@@ -14,7 +14,10 @@ Was tested with Python 3.8
 
 ## Features
 
+Common
 * Multy files compare
+
+NOR tool
 * PS4 Nor dump info
 * Toggle UART
 * Toggle Memory test, RNG/Keystorage test
@@ -22,8 +25,12 @@ Was tested with Python 3.8
 * Memory clock editing (GDDR5)
 * SAMU boot flag edit
 * Downgrade by slot switch
+
+Syscon tool
 * Syscon check
-* Syscon patch (upcoming)
+* Show active SNVS slot
+* Auto SNVS patch (upcoming)
+* Manual SNVS patch (upcoming)
 
 Don't use if you don't understant what is it for
 
@@ -46,7 +53,12 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
-### v0.1 - Initial release
+### v0.2
+* Syscon DEBUG toggle
+* Syscon NVStorage class
+* Syscon show active slot
+
+### v0.1
 * Files compare
 * UART, Memtest toggle
 * Sys flags clean

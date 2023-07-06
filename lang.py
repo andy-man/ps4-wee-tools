@@ -27,7 +27,7 @@ DIVIDER = '_'*LINE_WIDTH+'\n'
 DIVIDER_DASH = '-'*LINE_WIDTH+'\n'
 DIVIDER_BOLD = '='*LINE_WIDTH+'\n'
 
-TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.1 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
+TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.2 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
 
 TAB_FILE_LIST = getTab('Files list')
 TAB_NOR_INFO = getTab('NOR dump info')
@@ -39,6 +39,9 @@ TAB_DOWNGRADE = getTab('Downgrade patterns')
 TAB_MEMCLOCK = getTab('Memory clock')
 TAB_SAMU_BOOT = getTab('SAMU boot')
 TAB_SYSFLAGS = getTab('System flags')
+TAB_LAST_SVNS = getTab('Last SNVS')
+TAB_APATCH_SVNS = getTab('SNVS auto patching')
+TAB_MPATCH_SVNS = getTab('SNVS manual patcher')
 
 MENU_NOR_ACTIONS = [
 	'Select another file',
@@ -54,8 +57,9 @@ MENU_NOR_ACTIONS = [
 MENU_SC_ACTIONS = [
 	'Select another file',
 	'Toggle Debug',
-	'Show active SNVS slot',
-	'Patch active NVS slot',
+	'Show active SNVS block',
+	'Auto SNVS patch',
+	'Manual SNVS patch',
 	'Exit'
 ]
 
@@ -112,7 +116,7 @@ MSG_DOWNGRADE = getTab('Warning')+\
 MSG_HELP = getTab('Help')+\
 '\n'\
 ' Usage: ps4-wee-tools <file1> <file2> ... \n'\
-'  - One <file>: auto detects file type and loads apropriate tool\n'\
+'  - One <file>: auto detects file type and loads appropriate tool\n'\
 '  - Multi <files>: compare mode (with MD5 info)\n'\
 '  - help: show this help screen\n'\
 '\n'\
