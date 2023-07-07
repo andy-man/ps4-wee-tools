@@ -147,6 +147,27 @@ def screenDowngrade(file):
 
 
 
+def screenEntropy(file):
+	os.system('cls')
+	print(TITLE + TAB_ENTROPY + '\n' + MSG_WAIT)
+	
+	stats = entropy(file)
+	
+	os.system('cls')
+	print(TITLE+TAB_ENTROPY)
+	
+	info = {
+		'Entropy': '{:.5f}'.format(stats['ent']),
+		'0xFF': '{:.2f}%'.format(stats['ff']*100),
+		'0x00': '{:.2f}%'.format(stats['00']*100),
+		'Other': '{:.2f}%'.format((1 - stats['ff'] - stats['00'])*100),
+	}
+	
+	showTable(info)
+	
+	input(MSG_BACK)
+
+
 def screenNorTools(file):
 	os.system('cls')
 	print(TITLE+TAB_NOR_INFO)
@@ -176,6 +197,8 @@ def screenNorTools(file):
 	elif choice == '6':
 		screenDowngrade(file)
 	elif choice == '7':
+		screenEntropy(file)
+	elif choice == '8':
 	    exit(1)
 	
 	screenNorTools(file)
@@ -193,15 +216,15 @@ def showNorInfo(file = '-'):
 		sb = getNorData(f, 'SAMUBOOT')[0]
 		
 		try:
-			hdd = (' / ').join(swapBytes(getNorData(f, 'HDD')).decode('utf-8').split())
+			hdd = (' / ').join(swapBytes(getNorData(f, 'HDD')).decode('utf-8','ignore').split())
 		except:
 			hdd = MSG_NO_INFO
 		
-		INFO = {
+		info = {
 			'FILE'			: os.path.basename(file),
 			'MD5'			: getFileMD5(file),
-			'SKU'			: getNorData(f, 'SKU').decode('utf-8'),
-			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8')+' / '+getNorData(f, 'MB_SN').decode('utf-8'),
+			'SKU'			: getNorData(f, 'SKU').decode('utf-8','ignore'),
+			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
 			'MAC'			: getHex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
 			'VERS'			: ('{:02X}.{:02X} | {:02X}.{:02X}').format(fw1[1], fw1[0], fw2[1], fw2[0]),
@@ -212,8 +235,7 @@ def showNorInfo(file = '-'):
 			'Slot switch'	: getSlotSwitchInfo(f)
 		}
 	
-	for key in INFO:
-		print(' '+key.ljust(16,' ')+' : '+INFO[key])
+	showTable(info)
 	
 	return True
 
@@ -288,8 +310,30 @@ def screenAutoPatchSNVS(file):
 
 def screenManualPatchSNVS(file):
 	os.system('cls')
-	print(TITLE+TAB_MPATCH_SVNS)
-	input(MSG_BACK)
+	print(TITLE+MSG_INFO_SC_MPATCH+TAB_MPATCH_SVNS)
+	
+	with open(file, 'r+b') as f:
+		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		entries = SNVS.getLastDataEntries()
+		
+		records_count = 16 if len(entries) > 16 else len(entries)
+		print(MSG_LAST_DATA.format(records_count, len(entries)))
+		
+		for i in range(len(entries)-16, len(entries)):
+			offset = SNVS.getLastDataBlockOffset(True) + NvsEntry.getEntrySize()*i
+			print(' {:5X} | '.format(offset) + getHex(entries[i]))
+		
+		try:
+			num = int(input(MSG_MPATCH_INPUT))
+		except:
+			return
+		
+		if num > 0 and num < len(entries):
+			length = num*NvsEntry.getEntrySize()
+			setData(f, offset - length, b'\xFF'*length)
+			setStatus(MSG_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(offset - length,offset))
+		else:
+			setStatus(MSG_PATCH_CANCELED)
 
 
 def showSysconInfo(file):
@@ -301,23 +345,22 @@ def showSysconInfo(file):
 		debug = getSysconData(f, 'DEBUG')[0]
 		debug = MSG_ON if debug == 0x84 or debug == 0x85 else MSG_OFF
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
-		SNVS_INFO = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}] offset[0x{:5X}]'.format(
+		SNVS_INFO = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}]'.format(
 			SNVS.active_volume,
 			SNVS.active_entry.getLink(),
 			SNVS.active_entry.getCounter(),
-			SNVS.getLastDataBlockOffset(True)
 		)
 		
-		INFO = {
+		info = {
 			'FILE'			: os.path.basename(file),
 			'MD5'			: getFileMD5(file),
 			'Magic'			: ('True' if magic else 'False'),
 			'Debug'			: debug,
 			'SNVS'			: SNVS_INFO,
+			'Entries'		: MSG_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True))
 		}
 	
-	for key in INFO:
-		print(' '+key.ljust(16,' ')+' : '+INFO[key])
+	showTable(info)
 	
 	return True
 

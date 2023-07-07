@@ -1,6 +1,6 @@
-# PS4 WEE Tools
+![PS4 Wee Tools](assets/splash.png)
 
-![PS4 WEE Tools](assets/splash.png)
+# PS4 Wee Tools
 
 PS4 wee tools help to work with PS4 nor and syscon dumps.
 
@@ -25,12 +25,13 @@ NOR tool
 * Memory clock editing (GDDR5)
 * SAMU boot flag edit
 * Downgrade by slot switch
+* Entropy stats
 
 Syscon tool
 * Syscon check
 * Show active SNVS slot
+* Manual SNVS patch
 * Auto SNVS patch (upcoming)
-* Manual SNVS patch (upcoming)
 
 Don't use if you don't understant what is it for
 
@@ -39,7 +40,7 @@ Don't use if you don't understant what is it for
 This wouldn't be possible without work of these folks: 
 * fail0verflow
 * BwE
-* Darknesmonk 
+* Darknesmonk
 * pearlxcore
 
 And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
@@ -51,7 +52,16 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * **[YandexMoney](https://yoomoney.ru/to/410011555252085)**
 * **Bitcoin**: 39VaMnFqCQo751mvDc3M7ADVty71q2tWDm 
 
+## Links
+
+* [Twitter](https://twitter.com/AndyManDev)
+
 ## Changelog
+
+### v0.3
+* NOR Entropy stats
+* Syscon manual patch
+* Minor errors fix
 
 ### v0.2
 * Syscon DEBUG toggle

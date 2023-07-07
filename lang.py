@@ -5,6 +5,10 @@ LINE_WIDTH = 70
 def getTab(str):
 	return '  _'+('_'*len(str))+'_\n'+('_/ '+str+' \_').ljust(LINE_WIDTH, '_')+'\n'
 
+def showTable(data, pad=16):
+	for key in data:
+		print(' {} : {}'.format(key.ljust(pad,' '),data[key]))
+
 def getMenu(menu):
 	for n, text in enumerate(menu):
 		print(' '+str(n)+': '+text)
@@ -27,7 +31,7 @@ DIVIDER = '_'*LINE_WIDTH+'\n'
 DIVIDER_DASH = '-'*LINE_WIDTH+'\n'
 DIVIDER_BOLD = '='*LINE_WIDTH+'\n'
 
-TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.2 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
+TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.3 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
 
 TAB_FILE_LIST = getTab('Files list')
 TAB_NOR_INFO = getTab('NOR dump info')
@@ -42,6 +46,7 @@ TAB_SYSFLAGS = getTab('System flags')
 TAB_LAST_SVNS = getTab('Last SNVS')
 TAB_APATCH_SVNS = getTab('SNVS auto patching')
 TAB_MPATCH_SVNS = getTab('SNVS manual patcher')
+TAB_ENTROPY = getTab('Entropy statistics')
 
 MENU_NOR_ACTIONS = [
 	'Select another file',
@@ -51,6 +56,7 @@ MENU_NOR_ACTIONS = [
 	'Memory clocking (GDDR5)',
 	'SAMU boot flag',
 	'Downgrade - CoreOS slot switching',
+	'Entropy check',
 	'Exit'
 ]
 
@@ -66,6 +72,7 @@ MENU_SC_ACTIONS = [
 MSG_NO_INFO = '- No info -'
 MSG_OFF = 'Off'
 MSG_ON = 'On'
+MSG_WAIT = ' Please wait...'
 
 MSG_NIY = ' Function is not implemented yet'
 MSG_UNK_FILE_TYPE = ' Unknown file type'
@@ -76,7 +83,12 @@ MSG_DIFF_SLOT_VALUES = ' Values in slots are different!'
 MSG_SYSFLAGS_CLEAN = ' Sys flags were cleared. Tip: turn on UART'
 MSG_SAMU_UPD = ' SAMU flag was set to '
 MSG_DOWNGRADE_UPD = ' Downgrade was set to: '
+MSG_SNVS_ENTRIES = '{} records found at 0x{:5X}'
+MSG_LAST_DATA = ' Last {} records of {}: '
+MSG_PATCH_CANCELED = ' Patch was canceled'
+MSG_PATCH_SUCCESS = ' Successfully removed {} entries'
 
+MSG_MPATCH_INPUT = DIVIDER + ' How many records to clean (from end): '
 MSG_CHOICE = DIVIDER + ' Make choice: '
 MSG_BACK = DIVIDER + ' Press [ENTER] to go back'
 MSG_MEMCLOCK_INPUT = DIVIDER + ' Setup frequency [400 - 2000] / [0 set default (0xFF)] MHz '
@@ -112,6 +124,15 @@ MSG_DOWNGRADE = getTab('Warning')+\
 ' Make sure you have backup of stock NOR dump.\n'\
 ' Syscon patching required - otherwise you\'ll get "loadbios" error.\n'\
 ' Console will not boot normally.\n'
+
+MSG_INFO_SC_MPATCH = getTab('Manual patch instructions')+\
+'\n'\
+' Every record is 16 bytes length. First byte is always "A5"\n'\
+' The second byte is record "type" usualy in range [08-2B]\n'\
+' Firmware update takes 4 records with types "08-0B"\n'\
+' To cancel last fw update we need to clean these 4 records (fill 0xFF)\n'\
+' If there are "20-23","0C-0F" types after "08-0B" patch is impossible\n'\
+' backup slot is already erased, you\'ll got checkUpdVersion error\n'
 
 MSG_HELP = getTab('Help')+\
 '\n'\

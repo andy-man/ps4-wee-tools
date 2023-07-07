@@ -1,4 +1,4 @@
-import hashlib, os
+import hashlib, os, math
 
 #==========================================================
 # NOR stuff
@@ -28,9 +28,9 @@ SWITCH_BLOBS = [
 # 'KEY':{'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
 NOR_AREAS = {
 	'MAC':		{'o':0x1C4021,	'l':6,	't':'b',	'n':'MAC Address'},
-	'MB_SN':	{'o':0x1C8000,	'l':14,	't':'s',	'n':'Motherboard Serial'},
-	'SN':		{'o':0x1C8030,	'l':17,	't':'s',	'n':'Console Serial'},
-	'SKU':		{'o':0x1C8041,	'l':13,	't':'s',	'n':'SKU Version'},
+	'MB_SN':	{'o':0x1C8000,	'l':16,	't':'s',	'n':'Motherboard Serial'},
+	'SN':		{'o':0x1C8030,	'l':16,	't':'s',	'n':'Console Serial'},
+	'SKU':		{'o':0x1C8040,	'l':16,	't':'s',	'n':'SKU Version'},
 	'HDD':		{'o':0x1C9C00,	'l':60,	't':'s',	'n':'HDD'},
 	'HDD_TYPE':	{'o':0x1C9C3C,	'l':4,	't':'s',	'n':'HDD type'},
 	'FW_C':		{'o':0x1CA5D8,	'l':1,	't':'b',	'n':'FW Counter'},
@@ -41,6 +41,8 @@ NOR_AREAS = {
 	'SAMUBOOT':	{'o':0x1C9323,	'l':1,	't':'b',	'n':'SAMU enc'},
 	'MEMCLK':	{'o':0x1C9320,	'l':1,	't':'b',	'n':'GDDR5 Memory clock'},
 	'CORE_SWCH':{'o':0x201000,	'l':16,	't':'b',	'n':'Slot switch hack'},
+	'SAMU_SL1':	{'o':0x204000,	'l':16,	't':'b',	'n':'slot 1 loader'},
+	'SAMU_SL2':	{'o':0x242000,	'l':16,	't':'b',	'n':'slot 2 loader'},
 	'UART':		{'o':0x1C931F,	'l':1,	't':'b',	'n':'UART flag'},
 	'SYS_FLAGS':{'o':0x1C9310,	'l':64,	't':'b',	'n':'System flags'},
 	'MEMTEST1':	{'o':0x1C9310,	'l':1,	't':'b',	'n':'Memtest in slot 1'},
@@ -388,3 +390,16 @@ def clockToRaw(frq):
 	return (frq - 400) // 25 + 0x10
 
 
+
+def entropy(file):
+	with open(file, "rb") as f:
+		
+		vals = {byte: 0 for byte in range(2**8)}
+		
+		for byte in f.read():
+			vals[byte] += 1
+		
+		probs = [val / f.tell() for val in vals.values()]
+		entropy = -sum(prob * math.log2(prob) for prob in probs if prob > 0)
+		
+		return {'00':probs[0],'ff':probs[0xff],'ent':entropy}
