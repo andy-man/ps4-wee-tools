@@ -29,6 +29,7 @@ NOR tool
 
 Syscon tool
 * Syscon check
+* Patchable check
 * Show active SNVS slot
 * Manual SNVS patch
 * Auto SNVS patch (upcoming)
@@ -57,6 +58,11 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.4
+* Syscon patchable check
+* Manual patch bug fix
+* Minor errors fix
 
 ### v0.3
 * NOR Entropy stats

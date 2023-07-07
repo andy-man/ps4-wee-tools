@@ -31,7 +31,7 @@ DIVIDER = '_'*LINE_WIDTH+'\n'
 DIVIDER_DASH = '-'*LINE_WIDTH+'\n'
 DIVIDER_BOLD = '='*LINE_WIDTH+'\n'
 
-TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.3 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
+TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.4 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
 
 TAB_FILE_LIST = getTab('Files list')
 TAB_NOR_INFO = getTab('NOR dump info')
@@ -73,6 +73,9 @@ MSG_NO_INFO = '- No info -'
 MSG_OFF = 'Off'
 MSG_ON = 'On'
 MSG_WAIT = ' Please wait...'
+MSG_YES = 'Yes'
+MSG_NO = 'No'
+MSG_PROBABLY = 'Probably'
 
 MSG_NIY = ' Function is not implemented yet'
 MSG_UNK_FILE_TYPE = ' Unknown file type'
@@ -131,7 +134,7 @@ MSG_INFO_SC_MPATCH = getTab('Manual patch instructions')+\
 ' The second byte is record "type" usualy in range [08-2B]\n'\
 ' Firmware update takes 4 records with types "08-0B"\n'\
 ' To cancel last fw update we need to clean these 4 records (fill 0xFF)\n'\
-' If there are "20-23","0C-0F" types after "08-0B" patch is impossible\n'\
+' If there are "0C-0F","20-23" types after "08-0B" patch is impossible\n'\
 ' backup slot is already erased, you\'ll got checkUpdVersion error\n'
 
 MSG_HELP = getTab('Help')+\

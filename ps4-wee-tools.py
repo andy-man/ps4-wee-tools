@@ -330,8 +330,9 @@ def screenManualPatchSNVS(file):
 		
 		if num > 0 and num < len(entries):
 			length = num*NvsEntry.getEntrySize()
-			setData(f, offset - length, b'\xFF'*length)
-			setStatus(MSG_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(offset - length,offset))
+			offset += NvsEntry.getEntrySize() - length
+			setData(f, offset, b'\xFF'*length)
+			setStatus(MSG_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(offset,offset + length))
 		else:
 			setStatus(MSG_PATCH_CANCELED)
 
@@ -345,7 +346,8 @@ def showSysconInfo(file):
 		debug = getSysconData(f, 'DEBUG')[0]
 		debug = MSG_ON if debug == 0x84 or debug == 0x85 else MSG_OFF
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
-		SNVS_INFO = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}]'.format(
+		entries = SNVS.getLastDataEntries()
+		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}]'.format(
 			SNVS.active_volume,
 			SNVS.active_entry.getLink(),
 			SNVS.active_entry.getCounter(),
@@ -356,8 +358,9 @@ def showSysconInfo(file):
 			'MD5'			: getFileMD5(file),
 			'Magic'			: ('True' if magic else 'False'),
 			'Debug'			: debug,
-			'SNVS'			: SNVS_INFO,
-			'Entries'		: MSG_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True))
+			'SNVS'			: snvs_info,
+			'Entries'		: MSG_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
+			'Patchable'		: MSG_NO if isSysconPatchable(entries) == 0 else MSG_PROBABLY
 		}
 	
 	showTable(info)

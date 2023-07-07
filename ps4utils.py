@@ -391,6 +391,17 @@ def clockToRaw(frq):
 
 
 
+def isSysconPatchable(records):
+	type = NvsEntry(records[-1]).getIndex()
+	if type in [0x08, 0x09, 0x0A, 0x0B]:
+		return 1
+	if type in [0x0C, 0x0D, 0x0E, 0x0F]:
+		return 0
+	if type in [0x20, 0x21, 0x22, 0x23]:
+		return 0
+	return 2
+
+
 def entropy(file):
 	with open(file, "rb") as f:
 		
