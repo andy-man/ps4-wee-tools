@@ -48,43 +48,47 @@ BOOT_MODES = {b'\xFE':'Development', b'\xFB':'Assist', b'\xFF':'Release'}
 
 # 'KEY':{'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
 NOR_AREAS = {
-	'MAC':		{'o':0x1C4021,	'l':6,	't':'b',	'n':'MAC Address'},
-	'MB_SN':	{'o':0x1C8000,	'l':16,	't':'s',	'n':'Motherboard Serial'},
-	'SN':		{'o':0x1C8030,	'l':16,	't':'s',	'n':'Console Serial'},
-	'SKU':		{'o':0x1C8041,	'l':13,	't':'s',	'n':'SKU Version'},
-	'REGION':	{'o':0x1C8047,	'l':2,	't':'s',	'n':'Region code'},
 	
-	'BOOT_MODE':{'o':0x1C9000,	'l':1,	't':'b',	'n':'Boot mode'},			# Development(FE), Assist(FB), Release(FF)
-	'MEM_BGM':	{'o':0x1C9003,	'l':1,	't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
-	'SLOW_HDD':	{'o':0x1C9005,	'l':1,	't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
-	'SAFE_BOOT':{'o':0x1C9020,	'l':1,	't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
-	'FW_SLOT1':	{'o':0x1C9062,	'l':2,	't':'b',	'n':'FW in slot 1'},
-	'FW_SLOT2':	{'o':0x1C906A,	'l':2,	't':'b',	'n':'FW in slot 2'},
-	'SAMUBOOT':	{'o':0x1C9323,	'l':1,	't':'b',	'n':'SAMU enc'},	
-	'HDD':		{'o':0x1C9C00,	'l':60,	't':'s',	'n':'HDD'},
-	'HDD_TYPE':	{'o':0x1C9C3C,	'l':4,	't':'s',	'n':'HDD type'},
+	'EMC_IPL1':	{'o':0x004000,	'l':0x60000,	't':'b',	'n':'SBL2 1'},
+	'EMC_IPL2':	{'o':0x064000,	'l':0x60000,	't':'b',	'n':'SBL2 2'},
+	
+	'MAC':		{'o':0x1C4021,	'l':6,			't':'b',	'n':'MAC Address'},
+	'MB_SN':	{'o':0x1C8000,	'l':16,			't':'s',	'n':'Motherboard Serial'},
+	'SN':		{'o':0x1C8030,	'l':17,			't':'s',	'n':'Console Serial'},
+	'SKU':		{'o':0x1C8041,	'l':13,			't':'s',	'n':'SKU Version'},
+	'REGION':	{'o':0x1C8047,	'l':2,			't':'s',	'n':'Region code'},
+	
+	'BOOT_MODE':{'o':0x1C9000,	'l':1,			't':'b',	'n':'Boot mode'},			# Development(FE), Assist(FB), Release(FF)
+	'MEM_BGM':	{'o':0x1C9003,	'l':1,			't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
+	'SLOW_HDD':	{'o':0x1C9005,	'l':1,			't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
+	'SAFE_BOOT':{'o':0x1C9020,	'l':1,			't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
+	'FW_EXP':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'FW in backup slot?'},
+	'FW_VER':	{'o':0x1C906A,	'l':2,			't':'b',	'n':'FW in active slot'},
+	'SAMUBOOT':	{'o':0x1C9323,	'l':1,			't':'b',	'n':'SAMU enc'},	
+	'HDD':		{'o':0x1C9C00,	'l':60,			't':'s',	'n':'HDD'},
+	'HDD_TYPE':	{'o':0x1C9C3C,	'l':4,			't':'s',	'n':'HDD type'},
 	
 	# Sys flags
-	'SYS_FLAGS':{'o':0x1C9310,	'l':64,	't':'b',	'n':'System flags'},		# Clean FF*64
-	'MEMTEST':	{'o':0x1C9310,	'l':1,	't':'b',	'n':'Memory test'},			# On(01), Off(00/FF)
-	'RNG_KEY':	{'o':0x1C9312,	'l':1,	't':'b',	'n':'RNG/Keystorage test'},	# On(01), Off(00/FF)
-	'UART':		{'o':0x1C931F,	'l':1,	't':'b',	'n':'UART'},				# On(01), Off(00)
-	'MEMCLK':	{'o':0x1C9320,	'l':1,	't':'b',	'n':'GDDR5 Memory clock'},
+	'SYS_FLAGS':{'o':0x1C9310,	'l':64,			't':'b',	'n':'System flags'},		# Clean FF*64
+	'MEMTEST':	{'o':0x1C9310,	'l':1,			't':'b',	'n':'Memory test'},			# On(01), Off(00/FF)
+	'RNG_KEY':	{'o':0x1C9312,	'l':1,			't':'b',	'n':'RNG/Keystorage test'},	# On(01), Off(00/FF)
+	'UART':		{'o':0x1C931F,	'l':1,			't':'b',	'n':'UART'},				# On(01), Off(00)
+	'MEMCLK':	{'o':0x1C9320,	'l':1,			't':'b',	'n':'GDDR5 Memory clock'},
 	
-	'BTNSWAP':	{'o':0x1CA040,	'l':1,	't':'b',	'n':'Buttons swap'},		# X(01), O(00/FF)
-	'FW_C':		{'o':0x1CA5D8,	'l':1,	't':'b',	'n':'FW Counter'},
-	'FWP_C':	{'o':0x1CA5D9,	'l':1,	't':'b',	'n':'FW Patch Counter'},
-	'IDU':		{'o':0x1CA600,	'l':1,	't':'b',	'n':'IDU (Kiosk mode)'},	# On(01), Off(00/FF)
-	'UPD_MODE':	{'o':0x1CA601,	'l':1,	't':'b',	'n':'Update mode'},			# On(10), Off(00)
-	'REG_REC':	{'o':0x1CA603,	'l':1,	't':'b',	'n':'Registry recovery'},	# On(01), Off(00)
-	'FWV':		{'o':0x1CA604,	'l':4,	't':'s',	'n':'FW Version'},
-	'ARCADE':	{'o':0x1CA609,	'l':1,	't':'s',	'n':'Arcade mode'},			# On(01), Off(00/FF)
+	'BTNSWAP':	{'o':0x1CA040,	'l':1,			't':'b',	'n':'Buttons swap'},		# X(01), O(00/FF)
+	'FW_C':		{'o':0x1CA5D8,	'l':1,			't':'b',	'n':'FW Counter'},
+	'FW_PC':	{'o':0x1CA5D9,	'l':1,			't':'b',	'n':'FW Patch Counter'},
+	'IDU':		{'o':0x1CA600,	'l':1,			't':'b',	'n':'IDU (Kiosk mode)'},	# On(01), Off(00/FF)
+	'UPD_MODE':	{'o':0x1CA601,	'l':1,			't':'b',	'n':'Update mode'},			# On(10), Off(00)
+	'REG_REC':	{'o':0x1CA603,	'l':1,			't':'b',	'n':'Registry recovery'},	# On(01), Off(00)
+	'FW_V':		{'o':0x1CA606,	'l':2,			't':'s',	'n':'FW Version'},
+	'ARCADE':	{'o':0x1CA609,	'l':1,			't':'s',	'n':'Arcade mode'},			# On(01), Off(00/FF)
 	
-	'MANU':		{'o':0x1CBC00,	'l':32,	't':'b',	'n':'MANU mode'},			# Enabled(0*32), Disabled(FF*32)
+	'MANU':		{'o':0x1CBC00,	'l':32,			't':'b',	'n':'MANU mode'},			# Enabled(0*32), Disabled(FF*32)
 	
-	'CORE_SWCH':{'o':0x201000,	'l':16,	't':'b',	'n':'Slot switch hack'},
-	'SAMU_SL1':	{'o':0x204000,	'l':0,	't':'b',	'n':'slot 1 loader'},
-	'SAMU_SL2':	{'o':0x242000,	'l':0,	't':'b',	'n':'slot 2 loader'},
+	'CORE_SWCH':{'o':0x201000,	'l':16,			't':'b',	'n':'Slot switch hack'},
+	'SAMU_SL1':	{'o':0x204000,	'l':0,			't':'b',	'n':'slot 1 loader'},
+	'SAMU_SL2':	{'o':0x242000,	'l':0,			't':'b',	'n':'slot 2 loader'},
 }
 
 # Functions ===============================================
@@ -377,6 +381,10 @@ NVS_CONFIG = NvsConfig({
 	"data":		{ "flat":SYSCON_BLOCK_SIZE, "records":SYSCON_BLOCK_SIZE * 5, "count":8 },
 })
 
+SC_UPD_TYPES = [0x08, 0x09, 0x0A, 0x0B]
+SC_PRE1_TYPE = [0x0C, 0x0D, 0x0E, 0x0F]
+SC_PRE2_TYPE = [0x20, 0x21, 0x22, 0x23]
+
 #==========================================================
 # Common
 #==========================================================
@@ -452,22 +460,25 @@ def getLast_080B_Index(entries):
 	if length < 4:
 		return -1
 	for i in range(length):
-		entry1 = entries[length-4-i]
-		entry2 = entries[length-3-i]
-		entry3 = entries[length-2-i]
-		entry4 = entries[length-1-i]
-		if entry1[1] == 0x08 and entry2[1] == 0x09 and entry3[1] == 0x0A and entry4[1] == 0x0B:
-			return length-i-4
+		if entries[length-4-i][1] != SC_UPD_TYPES[0]:
+			continue
+		if entries[length-3-i][1] != SC_UPD_TYPES[1]:
+			continue
+		if entries[length-2-i][1] != SC_UPD_TYPES[2]:
+			continue
+		if entries[length-1-i][1] != SC_UPD_TYPES[3]:
+			continue
+		return length-i-4
 	return -1
 
 
 def isSysconPatchable(records):
 	type = NvsEntry(records[-1]).getIndex()
-	if type in [0x08, 0x09, 0x0A, 0x0B]:
+	if type in SC_UPD_TYPES:
 		return 1
-	if type in [0x0C, 0x0D, 0x0E, 0x0F]:
+	if type in SC_PRE1_TYPE:
 		return 0
-	if type in [0x20, 0x21, 0x22, 0x23]:
+	if type in SC_PRE2_TYPE:
 		return 0
 	return 2
 

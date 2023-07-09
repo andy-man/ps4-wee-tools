@@ -61,6 +61,10 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
+### v0.6
+* Now with color highlighting
+* Dialog improvements
+
 ### v0.5
 * New screen "Flags toggle"
 * boot mode, safe boot, update mode, arcade mode, kiosk mode (idu)

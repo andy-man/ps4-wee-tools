@@ -52,12 +52,15 @@ def screenMemClock(file):
 		    return
 		
 		if frq >= 400 and frq <= 2000:
-		    frq = clockToRaw(frq)
+		    raw = clockToRaw(frq)
 		else:
-		    frq = 255
+			frq = 0
+			raw = 255
 		
-		setNorData(f, 'MEMCLK',  frq.to_bytes(1, 'big'))
-		setNorDataB(f, 'MEMCLK', frq.to_bytes(1, 'big'))
+		setNorData(f, 'MEMCLK',  raw.to_bytes(1, 'big'))
+		setNorDataB(f, 'MEMCLK', raw.to_bytes(1, 'big'))
+		
+		setStatus(MSG_MEMCLOCK_SET.format(frq,raw))
 
 
 
@@ -91,32 +94,36 @@ def screenDowngrade(file):
 	
 	with open(file, 'r+b') as f:
 		
-		print(MSG_CURRENT+'\n'+DIVIDER_DASH+' '+getHex(getNorData(f, 'CORE_SWCH')))
+		print(MSG_CURRENT+getSlotSwitchInfo(f))
 		
-		print(TAB_DOWNGRADE)
+		print(TAB_DOWNGRADE,end='')
 		
 		for i in range(1, len(SWITCH_TYPES)):
-			print(' '+SWITCH_TYPES[i]+'\n')
+			print('\n '+SWITCH_TYPES[i]+'\n')
 			for n in range(len(SWITCH_BLOBS)):
 				if SWITCH_BLOBS[n]['t'] == i:
 					print('  '+str(n+1)+': '+getHex(SWITCH_BLOBS[n]['v']))
-			print('')
 		
-		while 1:
-			try:
-				choice = int(input(MSG_CHOICE))
-			except:
-				return
-			
-			if choice <= 0 or choice > len(SWITCH_BLOBS):
-				print(MSG_ERROR_CHOICE)
-			else:
-				pattern = SWITCH_BLOBS[choice-1]
-				break
+		print(DIVIDER)
+		print(' 0:'+MSG_GO_BACK)
 		
-		setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
+		showStatus()
+		
+		try:
+			choice = int(input(MSG_CHOICE))
+		except:
+			return
+		
+		if choice == 0:
+			return
+		elif choice < 0 or choice > len(SWITCH_BLOBS):
+			setStatus(MSG_ERROR_CHOICE)
+		else:
+			pattern = SWITCH_BLOBS[choice-1]
+			setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
+			setStatus(MSG_DOWNGRADE_UPD + SWITCH_TYPES[pattern['t']] + ' [' + str(choice)+']')
 	
-	setStatus(MSG_DOWNGRADE_UPD + SWITCH_TYPES[pattern['t']] + ' [' + str(choice)+']')
+	screenDowngrade(file)
 
 
 
@@ -254,10 +261,11 @@ def showNorInfo(file = '-'):
 		
 		sku = getNorData(f, 'SKU').decode('utf-8','ignore')
 		
-		fw1 = getNorData(f, 'FW_SLOT1')
-		fw2 = getNorData(f, 'FW_SLOT2')
-		a_fw1 = '{:02X}.{:02X}'.format(fw1[1], fw1[0])
-		a_fw2 = '{:02X}.{:02X}'.format(fw2[1], fw2[0])
+		SBL2_1 = getNorData(f, 'EMC_IPL1')
+		SBL2_2 = getNorData(f, 'EMC_IPL2')
+		
+		old_fw = getNorData(f, 'FW_V')
+		fw = getNorData(f, 'FW_VER') if old_fw[0] == 0xFF else old_fw
 		
 		sb = getNorData(f, 'SAMUBOOT')[0]
 		region = getConsoleRegion(f)
@@ -275,7 +283,7 @@ def showNorInfo(file = '-'):
 			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
 			'MAC'			: getHex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
-			'VERS'			: a_fw2+' ? '+a_fw1+' <- '+MSG_NOT_SURE,
+			'FW'			: '{:X}.{:02X} '.format(fw[1], fw[0]) + ('EQ' if SBL2_1 == SBL2_2 else 'DIFF'),
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(sb,sb),
 			'UART'			: (MSG_ON if getNorData(f, 'UART')[0] == 1 else MSG_OFF),
@@ -303,6 +311,20 @@ def toggleDebug(file):
 		setSysconData(f, 'DEBUG',  val)
 	
 	setStatus(MSG_DEBUG+(MSG_OFF if val == b'\x04' else MSG_ON))
+
+
+
+def printSnvsEntries(base,entries):
+	
+	for i,v in enumerate(entries):
+		color = ' '
+		if v[1] in SC_UPD_TYPES:
+			color = Clr.fg.cyan
+		elif v[1] in SC_PRE1_TYPE:
+			color = Clr.fg.orange
+		elif v[1] in SC_PRE2_TYPE:
+			color = Clr.fg.red
+		print(' {:5X} | '.format(base + (i * NvsEntry.getEntrySize())) + color + getHex(v)+Clr.reset)
 
 
 
@@ -345,9 +367,9 @@ def screenActiveSNVS(file):
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
 	
 	entries = SNVS.getLastDataEntries()
-	for i,v in enumerate(entries):
-		base = SNVS.getLastDataBlockOffset(True)
-		print(' {:5X} | '.format(base + (i * NvsEntry.getEntrySize())) + getHex(v))
+	base = SNVS.getLastDataBlockOffset(True)
+	
+	printSnvsEntries(base, entries)
 	
 	input(MSG_BACK)
 
@@ -373,7 +395,7 @@ def screenAutoPatchSNVS(file):
 	pre_o = prev_index * NvsEntry.getEntrySize() + base
 	
 	if index < 0 or prev_index < 0 or not isSysconPatchable(entries):
-		print(MSG_UNPATCHABLE.format(len(entries),last.getCounter(),last.getIndex()))
+		print(MSG_UNPATCHABLE.format(len(entries),last.getCounter(),last.getIndex(), index, prev_index ))
 		input(MSG_BACK)
 		return
 	
@@ -382,7 +404,7 @@ def screenAutoPatchSNVS(file):
 	options = MENU_PATCHES
 	options[1] = options[1].format(len(entries) - index)
 	
-	print(MSG_PATCH_INDEXES.format(cur_o, pre_o))
+	print(Clr.fg.cyan+MSG_PATCH_INDEXES.format(cur_o, pre_o)+Clr.reset)
 	getMenu(options,1)
 	showStatus()
 	
@@ -433,10 +455,10 @@ def screenManualPatchSNVS(file):
 		
 		records_count = 16 if len(entries) > 16 else len(entries)
 		print(MSG_LAST_DATA.format(records_count, len(entries)))
+		print()
 		
-		for i in range(len(entries)-16, len(entries)):
-			offset = SNVS.getLastDataBlockOffset(True) + NvsEntry.getEntrySize()*i
-			print(' {:5X} | '.format(offset) + getHex(entries[i]))
+		base = SNVS.getLastDataBlockOffset(True) + NvsEntry.getEntrySize() * (len(entries) - records_count)
+		printSnvsEntries(base, entries[-records_count:])
 		
 		try:
 			num = int(input(MSG_MPATCH_INPUT))
