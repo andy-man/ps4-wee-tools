@@ -19,8 +19,10 @@ Common
 
 NOR tool
 * PS4 Nor dump info
-* Toggle UART
-* Toggle Memory test, RNG/Keystorage test
+* FW detection in slots (experemental)
+* Flags toggle:
+  * boot mode, safe boot, update mode, arcade mode, kiosk mode (idu)
+  * registry recovery, manu, button swap, memory budget, slow hdd mode
 * System flags cleaning
 * Memory clock editing (GDDR5)
 * SAMU boot flag edit
@@ -32,9 +34,9 @@ Syscon tool
 * Patchable check
 * Show active SNVS slot
 * Manual SNVS patch
-* Auto SNVS patch (upcoming)
+* Auto SNVS patch (4 modes)
 
-Don't use if you don't understant what is it for
+Don't use if you don't understant what is it for!
 
 ## Credits
 
@@ -58,6 +60,15 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.5
+* New screen "Flags toggle"
+* boot mode, safe boot, update mode, arcade mode, kiosk mode (idu)
+* registry recovery, manu, button swap, memory budget, slow hdd mode
+* Syscon auto SNVS patch (4 modes)
+* New FW detection (experemental)
+* Region info
+* Minor improvements
 
 ### v0.4
 * Syscon patchable check

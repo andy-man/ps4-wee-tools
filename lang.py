@@ -9,9 +9,9 @@ def showTable(data, pad=16):
 	for key in data:
 		print(' {} : {}'.format(key.ljust(pad,' '),data[key]))
 
-def getMenu(menu):
+def getMenu(menu, start=0):
 	for n, text in enumerate(menu):
-		print(' '+str(n)+': '+text)
+		print(' '+str(n+start)+': '+text)
 
 STATUS = ''
 
@@ -31,7 +31,7 @@ DIVIDER = '_'*LINE_WIDTH+'\n'
 DIVIDER_DASH = '-'*LINE_WIDTH+'\n'
 DIVIDER_BOLD = '='*LINE_WIDTH+'\n'
 
-TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.4 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
+TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.5 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
 
 TAB_FILE_LIST = getTab('Files list')
 TAB_NOR_INFO = getTab('NOR dump info')
@@ -43,16 +43,15 @@ TAB_DOWNGRADE = getTab('Downgrade patterns')
 TAB_MEMCLOCK = getTab('Memory clock')
 TAB_SAMU_BOOT = getTab('SAMU boot')
 TAB_SYSFLAGS = getTab('System flags')
-TAB_LAST_SVNS = getTab('Last SNVS')
+TAB_LAST_SVNS = getTab('Last SNVS entries')
 TAB_APATCH_SVNS = getTab('SNVS auto patching')
 TAB_MPATCH_SVNS = getTab('SNVS manual patcher')
 TAB_ENTROPY = getTab('Entropy statistics')
+TAB_NOR_FLAGS = getTab('NOR flags')
 
 MENU_NOR_ACTIONS = [
 	'Select another file',
-	'Toggle UART',
-	'Toggle Memory test, RNG/Keystorage test',
-	'Clear all system flags',
+	'Flags (UART, RNG, Memtest, etc)',
 	'Memory clocking (GDDR5)',
 	'SAMU boot flag',
 	'Downgrade - CoreOS slot switching',
@@ -69,6 +68,13 @@ MENU_SC_ACTIONS = [
 	'Exit'
 ]
 
+MENU_PATCHES = [
+	'Method A - last 08-0B will be cleaned (4 records)',
+	'Method B - last 08-0B and below will be cleaned ({} records)',
+	'Method C - last 08-0B will be replaced with previous',
+	'Method D - fix counters (f.e. after method C)',
+]
+
 MSG_NO_INFO = '- No info -'
 MSG_OFF = 'Off'
 MSG_ON = 'On'
@@ -76,20 +82,27 @@ MSG_WAIT = ' Please wait...'
 MSG_YES = 'Yes'
 MSG_NO = 'No'
 MSG_PROBABLY = 'Probably'
+MSG_NOT_SURE = 'not sure'
+MSG_SET_TO = ' {} was set to [{}]'
 
 MSG_NIY = ' Function is not implemented yet'
+MSG_CLEAN_FLAGS = ' Clean all system flags'
 MSG_UNK_FILE_TYPE = ' Unknown file type'
 MSG_UART = ' UART is set to '
 MSG_DEBUG = ' Sycon debug is set to '
-MSG_MEMTEST = ' Memtest is set to [{}]'
+
 MSG_DIFF_SLOT_VALUES = ' Values in slots are different!'
 MSG_SYSFLAGS_CLEAN = ' Sys flags were cleared. Tip: turn on UART'
 MSG_SAMU_UPD = ' SAMU flag was set to '
 MSG_DOWNGRADE_UPD = ' Downgrade was set to: '
 MSG_SNVS_ENTRIES = '{} records found at 0x{:5X}'
 MSG_LAST_DATA = ' Last {} records of {}: '
+
 MSG_PATCH_CANCELED = ' Patch was canceled'
 MSG_PATCH_SUCCESS = ' Successfully removed {} entries'
+MSG_PATCH_SAVED = ' Patch was saved to {}'
+MSG_UNPATCHABLE = ' Can\'t procced. Last SNVS record #{} counter [0x{:02X}] type [0x{:02X}]'
+MSG_PATCH_INDEXES = ' Last 08-0B at 0x{:04X} | Previous at 0x{:04X}\n'
 
 MSG_MPATCH_INPUT = DIVIDER + ' How many records to clean (from end): '
 MSG_CHOICE = DIVIDER + ' Make choice: '
@@ -108,6 +121,7 @@ MSG_FILES_MISMATCH	= ' Files mismatch'
 
 MSG_CONFIRM = DIVIDER + ' Input [y] to continue: '
 MSG_CURRENT = ' Current: '
+MSG_GO_BACK = ' Go back'
 
 MSG_OVERCLOCKING = getTab('Warning')+\
 '\n'\
@@ -120,6 +134,11 @@ MSG_OVERCLOCKING = getTab('Warning')+\
 ' The frequency is selected experimentally\n'\
 ' - Too high value can lead to LOADBIOS -8 or DCT [*] error\n'\
 ' - Too low value leads to AMDINIT error \n'
+
+MSG_PATCHES = getTab('Warning')+\
+'\n'\
+' Be careful: All patches are applied immediatly to file! \n'\
+' Will switch value between available values for chosen option \n'
 
 MSG_DOWNGRADE = getTab('Warning')+\
 '\n'\
@@ -144,6 +163,6 @@ MSG_HELP = getTab('Help')+\
 '  - Multi <files>: compare mode (with MD5 info)\n'\
 '  - help: show this help screen\n'\
 '\n'\
-' File selection screen: only *.bin files are scanned within app\'s directory\n'\
+' File selection works only for *.bin files within app\'s directory\n'\
 '\n'\
 ' Home: https://github.com/andy-man/ps4-wee-tools'

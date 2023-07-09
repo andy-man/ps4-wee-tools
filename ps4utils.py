@@ -1,11 +1,30 @@
 import hashlib, os, math
 
+STR_UNKNOWN = '- Unknown -'
+
 #==========================================================
 # NOR stuff
 #==========================================================
 
 NOR_DUMP_SIZE = 0x2000000
 NOR_BACKUP_OFFSET = 0x3000
+
+PS4_REGIONS = {
+	'00':'Japan',
+	'01':'US, Canada (North America)',
+	'15':'US, Canada (North America)',
+	'02':'Australia / New Zealand (Oceania)',
+	'03':'U.K. / Ireland',
+	'04':'Europe / Middle East / Africa',
+	'16':'Europe / Middle East / Africa',
+	'05':'Korea (South Korea)',
+	'06':'Southeast Asia / Hong Kong',
+	'07':'Taiwan',
+	'08':'Russia, Ukraine, India, Central Asia',
+	'09':'Mainland China',
+	'11':'Mexico, Central America, South America',
+	'14':'Mexico, Central America, South America',
+}
 
 SWITCH_TYPES = [
 	'Off',
@@ -25,31 +44,57 @@ SWITCH_BLOBS = [
 	{'t':3, 'v':[0x00]*12 + [0xFF]*4},
 ]
 
+BOOT_MODES = {b'\xFE':'Development', b'\xFB':'Assist', b'\xFF':'Release'}
+
 # 'KEY':{'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
 NOR_AREAS = {
 	'MAC':		{'o':0x1C4021,	'l':6,	't':'b',	'n':'MAC Address'},
 	'MB_SN':	{'o':0x1C8000,	'l':16,	't':'s',	'n':'Motherboard Serial'},
 	'SN':		{'o':0x1C8030,	'l':16,	't':'s',	'n':'Console Serial'},
-	'SKU':		{'o':0x1C8040,	'l':16,	't':'s',	'n':'SKU Version'},
+	'SKU':		{'o':0x1C8041,	'l':13,	't':'s',	'n':'SKU Version'},
+	'REGION':	{'o':0x1C8047,	'l':2,	't':'s',	'n':'Region code'},
+	
+	'BOOT_MODE':{'o':0x1C9000,	'l':1,	't':'b',	'n':'Boot mode'},			# Development(FE), Assist(FB), Release(FF)
+	'MEM_BGM':	{'o':0x1C9003,	'l':1,	't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
+	'SLOW_HDD':	{'o':0x1C9005,	'l':1,	't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
+	'SAFE_BOOT':{'o':0x1C9020,	'l':1,	't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
+	'FW_SLOT1':	{'o':0x1C9062,	'l':2,	't':'b',	'n':'FW in slot 1'},
+	'FW_SLOT2':	{'o':0x1C906A,	'l':2,	't':'b',	'n':'FW in slot 2'},
+	'SAMUBOOT':	{'o':0x1C9323,	'l':1,	't':'b',	'n':'SAMU enc'},	
 	'HDD':		{'o':0x1C9C00,	'l':60,	't':'s',	'n':'HDD'},
 	'HDD_TYPE':	{'o':0x1C9C3C,	'l':4,	't':'s',	'n':'HDD type'},
+	
+	# Sys flags
+	'SYS_FLAGS':{'o':0x1C9310,	'l':64,	't':'b',	'n':'System flags'},		# Clean FF*64
+	'MEMTEST':	{'o':0x1C9310,	'l':1,	't':'b',	'n':'Memory test'},			# On(01), Off(00/FF)
+	'RNG_KEY':	{'o':0x1C9312,	'l':1,	't':'b',	'n':'RNG/Keystorage test'},	# On(01), Off(00/FF)
+	'UART':		{'o':0x1C931F,	'l':1,	't':'b',	'n':'UART'},				# On(01), Off(00)
+	'MEMCLK':	{'o':0x1C9320,	'l':1,	't':'b',	'n':'GDDR5 Memory clock'},
+	
+	'BTNSWAP':	{'o':0x1CA040,	'l':1,	't':'b',	'n':'Buttons swap'},		# X(01), O(00/FF)
 	'FW_C':		{'o':0x1CA5D8,	'l':1,	't':'b',	'n':'FW Counter'},
 	'FWP_C':	{'o':0x1CA5D9,	'l':1,	't':'b',	'n':'FW Patch Counter'},
+	'IDU':		{'o':0x1CA600,	'l':1,	't':'b',	'n':'IDU (Kiosk mode)'},	# On(01), Off(00/FF)
+	'UPD_MODE':	{'o':0x1CA601,	'l':1,	't':'b',	'n':'Update mode'},			# On(10), Off(00)
+	'REG_REC':	{'o':0x1CA603,	'l':1,	't':'b',	'n':'Registry recovery'},	# On(01), Off(00)
 	'FWV':		{'o':0x1CA604,	'l':4,	't':'s',	'n':'FW Version'},
-	'FW_SLOT1':	{'o':0x1C906A,	'l':2,	't':'b',	'n':'FW in slot 1'},
-	'FW_SLOT2':	{'o':0x1CC06A,	'l':2,	't':'b',	'n':'FW in slot 2'},
-	'SAMUBOOT':	{'o':0x1C9323,	'l':1,	't':'b',	'n':'SAMU enc'},
-	'MEMCLK':	{'o':0x1C9320,	'l':1,	't':'b',	'n':'GDDR5 Memory clock'},
+	'ARCADE':	{'o':0x1CA609,	'l':1,	't':'s',	'n':'Arcade mode'},			# On(01), Off(00/FF)
+	
+	'MANU':		{'o':0x1CBC00,	'l':32,	't':'b',	'n':'MANU mode'},			# Enabled(0*32), Disabled(FF*32)
+	
 	'CORE_SWCH':{'o':0x201000,	'l':16,	't':'b',	'n':'Slot switch hack'},
-	'SAMU_SL1':	{'o':0x204000,	'l':16,	't':'b',	'n':'slot 1 loader'},
-	'SAMU_SL2':	{'o':0x242000,	'l':16,	't':'b',	'n':'slot 2 loader'},
-	'UART':		{'o':0x1C931F,	'l':1,	't':'b',	'n':'UART flag'},
-	'SYS_FLAGS':{'o':0x1C9310,	'l':64,	't':'b',	'n':'System flags'},
-	'MEMTEST1':	{'o':0x1C9310,	'l':1,	't':'b',	'n':'Memtest in slot 1'},
-	'MEMTEST2':	{'o':0x1C9312,	'l':1,	't':'b',	'n':'Memtest in slot 2'},
+	'SAMU_SL1':	{'o':0x204000,	'l':0,	't':'b',	'n':'slot 1 loader'},
+	'SAMU_SL2':	{'o':0x242000,	'l':0,	't':'b',	'n':'slot 2 loader'},
 }
 
 # Functions ===============================================
+
+def getConsoleRegion(file):
+	code = getNorData(file,'REGION').decode('utf-8','ignore')
+	desc = PS4_REGIONS[code] if code in PS4_REGIONS else STR_UNKNOWN
+	return [code, desc]
+
+
 
 def getMemClock(file):
 	raw1 = getNorData(file,'MEMCLK')[0]
@@ -67,31 +112,38 @@ def getSlotSwitchInfo(file):
 
 # NOR data utils
 
-def setNorData(file, name, val):
-	if not name in NOR_AREAS:
+def getNorAreaName(key):
+	if key in NOR_AREAS:
+		return NOR_AREAS[key]['n']
+	return STR_UNKNOWN
+
+
+
+def setNorData(file, key, val):
+	if not key in NOR_AREAS:
 		return False
-	return setData(file, NOR_AREAS[name]['o'], val)
+	return setData(file, NOR_AREAS[key]['o'], val)
 
 
 
-def setNorDataB(file, name, val):
-	if not name in NOR_AREAS:
+def setNorDataB(file, key, val):
+	if not key in NOR_AREAS:
 		return False
-	return setData(file, NOR_AREAS[name]['o'] + NOR_BACKUP_OFFSET, val)
+	return setData(file, NOR_AREAS[key]['o'] + NOR_BACKUP_OFFSET, val)
 
 
 
-def getNorData(file, name):
-	if not name in NOR_AREAS:
+def getNorData(file, key):
+	if not key in NOR_AREAS:
 		return False
-	return getData(file, NOR_AREAS[name]['o'], NOR_AREAS[name]['l'])
+	return getData(file, NOR_AREAS[key]['o'], NOR_AREAS[key]['l'])
 
 
 
-def getNorDataB(file, name):
-	if not name in NOR_AREAS:
+def getNorDataB(file, key):
+	if not key in NOR_AREAS:
 		return False
-	return getData(file, NOR_AREAS[name]['o'] + NOR_BACKUP_OFFSET, NOR_AREAS[name]['l'])
+	return getData(file, NOR_AREAS[key]['o'] + NOR_BACKUP_OFFSET, NOR_AREAS[key]['l'])
 
 
 
@@ -113,24 +165,24 @@ SC_AREAS = {
 
 # Functions ===============================================
 
-def setSysconData(file, name, val):
-	if not name in SC_AREAS:
+def setSysconData(file, key, val):
+	if not key in SC_AREAS:
 		return False
-	return setData(file, SC_AREAS[name]['o'], val)
+	return setData(file, SC_AREAS[key]['o'], val)
 
 
 
-def getSysconData(file, name):
-	if not name in SC_AREAS:
+def getSysconData(file, key):
+	if not key in SC_AREAS:
 		return False
-	return getData(file, SC_AREAS[name]['o'], SC_AREAS[name]['l'])
+	return getData(file, SC_AREAS[key]['o'], SC_AREAS[key]['l'])
 
 
 
-def checkSysconData(file, name):
-	if not name in SC_AREAS:
+def checkSysconData(file, key):
+	if not key in SC_AREAS:
 		return False
-	if getData(file, SC_AREAS[name]['o'], SC_AREAS[name]['l']) == SC_AREAS[name]['n']:
+	if getData(file, SC_AREAS[key]['o'], SC_AREAS[key]['l']) == SC_AREAS[key]['n']:
 		return True
 	else:
 		return False
@@ -179,9 +231,9 @@ class NvsEntry:
 	
 	def __init__(self, buf):
 		if len(buf) < self.getEntryHeadSize() or self.checkMagic(buf) == 0:
-			self.entry = b'\x00' * self.getEntryHeadSize()
+			self.entry = [0x00] * self.getEntryHeadSize()
 		else:
-			self.entry = buf
+			self.entry = bytearray(buf)
 	
 	def getHeader(self):
 		return self.entry[:self.getHeaderSize()];
@@ -191,6 +243,11 @@ class NvsEntry:
 	
 	def getCounter(self):
 		return int.from_bytes(self.entry[4:4+3],"little")
+	
+	def setCounter(self,val):
+		self.entry[4+0] = val & 0xFF
+		self.entry[4+1] = val >> 8 & 0xFF
+		self.entry[4+2] = val >> 16 & 0xFF
 	
 	def getIndex(self):
 		return int.from_bytes(self.entry[1:1+2],"little")
@@ -390,6 +447,19 @@ def clockToRaw(frq):
 	return (frq - 400) // 25 + 0x10
 
 
+def getLast_080B_Index(entries):
+	length = len(entries)
+	if length < 4:
+		return -1
+	for i in range(length):
+		entry1 = entries[length-4-i]
+		entry2 = entries[length-3-i]
+		entry3 = entries[length-2-i]
+		entry4 = entries[length-1-i]
+		if entry1[1] == 0x08 and entry2[1] == 0x09 and entry3[1] == 0x0A and entry4[1] == 0x0B:
+			return length-i-4
+	return -1
+
 
 def isSysconPatchable(records):
 	type = NvsEntry(records[-1]).getIndex()
@@ -400,6 +470,19 @@ def isSysconPatchable(records):
 	if type in [0x20, 0x21, 0x22, 0x23]:
 		return 0
 	return 2
+
+
+def savePatchData(file, data, patch = False):
+	with open(file, 'wb') as f:
+		f.write(data)
+	
+	if not patch:
+		return
+	
+	with open(file, 'r+b') as f:
+		for i in range(len(patch)):
+			f.seek(patch[i]['o'],0)
+			f.write(patch[i]['d'])
 
 
 def entropy(file):

@@ -7,34 +7,6 @@ from ps4utils import *
 # Nor Tools
 #==============================================================
 
-def toggleUart(file):
-	with open(file, 'r+b') as f:
-		
-		cur = getNorData(f, 'UART')[0]
-		val = b'\x01' if cur == 0 else b'\x00'
-		
-		setNorData(f, 'UART',  val)
-		setNorDataB(f, 'UART', val)
-	
-	setStatus(MSG_UART+(MSG_OFF if val != b'\x01' else MSG_ON))
-
-
-
-def toggleMemtest(file):
-	with open(file, 'r+b') as f:
-		
-		cur = getNorData(f, 'MEMTEST1')[0]
-		val = b'\x01' if cur == 0 else b'\x00'
-		
-		setNorData(f, 'MEMTEST1',  val)
-		setNorDataB(f, 'MEMTEST1', val)
-		
-		setNorData(f, 'MEMTEST2',  val)
-		setNorDataB(f, 'MEMTEST2', val)
-
-	
-	setStatus(MSG_MEMTEST.format('ON' if val == b'\x01' else 'OFF'))
-
 
 
 def screenSysFlags(file):
@@ -58,6 +30,7 @@ def screenSysFlags(file):
 		setNorDataB(f, 'SYS_FLAGS', val)
 	
 	setStatus(MSG_SYSFLAGS_CLEAN)
+
 
 
 def screenMemClock(file):
@@ -147,6 +120,77 @@ def screenDowngrade(file):
 
 
 
+def screenFlagsToggler(file):
+	os.system('cls')
+	print(TITLE + MSG_PATCHES + TAB_NOR_FLAGS)
+	
+	with open(file, 'rb') as f:
+		
+		patches = [
+			{'k':'UART',	'v':[b'\x00',b'\x01'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'MEMTEST',	'v':[b'\x00',b'\x01'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'RNG_KEY',	'v':[b'\x00',b'\x01'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'BTNSWAP',	'v':[b'\x00',b'\x01'], 'd':['O - select','X - select']},
+			{'k':'SLOW_HDD','v':[b'\xFF',b'\xFE'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'MEM_BGM',	'v':[b'\xFE',b'\xFF'], 'd':['Large','Normal']},
+			{'k':'SAFE_BOOT','v':[b'\xFF',b'\x01'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'UPD_MODE','v':[b'\x00',b'\x10'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'ARCADE',	'v':[b'\x00',b'\x01'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'REG_REC',	'v':[b'\x00',b'\x01'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'IDU',		'v':[b'\x00',b'\x01'], 'd':[MSG_OFF,MSG_ON]},
+			{'k':'BOOT_MODE','v':[b'\xFE',b'\xFB',b'\xFF'], 'd':['Development','Assist','Release']},
+			{'k':'MANU',	'v':[b'\x00'*32,b'\xFF'*32], 'd':[MSG_OFF,MSG_ON]},
+		]
+		
+		for i in range(len(patches)):
+			name = getNorAreaName(patches[i]['k'])
+			val = getNorData(f, patches[i]['k'])
+			str = '['+getHex(val,'')[:32]+']'
+			for k in range(len(patches[i]['v'])):
+				if val == patches[i]['v'][k]:
+					str = patches[i]['d'][k]
+			print(' {:2d}: {:24s}: {}'.format(i+1, name, str))
+	
+	print(DIVIDER)
+	print(' c:'+MSG_CLEAN_FLAGS)
+	print(' 0:'+MSG_GO_BACK)
+	
+	showStatus()
+	
+	num = -1
+	try:
+		choice = input(MSG_CHOICE)
+		num = int(choice)
+	except:
+		if choice == 'c':
+			screenSysFlags(file)
+	
+	if num == 0:
+		return
+	elif num > 0 and num <= len(patches):
+		toggleFlag(file, patches[num-1])
+	
+	screenFlagsToggler(file)
+
+
+
+def toggleFlag(file, patch):
+	with open(file, 'r+b') as f:
+		
+		cur = getNorData(f, patch['k'])
+		for i in range(0,len(patch['v'])):
+			if cur == patch['v'][i]:
+				break
+		i = 0 if (i + 1) >= len(patch['v']) else i + 1
+		val = patch['v'][i]
+		
+		setNorData(f, patch['k'],  patch['v'][i])
+		#setNorDataB(f, patch['k'], patch['v'][i])
+	
+	setStatus(MSG_SET_TO.format(getNorAreaName(patch['k']),patch['d'][i]))
+
+
+
 def screenEntropy(file):
 	os.system('cls')
 	print(TITLE + TAB_ENTROPY + '\n' + MSG_WAIT)
@@ -168,6 +212,7 @@ def screenEntropy(file):
 	input(MSG_BACK)
 
 
+
 def screenNorTools(file):
 	os.system('cls')
 	print(TITLE+TAB_NOR_INFO)
@@ -185,20 +230,16 @@ def screenNorTools(file):
 	if choice == '0':
 	    return screenFileSelect()
 	elif choice == '1':
-	    toggleUart(file)
+	    screenFlagsToggler(file)
 	elif choice == '2':
-	    toggleMemtest(file)
-	elif choice == '3':
-		screenSysFlags(file)
-	elif choice == '4':
 	    screenMemClock(file)
-	elif choice == '5':
+	elif choice == '3':
 	    screenSamuBoot(file)
-	elif choice == '6':
+	elif choice == '4':
 		screenDowngrade(file)
-	elif choice == '7':
+	elif choice == '5':
 		screenEntropy(file)
-	elif choice == '8':
+	elif choice == '6':
 	    exit(1)
 	
 	screenNorTools(file)
@@ -210,28 +251,34 @@ def showNorInfo(file = '-'):
 		return False
 	
 	with open(file, 'rb') as f:
-	
+		
+		sku = getNorData(f, 'SKU').decode('utf-8','ignore')
+		
 		fw1 = getNorData(f, 'FW_SLOT1')
 		fw2 = getNorData(f, 'FW_SLOT2')
+		a_fw1 = '{:02X}.{:02X}'.format(fw1[1], fw1[0])
+		a_fw2 = '{:02X}.{:02X}'.format(fw2[1], fw2[0])
+		
 		sb = getNorData(f, 'SAMUBOOT')[0]
+		region = getConsoleRegion(f)
 		
 		try:
-			hdd = (' / ').join(swapBytes(getNorData(f, 'HDD')).decode('utf-8','ignore').split())
+			hdd = (' / ').join(swapBytes(getNorData(f, 'HDD')).decode('utf-8').split())
 		except:
 			hdd = MSG_NO_INFO
 		
 		info = {
 			'FILE'			: os.path.basename(file),
 			'MD5'			: getFileMD5(file),
-			'SKU'			: getNorData(f, 'SKU').decode('utf-8','ignore'),
+			'SKU'			: sku,
+			'Region'		: '[{}] {}'.format(region[0], region[1]),
 			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
 			'MAC'			: getHex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
-			'VERS'			: ('{:02X}.{:02X} | {:02X}.{:02X}').format(fw1[1], fw1[0], fw2[1], fw2[0]),
+			'VERS'			: a_fw2+' ? '+a_fw1+' <- '+MSG_NOT_SURE,
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(sb,sb),
 			'UART'			: (MSG_ON if getNorData(f, 'UART')[0] == 1 else MSG_OFF),
-			'MEMTEST'		: (MSG_ON if getNorData(f, 'MEMTEST1')[0] == 1 else MSG_OFF),
 			'Slot switch'	: getSlotSwitchInfo(f)
 		}
 	
@@ -240,9 +287,11 @@ def showNorInfo(file = '-'):
 	return True
 
 
+
 #==============================================================
 # Syscon Tools
 #==============================================================
+
 
 
 def toggleDebug(file):
@@ -254,6 +303,8 @@ def toggleDebug(file):
 		setSysconData(f, 'DEBUG',  val)
 	
 	setStatus(MSG_DEBUG+(MSG_OFF if val == b'\x04' else MSG_ON))
+
+
 
 def screenSysconTools(file):
 	os.system('cls')
@@ -305,7 +356,71 @@ def screenActiveSNVS(file):
 def screenAutoPatchSNVS(file):
 	os.system('cls')
 	print(TITLE+TAB_APATCH_SVNS)
-	input(MSG_BACK)
+	
+	with open(file, 'rb') as f:
+		data = f.read()
+		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+	
+	entries = SNVS.getLastDataEntries()
+	
+	base = SNVS.getLastDataBlockOffset(True)
+	last = NvsEntry(entries[-1])
+	
+	index = getLast_080B_Index(entries)
+	prev_index = getLast_080B_Index(entries[:index])
+	
+	cur_o = index * NvsEntry.getEntrySize() + base
+	pre_o = prev_index * NvsEntry.getEntrySize() + base
+	
+	if index < 0 or prev_index < 0 or not isSysconPatchable(entries):
+		print(MSG_UNPATCHABLE.format(len(entries),last.getCounter(),last.getIndex()))
+		input(MSG_BACK)
+		return
+	
+	out_file = os.path.basename(file).replace(" ", "_").rsplit('.', maxsplit=1)[0]
+	
+	options = MENU_PATCHES
+	options[1] = options[1].format(len(entries) - index)
+	
+	print(MSG_PATCH_INDEXES.format(cur_o, pre_o))
+	getMenu(options,1)
+	showStatus()
+	
+	choice = input(MSG_CHOICE)
+	
+	if choice == '':
+	    return
+	elif choice == '1':
+		ofile = out_file+'_patch_A.bin'
+		savePatchData(ofile, data, [{'o':cur_o,'d':b'\xFF'*NvsEntry.getEntrySize()*4}]);
+		setStatus(MSG_PATCH_SAVED.format(ofile))
+	elif choice == '2':
+		ofile = out_file+'_patch_B.bin'
+		savePatchData(ofile, data, [{'o':cur_o,'d':b'\xFF'*NvsEntry.getEntrySize()*(len(entries) - index)}]);
+		setStatus(MSG_PATCH_SAVED.format(ofile))
+	elif choice == '3':
+		ofile = out_file+'_patch_C.bin'
+		savePatchData(ofile, data, [{'o':cur_o,'d':data[pre_o:pre_o + NvsEntry.getEntrySize()*4]}]);
+		setStatus(MSG_PATCH_SAVED.format(ofile))
+	elif choice == '4':
+		ofile = out_file+'_patch_D.bin'
+		new_entries = bytearray()
+		prev_c = False
+		for i in range(len(entries)):
+			record = NvsEntry(entries[i])
+			cur_c = record.getCounter()
+			if prev_c and cur_c != prev_c+1:
+				cur_c = prev_c+1
+				record.setCounter(cur_c)
+			prev_c = cur_c
+			new_entries += record.entry
+		savePatchData(ofile, data, [{'o':base,'d':new_entries}]);
+		setStatus(MSG_PATCH_SAVED.format(ofile))
+	else:
+		setStatus(MSG_ERROR_CHOICE)
+	
+	screenAutoPatchSNVS(file)
+
 
 
 def screenManualPatchSNVS(file):
@@ -335,6 +450,7 @@ def screenManualPatchSNVS(file):
 			setStatus(MSG_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(offset,offset + length))
 		else:
 			setStatus(MSG_PATCH_CANCELED)
+
 
 
 def showSysconInfo(file):
