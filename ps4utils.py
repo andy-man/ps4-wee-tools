@@ -8,6 +8,8 @@ STR_UNKNOWN = '- Unknown -'
 
 NOR_DUMP_SIZE = 0x2000000
 NOR_BACKUP_OFFSET = 0x3000
+NOR_MBR_SIZE = 0x1000
+NOR_BLOCK_SIZE = 0x200
 
 PS4_REGIONS = {
 	'00':'Japan',
@@ -46,11 +48,34 @@ SWITCH_BLOBS = [
 
 BOOT_MODES = {b'\xFE':'Development', b'\xFB':'Assist', b'\xFF':'Release'}
 
+# {'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
+NOR_PARTITIONS = [
+	{"o": 0x00000000,	"l": 0x1000,	"t":"header",		"n":"s0_head"},
+	{"o": 0x00001000,	"l": 0x1000,	"t":"active_slot",	"n":"s0_act_slot"},
+	{"o": 0x00002000,	"l": 0x1000,	"t":"MBR1",			"n":"s0_mbr1"},
+	{"o": 0x00003000,	"l": 0x1000,	"t":"MBR2",			"n":"s0_mbr2"},
+	{"o": 0x00004000,	"l": 0x60000,	"t":"emc_ipl_a",	"n":"sflash0s0x32"},
+	{"o": 0x00064000,	"l": 0x60000,	"t":"emc_ipl_b",	"n":"sflash0s0x32b"},
+	{"o": 0x000C4000,	"l": 0x80000,	"t":"eap_kbl",		"n":"sflash0s0x33"},
+	{"o": 0x00144000,	"l": 0x80000,	"t":"wifi",			"n":"sflash0s0x38"},
+	{"o": 0x001C4000,	"l": 0xC000,	"t":"nvs",			"n":"sflash0s0x34"},
+	{"o": 0x001D0000,	"l": 0x30000,	"t":"blank",		"n":"sflash0s0x0"},
+	{"o": 0x00200000,	"l": 0x1000,	"t":"header",		"n":"s1_head.crypt"},
+	{"o": 0x00201000,	"l": 0x1000,	"t":"active_slot",	"n":"s1_act_slot.crypt"},
+	{"o": 0x00202000,	"l": 0x1000,	"t":"MBR1",			"n":"s1_mbr1.crypt"},
+	{"o": 0x00203000,	"l": 0x1000,	"t":"MBR2",			"n":"s1_mbr2.crypt"},
+	{"o": 0x00204000,	"l": 0x3E000,	"t":"samu_ipl_a",	"n":"sflash0s1.cryptx2"},
+	{"o": 0x00242000,	"l": 0x3E000,	"t":"samu_ipl_b",	"n":"sflash0s1.cryptx2b"},
+	{"o": 0x00280000,	"l": 0x80000,	"t":"idata",		"n":"sflash0s1.cryptx1"},
+	{"o": 0x00300000,	"l": 0x80000,	"t":"bd_hrl",		"n":"sflash0s1.cryptx39"},
+	{"o": 0x00380000,	"l": 0x40000,	"t":"Virtual_TRM",	"n":"sflash0s1.cryptx6"},
+	{"o": 0x003C0000,	"l": 0xCC0000,	"t":"CoreOS_A",		"n":"sflash0s1.cryptx3"},
+	{"o": 0x01080000,	"l": 0xCC0000,	"t":"CoreOS_B",		"n":"sflash0s1.cryptx3b"},
+	{"o": 0x01D40000,	"l": 0x2C0000,	"t":"blank",		"n":"sflash0s1.cryptx40"},
+]
+
 # 'KEY':{'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
 NOR_AREAS = {
-	
-	'EMC_IPL1':	{'o':0x004000,	'l':0x60000,	't':'b',	'n':'SBL2 1'},
-	'EMC_IPL2':	{'o':0x064000,	'l':0x60000,	't':'b',	'n':'SBL2 2'},
 	
 	'MAC':		{'o':0x1C4021,	'l':6,			't':'b',	'n':'MAC Address'},
 	'MB_SN':	{'o':0x1C8000,	'l':16,			't':'s',	'n':'Motherboard Serial'},
@@ -87,8 +112,23 @@ NOR_AREAS = {
 	'MANU':		{'o':0x1CBC00,	'l':32,			't':'b',	'n':'MANU mode'},			# Enabled(0*32), Disabled(FF*32)
 	
 	'CORE_SWCH':{'o':0x201000,	'l':16,			't':'b',	'n':'Slot switch hack'},
-	'SAMU_SL1':	{'o':0x204000,	'l':0,			't':'b',	'n':'slot 1 loader'},
-	'SAMU_SL2':	{'o':0x242000,	'l':0,			't':'b',	'n':'slot 2 loader'},
+}
+
+PARTITIONS_TYPES = {
+	0:"empty",
+	1:"idstorage",
+	2:"sam_ipl",
+	3:"core_os",
+	6:"bd_hrl",
+	13:"emc_ipl",
+	14:"eap_kbl",
+	32:"emc_ipl",
+	33:"eap_kbl",
+	34:"nvs",
+	38:"wifi",
+	39:"vtrm",
+	40:"empty",
+	41:"C0050100",
 }
 
 # Functions ===============================================
@@ -114,7 +154,7 @@ def getSlotSwitchInfo(file):
 			return SWITCH_TYPES[SWITCH_BLOBS[i]['t']]+' [#'+str(i+1)+']'
 	return SWITCH_TYPES[0]+' '+getHex(bytes(pattern),'')
 
-# NOR data utils
+# NOR Areas data utils
 
 def getNorAreaName(key):
 	if key in NOR_AREAS:
@@ -192,6 +232,36 @@ def checkSysconData(file, key):
 		return False
 
 
+
+def getLast_080B_Index(entries):
+	length = len(entries)
+	if length < 4:
+		return -1
+	for i in range(length):
+		if entries[length-4-i][1] != SC_UPD_TYPES[0]:
+			continue
+		if entries[length-3-i][1] != SC_UPD_TYPES[1]:
+			continue
+		if entries[length-2-i][1] != SC_UPD_TYPES[2]:
+			continue
+		if entries[length-1-i][1] != SC_UPD_TYPES[3]:
+			continue
+		return length-i-4
+	return -1
+
+
+
+def isSysconPatchable(records):
+	type = NvsEntry(records[-1]).getIndex()
+	if type in SC_UPD_TYPES:
+		return 1
+	if type in SC_PRE1_TYPE:
+		return 0
+	if type in SC_PRE2_TYPE:
+		return 0
+	return 2
+
+# NVS Parser ==============================================
 
 class NvsConfig:
 	
@@ -369,6 +439,8 @@ class NVStorage:
 		entry = NvsEntry(self.getVolumeEntry(volume,0))
 		return entry.getCounter()
 
+
+
 SNVS_CONFIG = NvsConfig({ 
 	"offset":	SC_AREAS['SNVS']['o'],
 	"header":	{ "length":SYSCON_BLOCK_SIZE, "count":2 }, 
@@ -454,33 +526,6 @@ def rawToClock(raw):
 def clockToRaw(frq):
 	return (frq - 400) // 25 + 0x10
 
-
-def getLast_080B_Index(entries):
-	length = len(entries)
-	if length < 4:
-		return -1
-	for i in range(length):
-		if entries[length-4-i][1] != SC_UPD_TYPES[0]:
-			continue
-		if entries[length-3-i][1] != SC_UPD_TYPES[1]:
-			continue
-		if entries[length-2-i][1] != SC_UPD_TYPES[2]:
-			continue
-		if entries[length-1-i][1] != SC_UPD_TYPES[3]:
-			continue
-		return length-i-4
-	return -1
-
-
-def isSysconPatchable(records):
-	type = NvsEntry(records[-1]).getIndex()
-	if type in SC_UPD_TYPES:
-		return 1
-	if type in SC_PRE1_TYPE:
-		return 0
-	if type in SC_PRE2_TYPE:
-		return 0
-	return 2
 
 
 def savePatchData(file, data, patch = False):

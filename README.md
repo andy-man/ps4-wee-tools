@@ -27,7 +27,11 @@ NOR tool
 * Memory clock editing (GDDR5)
 * SAMU boot flag edit
 * Downgrade by slot switch
-* Entropy stats
+* Additional tools
+  * Extract NOR's partitions
+  * Build dump from extracted files
+  * Get HDD EAP keys [keys.bin]
+  * Entropy stats
 
 Syscon tool
 * Syscon check
@@ -42,8 +46,9 @@ Don't use if you don't understant what is it for!
 
 This wouldn't be possible without work of these folks: 
 * fail0verflow
-* BwE
+* zecoxao
 * Darknesmonk
+* BwE
 * pearlxcore
 
 And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
@@ -60,6 +65,12 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.7
+* Extract NOR's partitions
+* Build dump from extracted files
+* Get HDD EAP keys [keys.bin]
+* File selection screen fix
 
 ### v0.6
 * Now with color highlighting

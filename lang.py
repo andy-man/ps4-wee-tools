@@ -69,10 +69,11 @@ DIVIDER = Clr.fg.yellow+'_'*LINE_WIDTH+Clr.reset+'\n'
 DIVIDER_DASH = Clr.fg.yellow+'-'*LINE_WIDTH+Clr.reset+'\n'
 DIVIDER_BOLD = '='*LINE_WIDTH+'\n'
 
-TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.6 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
+TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.7 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
 
 TAB_FILE_LIST = getTab('Files list')
 TAB_NOR_INFO = getTab('NOR dump info')
+TAB_ADDITIONAL = getTab('Additional tools')
 TAB_SYSCON_INFO = getTab('Syscon dump info')
 TAB_COMPARE = getTab('Compare')
 TAB_HELP = getTab('Help')
@@ -86,6 +87,16 @@ TAB_APATCH_SVNS = getTab('SNVS auto patching')
 TAB_MPATCH_SVNS = getTab('SNVS manual patcher')
 TAB_ENTROPY = getTab('Entropy statistics')
 TAB_NOR_FLAGS = getTab('NOR flags')
+TAB_NOR_EXTRACT = getTab('NOR extractor')
+TAB_NOR_BUILD = getTab('NOR builder')
+TAB_HDD_KEY = getTab('HDD eap key')
+
+MENU_ADDTIONAL = [
+	'Extract NOR\'s partitions',
+	'Build dump from extracted files',
+	'Get HDD EAP keys [keys.bin]',
+	'Entropy stats',
+]
 
 MENU_NOR_ACTIONS = [
 	'Select another file',
@@ -93,7 +104,7 @@ MENU_NOR_ACTIONS = [
 	'Memory clocking (GDDR5)',
 	'SAMU boot flag',
 	'Downgrade - CoreOS slot switching',
-	'Entropy check',
+	'Additional tools',
 	'Exit'
 ]
 
@@ -113,15 +124,27 @@ MENU_PATCHES = [
 	'Method D - fix counters (f.e. after method C)',
 ]
 
+MSG_NO_FOLDER = ' Folder {} doesn\'t exists'
+MSG_EXTRACTING = ' Extracting sflash0 to {} folder'
+MSG_FILES_CHECK = ' Checking files'
+MSG_BUILDING = ' Building file {}'
+
+MSG_DONE = Clr.fg.yellow+' All done'+Clr.reset
 MSG_NO_INFO = '- No info -'
 MSG_OFF = 'Off'
 MSG_ON = 'On'
+
 MSG_WAIT = ' Please wait...'
 MSG_YES = 'Yes'
 MSG_NO = 'No'
 MSG_PROBABLY = 'Probably'
 MSG_NOT_SURE = 'not sure'
 MSG_SET_TO = ' {} was set to [{}]'
+
+MSG_NOT_FOUND = Clr.fg.red+'not found'+Clr.reset
+MSG_BAD_SIZE = Clr.fg.orange+'bad size'+Clr.reset
+MSG_OK = Clr.fg.green+'OK'+Clr.reset
+MSG_ABORT = Clr.fg.red+' Action was aborted'+Clr.reset
 
 MSG_NIY = ' Function is not implemented yet'
 MSG_CLEAN_FLAGS = ' Clean all system flags'
@@ -157,6 +180,7 @@ MSG_OUT_OF_RANGE	= ' Value is out of range!'
 MSG_FILES_MATCH		= ' Files are equal'
 MSG_FILES_MISMATCH	= ' Files mismatch'
 
+MSG_USE_NEWBLOBS = ' Use new key blobs? [y] '
 MSG_CONFIRM = DIVIDER + ' Input [y] to continue: '
 MSG_CURRENT = ' Current: '
 MSG_GO_BACK = ' Go back'
@@ -185,8 +209,10 @@ MSG_PATCHES = getTab('Warning')+\
 MSG_DOWNGRADE = getTab('Warning')+\
 '\n'+Clr.fg.orange+\
 ' Dangerous operation! \n'\
+' Slot switching is used for FW revert (downgrade).\n'+\
+' It also fixes "loadbios" error.\n'\
 ' Make sure you have backup of stock NOR dump.\n'\
-' Syscon patching required - otherwise you\'ll get "loadbios" error.\n'\
+' Syscon patching required! Otherwise you\'ll get "loadbios" error.\n'\
 ' Console will not boot normally.\n'+Clr.reset
 
 MSG_080B = Clr.fg.cyan+'"08-0B"'+Clr.reset
@@ -201,6 +227,12 @@ MSG_INFO_SC_MPATCH = getTab('Manual patch instructions')+\
 ' To cancel last fw update we need to clean these 4 records (fill 0xFF)\n'\
 ' If there are '+MSG_0C0F+','+MSG_2023+' types after '+MSG_080B+' patch is impossible\n'\
 ' backup slot is already erased, you\'ll got checkUpdVersion error\n'
+
+MSG_INFO_HDD_EAP = getTab('About EAP keys')+\
+'\n'\
+' These keys allows you to explore PS4 HDD files with PC\n'+\
+' You can find additional info by visiting:\n'+\
+' '+Clr.underline+Clr.fg.cyan+'https://www.psdevwiki.com/ps4/Mounting_HDD_in_Linux'+Clr.reset
 
 MSG_HELP = getTab('Help')+\
 '\n'\

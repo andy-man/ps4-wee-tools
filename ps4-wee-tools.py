@@ -2,6 +2,7 @@ import os, sys
 
 from lang import *
 from ps4utils import *
+from ps4hddeap import getHddEapKey
 
 #==============================================================
 # Nor Tools
@@ -245,11 +246,137 @@ def screenNorTools(file):
 	elif choice == '4':
 		screenDowngrade(file)
 	elif choice == '5':
-		screenEntropy(file)
+		screenAdditionalTools(file)
 	elif choice == '6':
 	    exit(1)
 	
 	screenNorTools(file)
+
+
+
+def screenAdditionalTools(file):
+	os.system('cls')
+	print(TITLE+TAB_ADDITIONAL)
+	
+	with open(file, 'rb') as f:
+		sn = getNorData(f, 'SN').decode('utf-8','ignore')
+	
+	folder = os.path.dirname(file) + os.sep + sn
+	
+	getMenu(MENU_ADDTIONAL,1)
+	
+	showStatus()
+	
+	choice = input(MSG_CHOICE)
+	
+	if choice == '':
+		return
+	elif choice == '1':
+		screenExtractNorDump(file)
+	elif choice == '2':
+		screenBuildNorDump(folder)
+	elif choice == '3':
+		screenHddKey(file)
+	elif choice == '4':
+		screenEntropy(file)
+	
+	screenAdditionalTools(file)
+
+
+
+def screenHddKey(file):
+	os.system('cls')
+	print(TITLE+MSG_INFO_HDD_EAP+'\n')
+	
+	mode = input(MSG_USE_NEWBLOBS)
+	
+	print(TAB_HDD_KEY)
+	getHddEapKey(file, True if mode == 'y' else False)
+	
+	input(MSG_BACK)
+
+
+
+def screenExtractNorDump(file):
+	os.system('cls')
+	print(TITLE+TAB_NOR_EXTRACT)
+	
+	with open(file, 'rb') as f:
+		sn = getNorData(f, 'SN').decode('utf-8','ignore')
+		folder = os.path.dirname(file) + os.sep + sn + os.sep
+		
+		if not os.path.exists(folder):
+			os.makedirs(folder)
+		
+		print(MSG_EXTRACTING.format(sn)+'\n')
+		
+		for i in range(len(NOR_PARTITIONS)):
+			p = NOR_PARTITIONS[i]
+			print(' {:2d}: {:16s} > {}'.format(i, p['t'], p['n']))
+			
+			with open(folder + p['n'],'wb') as out:
+				out.write(getData(f, p['o'], p['l']))
+	
+	print('\n'+MSG_DONE)
+	
+	input(MSG_BACK)
+
+
+
+def screenBuildNorDump(folder):
+	os.system('cls')
+	print(TITLE+TAB_NOR_BUILD)
+	
+	if not os.path.exists(folder):
+		print(MSG_NO_FOLDER.format(folder)+'\n\n'+MSG_ABORT)
+		input(MSG_BACK)
+		return
+	
+	print(MSG_FILES_CHECK.format(folder)+'\n')
+	
+	found = 0
+	
+	for i in range(len(NOR_PARTITIONS)):
+		p = NOR_PARTITIONS[i]
+		status = MSG_OK
+		
+		file = folder+os.sep+p['n']
+		if not os.path.exists(file):
+			status = MSG_NOT_FOUND
+		elif os.stat(file).st_size != p['l']:
+			status = MSG_BAD_SIZE
+		else:
+			found += 1
+		
+		print(' {:2d}: {:20s} - {}'.format(i, p['n'], status))
+	
+	print()
+	
+	if found == len(NOR_PARTITIONS):
+		
+		sn = '0'*17
+		with open(folder+os.sep+NOR_PARTITIONS[8]['n']) as nvs:
+			nvs.seek(0x4030)
+			sn = nvs.read(17)
+		
+		fname = os.path.dirname(folder) + os.sep + sn + '.bin'
+		
+		print(MSG_BUILDING.format(fname))
+		
+		out = open(fname,"wb")
+		
+		for i in range(len(NOR_PARTITIONS)):
+			file = folder+os.sep+NOR_PARTITIONS[i]['n']
+			with open(file, 'rb') as f:
+				out.write(f.read())
+		
+		out.close()
+		
+		print('\n'+MSG_DONE)
+	else:
+		print(MSG_ABORT)
+	
+	input(MSG_BACK)
 
 
 
@@ -260,9 +387,6 @@ def showNorInfo(file = '-'):
 	with open(file, 'rb') as f:
 		
 		sku = getNorData(f, 'SKU').decode('utf-8','ignore')
-		
-		SBL2_1 = getNorData(f, 'EMC_IPL1')
-		SBL2_2 = getNorData(f, 'EMC_IPL2')
 		
 		old_fw = getNorData(f, 'FW_V')
 		fw = getNorData(f, 'FW_VER') if old_fw[0] == 0xFF else old_fw
@@ -283,7 +407,7 @@ def showNorInfo(file = '-'):
 			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
 			'MAC'			: getHex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
-			'FW'			: '{:X}.{:02X} '.format(fw[1], fw[0]) + ('EQ' if SBL2_1 == SBL2_2 else 'DIFF'),
+			'FW'			: '{:X}.{:02X} '.format(fw[1], fw[0]),
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(sb,sb),
 			'UART'			: (MSG_ON if getNorData(f, 'UART')[0] == 1 else MSG_OFF),
@@ -317,7 +441,7 @@ def toggleDebug(file):
 def printSnvsEntries(base,entries):
 	
 	for i,v in enumerate(entries):
-		color = ' '
+		color = ''
 		if v[1] in SC_UPD_TYPES:
 			color = Clr.fg.cyan
 		elif v[1] in SC_PRE1_TYPE:
@@ -510,6 +634,10 @@ def showSysconInfo(file):
 #==============================================================
 
 def launchTool(fname):
+	
+	if os.path.isdir(fname):
+		return screenBuildNorDump(fname)
+	
 	f_size = os.stat(fname).st_size
 	
 	if f_size == NOR_DUMP_SIZE:
@@ -524,7 +652,7 @@ def launchTool(fname):
 
 def screenFileSelect(fname = ''):
 	
-	if len(fname) and os.path.isfile(fname):
+	if len(fname) and os.path.exists(fname):
 		return launchTool(fname)
 	
 	os.system('cls')
@@ -541,18 +669,16 @@ def screenFileSelect(fname = ''):
 	
 	showStatus()
 	
-	file = ''
-	while not file:
-	    try:
-	        choice = int(input(MSG_CHOICE))
-	        if 1 <= choice <= len(files):
-	            file = files[choice - 1]
-	        else:
-	            print(MSG_ERROR_CHOICE)
-	    except ValueError:
-	        print(MSG_ERROR_INPUT)
+	try:
+		choice = int(input(MSG_CHOICE))
+		if 1 <= choice <= len(files):
+			launchTool(files[choice - 1])
+		else:
+			setStatus(MSG_ERROR_CHOICE)
+	except:
+		setStatus(MSG_ERROR_INPUT)
 	
-	launchTool(file)
+	screenFileSelect()
 
 
 
