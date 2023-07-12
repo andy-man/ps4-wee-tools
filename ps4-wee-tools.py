@@ -609,6 +609,7 @@ def showSysconInfo(file):
 		magic = checkSysconData(f, 'MAGIC_1') and checkSysconData(f, 'MAGIC_2') and checkSysconData(f, 'MAGIC_3')
 		debug = getSysconData(f, 'DEBUG')[0]
 		debug = MSG_ON if debug == 0x84 or debug == 0x85 else MSG_OFF
+		ver = getSysconData(f, 'VERSION')
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
 		entries = SNVS.getLastDataEntries()
 		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}]'.format(
@@ -622,6 +623,7 @@ def showSysconInfo(file):
 			'MD5'			: getFileMD5(file),
 			'Magic'			: ('True' if magic else 'False'),
 			'Debug'			: debug,
+			'Version'		: '{:X}.{:X}'.format(ver[0],ver[2]),
 			'SNVS'			: snvs_info,
 			'Entries'		: MSG_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
 			'Patchable'		: MSG_NO if isSysconPatchable(entries) == 0 else MSG_PROBABLY

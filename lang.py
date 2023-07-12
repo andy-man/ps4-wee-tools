@@ -1,40 +1,48 @@
+import sys
+
 LINE_WIDTH = 70
 
 # Helping UI stuff
 
+use_clr = True
+if sys.platform[:3] == 'win' and sys.getwindowsversion().major <= 10:
+	# win terminal doesn't support colors before win 10
+	use_clr = False
+
 class Clr:
-    reset			='\033[0m'
-    bold			='\033[01m'
-    disable			='\033[02m'
-    underline		='\033[04m'
-    reverse			='\033[07m'
-    invisible		='\033[08m'
-    strike			='\033[09m'
-    class fg:
-        black		='\033[30m'
-        red			='\033[31m'
-        green		='\033[32m'
-        orange		='\033[33m'
-        blue		='\033[34m'
-        purple		='\033[35m'
-        cyan		='\033[36m'
-        l_grey		='\033[37m'
-        d_grey		='\033[90m'
-        l_red		='\033[91m'
-        l_green		='\033[92m'
-        yellow		='\033[93m'
-        l_blue		='\033[94m'
-        pink		='\033[95m'
-        l_cyan		='\033[96m'
-    class bg:
-        black		='\033[40m'
-        red			='\033[41m'
-        green		='\033[42m'
-        orange		='\033[43m'
-        blue		='\033[44m'
-        purple		='\033[45m'
-        cyan		='\033[46m'
-        l_grey		='\033[47m'
+	reset			='\033[0m'	if use_clr else ''
+	bold			='\033[01m'	if use_clr else ''
+	disable			='\033[02m'	if use_clr else ''
+	underline		='\033[04m'	if use_clr else ''
+	reverse			='\033[07m'	if use_clr else ''
+	invisible		='\033[08m'	if use_clr else ''
+	strike			='\033[09m'	if use_clr else ''
+	class fg:
+		black		='\033[30m'	if use_clr else ''
+		red			='\033[31m'	if use_clr else ''
+		green		='\033[32m'	if use_clr else ''
+		orange		='\033[33m'	if use_clr else ''
+		blue		='\033[34m'	if use_clr else ''
+		purple		='\033[35m'	if use_clr else ''
+		cyan		='\033[36m'	if use_clr else ''
+		l_grey		='\033[37m'	if use_clr else ''
+		d_grey		='\033[90m'	if use_clr else ''
+		l_red		='\033[91m'	if use_clr else ''
+		l_green		='\033[92m'	if use_clr else ''
+		yellow		='\033[93m'	if use_clr else ''
+		l_blue		='\033[94m'	if use_clr else ''
+		pink		='\033[95m'	if use_clr else ''
+		l_cyan		='\033[96m'	if use_clr else ''
+	class bg:
+		black		='\033[40m'	if use_clr else ''
+		red			='\033[41m'	if use_clr else ''
+		green		='\033[42m'	if use_clr else ''
+		orange		='\033[43m'	if use_clr else ''
+		blue		='\033[44m'	if use_clr else ''
+		purple		='\033[45m'	if use_clr else ''
+		cyan		='\033[46m'	if use_clr else ''
+		l_grey		='\033[47m'	if use_clr else ''
+
 
 
 def getTab(str):
