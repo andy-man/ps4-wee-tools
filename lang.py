@@ -173,6 +173,7 @@ MSG_SAMU_INPUT = DIVIDER + ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
 
 MSG_INCORRECT_SIZE	= ' {} - incorrect dump size!'
 MSG_FILE_NOT_EXISTS	= ' File {} doesn\'t exist!'
+MSG_SAVED_TO		= ' Saved to {}'
 MSG_ERROR_INPUT		= ' Incorrect input'
 MSG_ERROR_DEF_VAL	= ' Setting default values'
 MSG_ERROR_CHOICE	= ' Invalid choice'
@@ -211,7 +212,7 @@ MSG_DOWNGRADE = getTab('Warning')+\
 ' Dangerous operation! \n'\
 ' Slot switching is used for FW revert (downgrade).\n'+\
 ' It also fixes "loadbios" error.\n'\
-' Make sure you have backup of stock NOR dump.\n'\
+' Make sure you have backup of stock NOR dump and SYSCON.\n'\
 ' Syscon patching required! Otherwise you\'ll get "loadbios" error.\n'\
 ' Console will not boot normally.\n'+Clr.reset
 

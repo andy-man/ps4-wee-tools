@@ -316,6 +316,8 @@ def screenExtractNorDump(file):
 			
 			with open(folder + p['n'],'wb') as out:
 				out.write(getData(f, p['o'], p['l']))
+		
+		print('\n'+MSG_SAVED_TO.format(folder))
 	
 	print('\n'+MSG_DONE)
 	
@@ -672,7 +674,7 @@ def screenFileSelect(fname = ''):
 	try:
 		choice = int(input(MSG_CHOICE))
 		if 1 <= choice <= len(files):
-			launchTool(files[choice - 1])
+			launchTool(os.getcwd() + os.sep + files[choice - 1])
 		else:
 			setStatus(MSG_ERROR_CHOICE)
 	except:
