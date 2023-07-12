@@ -87,7 +87,7 @@ NOR_AREAS = {
 	'MEM_BGM':	{'o':0x1C9003,	'l':1,			't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
 	'SLOW_HDD':	{'o':0x1C9005,	'l':1,			't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
 	'SAFE_BOOT':{'o':0x1C9020,	'l':1,			't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
-	'FW_EXP':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'FW in backup slot?'},
+	'FW_EXP':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'Initial FW version?'},
 	'FW_VER':	{'o':0x1C906A,	'l':2,			't':'b',	'n':'FW in active slot'},
 	'SAMUBOOT':	{'o':0x1C9323,	'l':1,			't':'b',	'n':'SAMU enc'},	
 	'HDD':		{'o':0x1C9C00,	'l':60,			't':'s',	'n':'HDD'},

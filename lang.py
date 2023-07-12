@@ -5,7 +5,7 @@ LINE_WIDTH = 70
 # Helping UI stuff
 
 use_clr = True
-if sys.platform[:3] == 'win' and sys.getwindowsversion().major <= 10:
+if sys.platform[:3] == 'win' and sys.getwindowsversion().major < 10:
 	# win terminal doesn't support colors before win 10
 	use_clr = False
 
@@ -190,6 +190,7 @@ MSG_FILES_MATCH		= ' Files are equal'
 MSG_FILES_MISMATCH	= ' Files mismatch'
 
 MSG_USE_NEWBLOBS = ' Use new key blobs? [y] '
+MSG_CONFIRM_SEPARATE = ' Save as separate file? [y] '
 MSG_CONFIRM = DIVIDER + ' Input [y] to continue: '
 MSG_CURRENT = ' Current: '
 MSG_GO_BACK = ' Go back'

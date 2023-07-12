@@ -121,8 +121,17 @@ def screenDowngrade(file):
 			setStatus(MSG_ERROR_CHOICE)
 		else:
 			pattern = SWITCH_BLOBS[choice-1]
-			setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
-			setStatus(MSG_DOWNGRADE_UPD + SWITCH_TYPES[pattern['t']] + ' [' + str(choice)+']')
+			
+			c = input('\n'+MSG_CONFIRM_SEPARATE)
+			
+			if c == 'y':
+				ofile = os.path.splitext(file)[0]+'_slot_switch_'+str(choice)+'.bin'
+				f.seek(0,0)
+				savePatchData(ofile, f.read(), [{'o':NOR_AREAS['CORE_SWCH']['o'],'d':bytes(pattern['v'])}]);
+				setStatus(MSG_PATCH_SAVED.format(ofile))
+			else:
+				setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
+				setStatus(MSG_DOWNGRADE_UPD + SWITCH_TYPES[pattern['t']] + ' [' + str(choice)+']')
 	
 	screenDowngrade(file)
 
@@ -391,7 +400,16 @@ def showNorInfo(file = '-'):
 		sku = getNorData(f, 'SKU').decode('utf-8','ignore')
 		
 		old_fw = getNorData(f, 'FW_V')
+		
 		fw = getNorData(f, 'FW_VER') if old_fw[0] == 0xFF else old_fw
+		fw = '{:X}.{:02X} '.format(fw[1], fw[0])
+		ffw = getNorData(f, 'FW_EXP')
+		ffw = '[Factory {:X}.{:02X}] '.format(ffw[1], ffw[0]) if ffw[0] != 0xFF else ''
+		
+		samu_ipl_a = getData(f, NOR_PARTITIONS[14]['o'], NOR_PARTITIONS[14]['l'])
+		samu_ipl_b = getData(f, NOR_PARTITIONS[15]['o'], NOR_PARTITIONS[15]['l'])
+		
+		ipl_eq = 'IPL:EQ' if samu_ipl_a == samu_ipl_b else 'IPL:DIFF'
 		
 		sb = getNorData(f, 'SAMUBOOT')[0]
 		region = getConsoleRegion(f)
@@ -409,7 +427,7 @@ def showNorInfo(file = '-'):
 			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
 			'MAC'			: getHex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
-			'FW'			: '{:X}.{:02X} '.format(fw[1], fw[0]),
+			'FW'			: fw + ffw + ipl_eq,
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(sb,sb),
 			'UART'			: (MSG_ON if getNorData(f, 'UART')[0] == 1 else MSG_OFF),
