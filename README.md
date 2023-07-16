@@ -14,9 +14,6 @@ Was tested with Python 3.8
 
 ## Features
 
-Common
-* Multy files compare
-
 NOR tool
 * PS4 Nor dump info
   * MD5, SKU, Region, SN / Mobo SN, Southbridge
@@ -32,7 +29,7 @@ NOR tool
   * Extract NOR's partitions
   * Build dump from extracted files
   * Get HDD EAP keys [keys.bin]
-  * Entropy stats
+  * Base validation and entropy stats
 
 Syscon tool
 * Syscon check
@@ -40,6 +37,9 @@ Syscon tool
 * Show active SNVS slot
 * Manual SNVS patch
 * Auto SNVS patch (4 modes)
+
+Common
+* Multy files compare
 
 Don't use if you don't understant what is it for!
 
@@ -67,8 +67,13 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
-### v0.7
+### v0.7.5
+* Base validation (header, mbrs, emc, eap, wifi)
 * Southbridge and torus Info
+* Code refactoring
+* Minor bugs fix
+
+### v0.7
 * Extract NOR's partitions
 * Build dump from extracted files
 * Get HDD EAP keys [keys.bin]

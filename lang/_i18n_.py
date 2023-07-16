@@ -59,6 +59,9 @@ STR_2023 = Clr.fg.red+'"20-23"'+Clr.reset
 
 # Common functions
 
+def highlight(str):
+	return Clr.fg.yellow + str + Clr.reset
+
 def warning(str):
 	return Clr.fg.orange + str + Clr.reset
 
@@ -90,7 +93,8 @@ def showStatus():
 
 from lang.en import *
 
-TITLE = DIVIDER_BOLD+' PS4 ~WEE~ TOOLS v0.7 '+('by Andy_maN').rjust(LINE_WIDTH-23)+'\n'+DIVIDER_BOLD
+APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.5 '
+TITLE = DIVIDER_BOLD+APP_NAME+('by Andy_maN').rjust(LINE_WIDTH-len(APP_NAME)-1)+'\n'+DIVIDER_BOLD
 
 # Fill strings
 
@@ -110,6 +114,8 @@ STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH.format(STR_080B, STR_0C0F, STR_2023, STR
 STR_DONE			= Clr.fg.yellow+ STR_DONE + Clr.reset
 STR_NOT_FOUND		= Clr.fg.red + STR_NOT_FOUND + Clr.reset
 STR_BAD_SIZE		= Clr.fg.orange + STR_BAD_SIZE + Clr.reset
+STR_DIFF			= Clr.fg.orange + STR_DIFF + Clr.reset
+STR_FAIL			= Clr.fg.red + STR_FAIL + Clr.reset
 STR_OK				= Clr.fg.green + STR_OK + Clr.reset
 STR_ABORT			= Clr.fg.red + STR_ABORT + Clr.reset
 

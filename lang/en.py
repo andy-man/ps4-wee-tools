@@ -7,7 +7,7 @@ MENU_ADDTIONAL = [
 	'Extract NOR\'s partitions',
 	'Build dump from extracted files',
 	'Get HDD EAP keys [keys.bin]',
-	'Entropy stats',
+	'Base validation and entropy stats',
 ]
 
 MENU_NOR_ACTIONS = [
@@ -50,7 +50,6 @@ STR_SYSFLAGS			= 'System flags'
 STR_LAST_SVNS			= 'Last SNVS entries'
 STR_APATCH_SVNS			= 'SNVS auto patching'
 STR_MPATCH_SVNS			= 'SNVS manual patcher'
-STR_ENTROPY				= 'Entropy statistics'
 STR_NOR_VALIDATOR		= 'NOR validator'
 STR_NOR_FLAGS			= 'NOR flags'
 STR_NOR_EXTRACT			= 'NOR extractor'
@@ -78,9 +77,11 @@ STR_PROBABLY			= 'Probably'
 STR_NOT_SURE			= 'not sure'
 STR_SET_TO				= ' {} was set to [{}]'
 
+STR_DIFF				= 'Different'
 STR_NOT_FOUND			= 'not found'
 STR_BAD_SIZE			= 'bad size'
 STR_OK					= 'OK'
+STR_FAIL				= 'Fail'
 STR_ABORT				= ' Action was aborted'
 
 STR_NIY					= ' Function is not implemented yet'
@@ -107,6 +108,12 @@ STR_CHOICE				= ' Make choice: '
 STR_BACK				= ' Press [ENTER] to go back'
 STR_MEMCLOCK_INPUT		= ' Setup frequency [400 - 2000] / [0 set default (0xFF)] MHz '
 STR_SAMU_INPUT			= ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
+
+STR_PARTITIONS_CHECK	= ' Checking partitions'
+STR_ENTROPY				= ' Entropy statistics'
+STR_MAGICS_CHECK		= ' Checking magics'
+STR_IS_PART_VALID		= '[{}] {} FW {}'
+STR_FW_VERSION			= ' FW version: {}'
 
 STR_COMPARE_RESULT		= ' {} | Result: {}'
 STR_INCORRECT_SIZE		= ' {} - incorrect dump size!'
@@ -167,10 +174,13 @@ STR_INFO_HDD_EAP = '\n'\
 ' You can find additional info by visiting:\n '\
 
 STR_APP_HELP = '\n'\
-' Usage: ps4-wee-tools <file1> <file2> ... \n'\
-'  - One <file>: auto detects file type and loads appropriate tool\n'\
-'  - Multi <files>: compare mode (with MD5 info)\n'\
-'  - help: show this help screen\n'\
+' Usage: ps4-wee-tools [params] \n'\
+'\n'\
+' Params: \n\n'\
+'  <file> - auto detects file type and loads appropriate tool\n'\
+'  <folder> - build dump from files from supplied folder\n'\
+'  <file1> <file2> ... - compare files (with MD5 info)\n'\
+'  -help - show this help screen\n'\
 '\n'\
 ' File selection works only for *.bin files within app\'s directory\n'\
 '\n'\

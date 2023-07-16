@@ -87,7 +87,7 @@ NOR_AREAS = {
 	'MEM_BGM':	{'o':0x1C9003,	'l':1,			't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
 	'SLOW_HDD':	{'o':0x1C9005,	'l':1,			't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
 	'SAFE_BOOT':{'o':0x1C9020,	'l':1,			't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
-	'FW_EXP':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'Initial FW version?'},
+	'FW_MIN':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'Minimal FW version?'},
 	'FW_VER':	{'o':0x1C906A,	'l':2,			't':'b',	'n':'FW in active slot'},
 	'SAMUBOOT':	{'o':0x1C9323,	'l':1,			't':'b',	'n':'SAMU enc'},	
 	'HDD':		{'o':0x1C9C00,	'l':60,			't':'s',	'n':'HDD'},
@@ -124,6 +124,12 @@ TORUS_VERS = {
 	0x03: 'Version 1',
 	0x22: 'Version 2',
 	0x30: 'Version 3',
+}
+
+MAGICS = {
+	"s0_header"			: {"o": 0x00,	"v":b'SONY COMPUTER ENTERTAINMENT INC.'},
+	"s0_MBR1"			: {"o": 0x00,	"v":b'Sony Computer Entertainment Inc.'},
+	"s0_MBR2"			: {"o": 0x00,	"v":b'Sony Computer Entertainment Inc.'},
 }
 
 # MBR parser
@@ -206,6 +212,18 @@ def getSlotSwitchInfo(file):
 
 
 
+def getNorFW(f):
+	old_fw = getNorData(f, 'FW_V')
+	
+	fw = getNorData(f, 'FW_VER') if old_fw[0] == 0xFF else old_fw
+	fw = '{:X}.{:02X}'.format(fw[1], fw[0])
+	
+	mfw = getNorData(f, 'FW_MIN')
+	mfw = '{:X}.{:02X}'.format(mfw[1], mfw[0]) if mfw[0] != 0xFF else ''
+	
+	return {'c':fw, 'min':mfw}
+
+
 def getPartitionName(code):
 	return PARTITIONS_TYPES[code] if code in PARTITIONS_TYPES else 'Unk_'+str(code)
 
@@ -214,6 +232,27 @@ def getNorPartition(f, name):
 	if not name in NOR_PARTITIONS:
 		return ''
 	return getData(f, NOR_PARTITIONS[name]['o'], NOR_PARTITIONS[name]['l'])
+
+
+
+def getNorPartitionMD5(f, name):
+	data = getNorPartition(f, name)
+	if len(data) > 0:
+		return hashlib.md5(data).hexdigest()
+	return ''
+
+
+
+def checkNorPartMagic(f, name):
+	data = getNorPartition(f, name)
+	if len(data) <= 0:
+		return False
+	if name in MAGICS:
+		offset = MAGICS[name]['o']
+		length = offset + len(MAGICS[name]['v'])
+		if data[offset:length] == MAGICS[name]['v']:
+			return True
+	return False
 
 
 
@@ -234,10 +273,10 @@ def getPartitionsInfo(f):
 		p = mbr.partitions[i]
 		
 		partitions.append({
-			'name': getPartitionName(p.type),
-			'offset': p.start_lba * NOR_BLOCK_SIZE,
-			'size': p.n_sectors * NOR_BLOCK_SIZE,
-			'type': p.type,
+			'name'		: getPartitionName(p.type),
+			'offset'	: p.start_lba * NOR_BLOCK_SIZE,
+			'size'		: p.n_sectors * NOR_BLOCK_SIZE,
+			'type'		: p.type,
 		})
 	
 	return {'active':active, 'base':base, 'partitions':partitions}
@@ -245,7 +284,7 @@ def getPartitionsInfo(f):
 
 
 def getTorusVersion(f):
-	torus_md5 = hashlib.md5(getNorPartition(f, 's0_wifi')).hexdigest()
+	torus_md5 = getNorPartitionMD5(f, 's0_wifi')
 	torus = Data.TORUS_FW_MD5[torus_md5]['t'] if torus_md5 in Data.TORUS_FW_MD5 else 0
 	
 	return TORUS_VERS[torus] if torus in TORUS_VERS else ''
@@ -253,8 +292,8 @@ def getTorusVersion(f):
 
 def getSouthBridge(f):
 	
-	emc_md5 = hashlib.md5(getNorPartition(f, 's0_emc_ipl_a')).hexdigest()
-	eap_md5 = hashlib.md5(getNorPartition(f, 's0_eap_kbl')).hexdigest()
+	emc_md5 = getNorPartitionMD5(f, 's0_emc_ipl_a')
+	eap_md5 = getNorPartitionMD5(f, 's0_eap_kbl')
 	
 	emc = Data.EMC_IPL_MD5[emc_md5]['t'] if emc_md5 in Data.EMC_IPL_MD5 else 0
 	eap = Data.EAP_KBL_MD5[eap_md5]['t'] if eap_md5 in Data.EAP_KBL_MD5 else 0

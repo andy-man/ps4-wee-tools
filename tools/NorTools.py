@@ -6,7 +6,7 @@ import os
 from lang._i18n_ import *
 from utils.nor import *
 from utils.hdd_eap import getHddEapKey
-
+import data.data as Data
 
 
 def screenSysFlags(file):
@@ -209,19 +209,61 @@ def toggleFlag(file, patch):
 
 def screenValidate(file):
 	os.system('cls')
-	print(TITLE + getTab(STR_NOR_VALIDATOR) + '\n' + STR_WAIT)
+	print(TITLE + getTab(STR_NOR_VALIDATOR))
 	
+	
+	with open(file,'rb') as f:
+		
+		fw = getNorFW(f)['c']
+		
+		magics = {
+			'header'	: STR_OK if checkNorPartMagic(f, 's0_header') else STR_DIFF,
+			'MBR1'		: STR_OK if checkNorPartMagic(f, 's0_MBR1') else STR_DIFF,
+			'MBR2'		: STR_OK if checkNorPartMagic(f, 's0_MBR2') else STR_DIFF,
+		}
+		
+		parts_info = {
+			'emc_ipl_a'	: {'md5':getNorPartitionMD5(f, 's0_emc_ipl_a'), 'var':Data.EMC_IPL_MD5},
+			'emc_ipl_b'	: {'md5':getNorPartitionMD5(f, 's0_emc_ipl_b'), 'var':Data.EMC_IPL_MD5},
+			'eap_kbl'	: {'md5':getNorPartitionMD5(f, 's0_eap_kbl'), 'var':Data.EAP_KBL_MD5},
+			'wifi'		: {'md5':getNorPartitionMD5(f, 's0_wifi'), 'var':Data.TORUS_FW_MD5},
+		}
+	
+	print(STR_FW_VERSION.format(fw)+'\n')
+	
+	print(highlight(STR_MAGICS_CHECK)+'\n')
+	showTable(magics)
+	print()
+	
+	print(highlight(STR_PARTITIONS_CHECK)+'\n')
+	
+	for k in parts_info:
+		md5 = parts_info[k]['md5']
+		var = parts_info[k]['var']
+		if md5 in var:
+			if fw in var[md5]['fw']:
+				parts_info[k] = STR_IS_PART_VALID.format(md5, STR_OK, STR_OK)
+			else:
+				parts_info[k] = STR_IS_PART_VALID.format(md5, STR_OK, var[md5]['fw'][0])
+		else:
+			parts_info[k] = STR_IS_PART_VALID.format(md5, STR_FAIL, '-')
+	
+	showTable(parts_info)
+	print()
+	
+	print(highlight(STR_ENTROPY)+'\n')
+	#stats = {'ent':0, 'ff':0, '00':0}
 	stats = entropy(file)
-	
-	os.system('cls')
-	print(TITLE+getTab(STR_ENTROPY))
+	print('\r',end='')
 	
 	info = {
-		'Entropy': '{:.5f}'.format(stats['ent']),
-		'0xFF': '{:.2f}%'.format(stats['ff']*100),
-		'0x00': '{:.2f}%'.format(stats['00']*100),
-		'Other': '{:.2f}%'.format((1 - stats['ff'] - stats['00'])*100),
+		
+		'Entropy'	: '{:.5f}'.format(stats['ent']),
+		'0xFF'		: '{:.2f}%'.format(stats['ff']*100),
+		'0x00'		: '{:.2f}%'.format(stats['00']*100),
+		'Other'		: '{:.2f}%'.format((1 - stats['ff'] - stats['00'])*100),
 	}
+	
 	
 	showTable(info)
 	
@@ -402,12 +444,7 @@ def showNorInfo(file = '-'):
 		
 		sku = getNorData(f, 'SKU').decode('utf-8','ignore')
 		
-		old_fw = getNorData(f, 'FW_V')
-		
-		fw = getNorData(f, 'FW_VER') if old_fw[0] == 0xFF else old_fw
-		fw = '{:X}.{:02X} '.format(fw[1], fw[0])
-		ffw = getNorData(f, 'FW_EXP')
-		ffw = '[min {:X}.{:02X}] '.format(ffw[1], ffw[0]) if ffw[0] != 0xFF else ''
+		fw = getNorFW(f)
 		
 		samu_ipl_a = getNorPartition(f, 's1_samu_ipl_a')
 		samu_ipl_b = getNorPartition(f, 's1_samu_ipl_b')
@@ -435,7 +472,7 @@ def showNorInfo(file = '-'):
 			'Torus (WiFi)'	: torus if len(torus) else STR_UNKNOWN,
 			'MAC'			: getHex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
-			'FW'			: fw + ffw + ipl_eq,
+			'FW'			: fw['c'] + (' [min '+fw['min']+']' if fw['min'] else '') + ' ' + ipl_eq,
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(samu,samu),
 			'UART'			: (STR_ON if getNorData(f, 'UART')[0] == 1 else STR_OFF),
