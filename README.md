@@ -19,7 +19,8 @@ Common
 
 NOR tool
 * PS4 Nor dump info
-* FW detection in slots (experemental)
+  * MD5, SKU, Region, SN / Mobo SN, Southbridge
+  * Torus (WiFi), MAC, HDD, FW (current, minimal, slots compare)
 * Flags toggle:
   * boot mode, safe boot, update mode, arcade mode, kiosk mode (idu)
   * registry recovery, manu, button swap, memory budget, slow hdd mode
@@ -44,9 +45,9 @@ Don't use if you don't understant what is it for!
 
 ## Credits
 
-This wouldn't be possible without work of these folks: 
 * fail0verflow
 * zecoxao
+* Al-Azif
 * Darknesmonk
 * BwE
 * pearlxcore
@@ -67,6 +68,7 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 ## Changelog
 
 ### v0.7
+* Southbridge and torus Info
 * Extract NOR's partitions
 * Build dump from extracted files
 * Get HDD EAP keys [keys.bin]
