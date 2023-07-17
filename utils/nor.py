@@ -77,6 +77,8 @@ NOR_PARTITIONS = {
 # 'KEY':{'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
 NOR_AREAS = {
 	
+	'ACT_SLOT':	{'o':0x001000,	'l':1,			't':'b',	'n':'Active slot'},			# 0x00 - A 0x80 - B
+	
 	'MAC':		{'o':0x1C4021,	'l':6,			't':'b',	'n':'MAC Address'},
 	'MB_SN':	{'o':0x1C8000,	'l':16,			't':'s',	'n':'Motherboard Serial'},
 	'SN':		{'o':0x1C8030,	'l':17,			't':'s',	'n':'Console Serial'},

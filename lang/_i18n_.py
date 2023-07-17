@@ -70,6 +70,8 @@ def getTab(str):
 
 def showTable(data, pad=16):
 	for key in data:
+		if data[key] == '':
+			continue
 		print(' {} : {}'.format(key.ljust(pad,' '),data[key]))
 
 def getMenu(menu, start=0):

@@ -215,6 +215,7 @@ def screenValidate(file):
 	with open(file,'rb') as f:
 		
 		fw = getNorFW(f)['c']
+		slot = 'A' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'B'
 		
 		magics = {
 			'header'	: STR_OK if checkNorPartMagic(f, 's0_header') else STR_DIFF,
@@ -229,10 +230,10 @@ def screenValidate(file):
 			'wifi'		: {'md5':getNorPartitionMD5(f, 's0_wifi'), 'var':Data.TORUS_FW_MD5},
 		}
 	
-	print(STR_FW_VERSION.format(fw)+'\n')
+	print(STR_FW_VERSION.format(fw,slot)+'\n')
 	
 	print(highlight(STR_MAGICS_CHECK)+'\n')
-	showTable(magics)
+	showTable(magics,10)
 	print()
 	
 	print(highlight(STR_PARTITIONS_CHECK)+'\n')
@@ -244,11 +245,11 @@ def screenValidate(file):
 			if fw in var[md5]['fw']:
 				parts_info[k] = STR_IS_PART_VALID.format(md5, STR_OK, STR_OK)
 			else:
-				parts_info[k] = STR_IS_PART_VALID.format(md5, STR_OK, var[md5]['fw'][0])
+				parts_info[k] = STR_IS_PART_VALID.format(md5, STR_OK, var[md5]['fw'][0] if len(var[md5]['fw']) == 1 else (var[md5]['fw'][0]+' <-> '+var[md5]['fw'][-1]))
 		else:
 			parts_info[k] = STR_IS_PART_VALID.format(md5, STR_FAIL, '-')
 	
-	showTable(parts_info)
+	showTable(parts_info,10)
 	print()
 	
 	print(highlight(STR_ENTROPY)+'\n')
@@ -265,7 +266,7 @@ def screenValidate(file):
 	}
 	
 	
-	showTable(info)
+	showTable(info,10)
 	
 	input(STR_BACK)
 
@@ -446,10 +447,8 @@ def showNorInfo(file = '-'):
 		
 		fw = getNorFW(f)
 		
-		samu_ipl_a = getNorPartition(f, 's1_samu_ipl_a')
-		samu_ipl_b = getNorPartition(f, 's1_samu_ipl_b')
-		
-		ipl_eq = 'IPL:EQ' if samu_ipl_a == samu_ipl_b else 'IPL:DIFF'
+		active_slot = 'a' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'b'
+		inactive_slot = 'a' if active_slot == 'b' else 'b'
 		
 		southbridge = getSouthBridge(f)
 		torus = getTorusVersion(f)
@@ -472,12 +471,18 @@ def showNorInfo(file = '-'):
 			'Torus (WiFi)'	: torus if len(torus) else STR_UNKNOWN,
 			'MAC'			: getHex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
-			'FW'			: fw['c'] + (' [min '+fw['min']+']' if fw['min'] else '') + ' ' + ipl_eq,
+			'FW (active)'	: fw['c'] + ' ['+active_slot.upper()+']' + (' [min '+fw['min']+']' if fw['min'] else ''),
+			'FW (backup)'	: '',
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(samu,samu),
 			'UART'			: (STR_ON if getNorData(f, 'UART')[0] == 1 else STR_OFF),
 			'Slot switch'	: getSlotSwitchInfo(f)
 		}
+		
+		md5 = getNorPartitionMD5(f, 's0_emc_ipl_'+inactive_slot)
+		if md5 in Data.EMC_IPL_MD5:
+			fw2 = Data.EMC_IPL_MD5[md5]['fw']
+			info['FW (backup)'] = (fw2[0] if len(fw2) == 1 else fw2[0]+' <-> '+fw2[-1])
 	
 	showTable(info)
 	

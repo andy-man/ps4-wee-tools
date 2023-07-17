@@ -113,7 +113,7 @@ STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
 STR_IS_PART_VALID		= '[{}] {} FW {}'
-STR_FW_VERSION			= ' FW version: {}'
+STR_FW_VERSION			= ' FW version {} / Active slot {}'
 
 STR_COMPARE_RESULT		= ' {} | Result: {}'
 STR_INCORRECT_SIZE		= ' {} - incorrect dump size!'

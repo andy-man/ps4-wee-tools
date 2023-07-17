@@ -17,7 +17,7 @@ Was tested with Python 3.8
 NOR tool
 * PS4 Nor dump info
   * MD5, SKU, Region, SN / Mobo SN, Southbridge
-  * Torus (WiFi), MAC, HDD, FW (current, minimal, slots compare)
+  * Torus (WiFi), MAC, HDD, FW (current, minimal), FW2 ver probability
 * Flags toggle:
   * boot mode, safe boot, update mode, arcade mode, kiosk mode (idu)
   * registry recovery, manu, button swap, memory budget, slow hdd mode
@@ -66,6 +66,10 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.7.6
+* FW2 version assumption
+* Validation screen update
 
 ### v0.7.5
 * Base validation (header, mbrs, emc, eap, wifi)
