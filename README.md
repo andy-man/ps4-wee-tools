@@ -40,6 +40,7 @@ Syscon tool
 
 Common
 * Multy files compare
+* Pack / Unpack SLB2 files
 
 Don't use if you don't understant what is it for!
 
@@ -66,6 +67,11 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.7.7
+* SLB2 pack / unpack
+* File selection screen upgrade
+* Preparations for EMC cfw (Aeolia)
 
 ### v0.7.6
 * FW2 version assumption

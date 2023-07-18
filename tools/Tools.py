@@ -6,62 +6,110 @@ import os, sys
 
 from lang._i18n_ import *
 import utils.utils as Utils
+import utils.slb2 as Slb2
 import tools.NorTools as NorTools
 import tools.SysconTools as SysconTools
 
 
-def launchTool(fname):
+
+def launchTool(path):
 	
-	if os.path.isdir(fname):
-		return NorTools.screenBuildNorDump(fname)
+	if not os.path.exists(path):
+		return 0
 	
-	f_size = os.stat(fname).st_size
+	if os.path.isdir(path):
+		if os.path.exists(os.path.join(path, Utils.INFO_FILE_NOR)):
+			return NorTools.screenBuildNorDump(path)
+		elif os.path.exists(os.path.join(path, Utils.INFO_FILE_SLB2)):
+			return screenBuildSLB2(path)
+		else:
+			setStatus(STR_UNK_CONTENT + ' {}'.format(path))
+			return 0
+	
+	f_size = os.stat(path).st_size
+	with open(path,'rb') as f:
+		header = f.read(0x10)
 	
 	if f_size == NorTools.NOR_DUMP_SIZE:
-		return NorTools.screenNorTools(fname)
+		return NorTools.screenNorTools(path)
 	elif f_size == SysconTools.SYSCON_DUMP_SIZE:
-		return SysconTools.screenSysconTools(fname)
+		return SysconTools.screenSysconTools(path)
+	elif header[0:len(Slb2.SLB2_HEADER)] == Slb2.SLB2_HEADER:
+		return screenUnpackSLB2(path)
 	else:
-		setStatus(STR_UNK_FILE_TYPE + ' {}'.format(fname))
-		return screenFileSelect()
+		setStatus(STR_UNK_FILE_TYPE + ' {}'.format(path))
 
 
 
-def screenFileSelect(fname = ''):
-	
-	if len(fname) and os.path.exists(fname):
-		return launchTool(fname)
-	
+def screenFileSelect(path = '', all = False):
 	os.system('cls')
-	print(TITLE + getTab(STR_FILE_LIST))
+	print(TITLE + getTab(STR_FILE_LIST+' '+('[all]' if all else '[bin, pup]')))
 	
-	files = []
-	for f in os.listdir(os.getcwd()):
-		if f.lower().endswith('.bin'):
-			files.append(f)
-			print(' '+str(len(files))+': '+f)
+	path = path if os.path.exists(path) else os.getcwd()
+	path = path if os.path.isdir(path) else os.path.dirname(path)
 	
-	if len(files) == 0:
-		return screenHelp()
+	print(Clr.fg.l_grey+(' %s\n'%path)+Clr.reset)
 	
+	list = [os.path.dirname(path)]
+	print('  0: '+os.sep+'..')
+	
+	dirs = [x for x in os.listdir(path) if os.path.isdir(os.path.join(path, x))]
+	files = [x for x in os.listdir(path) if not os.path.isdir(os.path.join(path, x))]
+	
+	dirs.sort()
+	files.sort()
+	
+	for d in dirs:
+		list.append(os.path.join(path, d))
+		print((' %2d: '+os.sep+'%s'+os.sep)%(len(list)-1,d))
+	
+	for f in files:
+		if all or f.lower().endswith('.bin') or f.lower().endswith('.pup'):
+			list.append(os.path.join(path, f))
+			print(' %2d: %s'%(len(list)-1,f))
+	
+	print(DIVIDER)
+	getMenu(MENU_FILE_SELECTION)
 	showStatus()
 	
-	try:
-		choice = int(input(STR_CHOICE))
-		if 1 <= choice <= len(files):
-			launchTool(os.getcwd() + os.sep + files[choice - 1])
-		else:
-			setStatus(STR_ERROR_CHOICE)
-	except:
-		setStatus(STR_ERROR_INPUT)
+	choice = input(STR_CHOICE)
 	
-	screenFileSelect()
+	if choice == 'a':
+		all = False if all else True
+	elif choice == 'f':
+		NorTools.screenBuildNorDump(path)
+	elif choice == 's':
+		screenBuildSLB2(path)
+	elif choice == 'c':
+		file_list = [os.path.join(path, x) for x in os.listdir(path) if not os.path.isdir(os.path.join(path, x)) and f.lower().endswith('.bin')]
+		file_list.sort()
+		screenCompareFiles(file_list)
+	elif choice == 'e':
+		return quit()
+	elif choice != '':
+		try:
+			ind = int(choice)
+			if ind >= 0 and ind < len(list):
+				path = list[ind]
+				if not os.path.isdir(path):
+					launchTool(path)
+			else:
+				setStatus(STR_ERROR_CHOICE)
+		except Exception as error:
+			setStatus(' %s'%error)
+	
+	screenFileSelect(path, all)
 
 
 
 def screenCompareFiles(list):
 	os.system('cls')
 	print(TITLE + getTab(STR_COMPARE))
+	
+	if len(list) == 0:
+		print(STR_EMPTY_FILE_LIST)
+		input(STR_BACK)
+		return
 	
 	res = True
 	c_md5 = False
@@ -81,6 +129,81 @@ def screenCompareFiles(list):
 	input(STR_BACK)
 	
 	screenFileSelect()
+
+
+
+def screenUnpackSLB2(path):
+	os.system('cls')
+	print(TITLE + getTab(STR_UNPACK_SLB2))
+	
+	with open(path,'rb') as f:
+		data = f.read()
+	
+	fname = os.path.splitext(os.path.basename(path))[0]
+	folder = os.path.join(os.path.dirname(path), fname+'_slb2')	
+	
+	info = Slb2.getGetSlb2Info(data)
+	
+	print(highlight(' Header'))
+	head = showTable(info['header'],16,False)
+	txt_info = 'Header:\n\n' + head + '\n'
+	print(head,end='')
+	
+	if not os.path.isdir(folder):
+		os.makedirs(folder)
+	
+	entries = info['entries']
+	txt_info += 'Entries:\n\n'
+	
+	for key in entries:
+		entry = entries[key]
+		
+		print(highlight('\n Entry %s'%key))
+		e_info = showTable(entry,16,False)
+		txt_info += e_info + '\n'
+		print(e_info,end='')
+		
+		with open(os.path.join(folder, entry['name']),'wb') as out:
+			out.write(data[entry['offset']:entry['offset'] + entry['size']])
+	
+	with open(os.path.join(folder, Utils.INFO_FILE_SLB2),'w') as txt:
+		txt.write(txt_info)
+	
+	print('\n'+STR_SAVED_TO.format(folder))
+	
+	input(STR_BACK)
+
+
+
+def screenBuildSLB2(path):
+	os.system('cls')
+	print(TITLE + getTab(STR_SLB2_BUILDER))
+	
+	name = os.path.basename(path).replace('_slb2','.slb2')
+	file = os.path.join(os.path.dirname(path),name)
+	
+	files = [os.path.join(path,x) for x in os.listdir(path) if os.path.isfile(os.path.join(path, x)) and x != Utils.INFO_FILE_SLB2]
+	data = Slb2.buildSlb2(files)
+	
+	with open(file, 'wb') as out:
+		out.write(data)
+	
+	info = Slb2.getGetSlb2Info(data)
+	
+	print(highlight(' Header'))
+	showTable(info['header'])
+	
+	entries = info['entries']
+	for key in entries:
+		entry = entries[key]
+		
+		print(highlight('\n Entry %s'%key))
+		showTable(entry)
+	
+	
+	print('\n'+STR_SAVED_TO.format(file))
+	
+	input(STR_BACK)
 
 
 

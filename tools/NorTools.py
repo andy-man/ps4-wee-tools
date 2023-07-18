@@ -5,9 +5,10 @@
 import os
 from lang._i18n_ import *
 from utils.nor import *
-from utils.hdd_eap import getHddEapKey
+from utils.hddeap import getHddEapKey
 import data.data as Data
-
+import utils.aeolia as Aeolia
+import tools.Tools as Tools
 
 def screenSysFlags(file):
 	os.system('cls')
@@ -272,39 +273,6 @@ def screenValidate(file):
 
 
 
-def screenNorTools(file):
-	os.system('cls')
-	print(TITLE+getTab(STR_NOR_INFO))
-	
-	if not showNorInfo(file):
-		return screenFileSelect()
-	
-	print(getTab(STR_ACTIONS))
-	getMenu(MENU_NOR_ACTIONS)
-	
-	showStatus()
-	
-	choice = input(STR_CHOICE)
-	
-	if choice == '0':
-	    return screenFileSelect()
-	elif choice == '1':
-	    screenFlagsToggler(file)
-	elif choice == '2':
-	    screenMemClock(file)
-	elif choice == '3':
-	    screenSamuBoot(file)
-	elif choice == '4':
-		screenDowngrade(file)
-	elif choice == '5':
-		screenAdditionalTools(file)
-	elif choice == '6':
-	    exit(1)
-	
-	screenNorTools(file)
-
-
-
 def screenAdditionalTools(file):
 	os.system('cls')
 	print(TITLE+getTab(STR_ADDITIONAL))
@@ -330,8 +298,20 @@ def screenAdditionalTools(file):
 		screenHddKey(file)
 	elif choice == '4':
 		screenValidate(file)
+	elif choice == '5':
+		screenEmcCFW(file)
 	
 	screenAdditionalTools(file)
+
+
+
+def screenEmcCFW(file):
+	os.system('cls')
+	print(TITLE+getTab(STR_EMC_CFW))
+	
+	print(STR_NIY)
+	
+	input(STR_BACK)
 
 
 
@@ -353,11 +333,18 @@ def screenExtractNorDump(file):
 	print(TITLE+getTab(STR_NOR_EXTRACT))
 	
 	with open(file, 'rb') as f:
+		
 		sn = getNorData(f, 'SN').decode('utf-8','ignore')
 		folder = os.path.dirname(file) + os.sep + sn + os.sep
 		
 		if not os.path.exists(folder):
 			os.makedirs(folder)
+		
+		info = ''
+		data = getNorInfo(file)
+		for key in data:
+			info += '{} : {}\n'.format(key.ljust(12,' '),data[key])
+		info += '\n'
 		
 		print(STR_EXTRACTING.format(sn)+'\n')
 		
@@ -366,9 +353,13 @@ def screenExtractNorDump(file):
 			p = NOR_PARTITIONS[k]
 			i += 1
 			print(' {:2d}: {:16s} > {}'.format(i, k, p['n']))
+			info += '{:2d}: {:16s} > {}\n'.format(i, k, p['n'])
 			
 			with open(folder + p['n'],'wb') as out:
 				out.write(getData(f, p['o'], p['l']))
+		
+		with open(folder + INFO_FILE_NOR, 'w') as txt:
+			txt.write(info)
 		
 		print('\n'+STR_SAVED_TO.format(folder))
 	
@@ -416,7 +407,7 @@ def screenBuildNorDump(folder):
 			nvs.seek(0x4030)
 			sn = nvs.read(17)
 		
-		fname = os.path.dirname(folder) + os.sep + sn + '.bin'
+		fname = os.path.join(folder, 'sflash0.bin')
 		
 		print(STR_BUILDING.format(fname))
 		
@@ -437,7 +428,43 @@ def screenBuildNorDump(folder):
 
 
 
-def showNorInfo(file = '-'):
+def screenNorTools(file):
+	os.system('cls')
+	print(TITLE+getTab(STR_NOR_INFO))
+	
+	info = getNorInfo(file)
+	if info:
+		showTable(info)
+	else:
+		return Tools.screenFileSelect(file)
+	
+	print(getTab(STR_ACTIONS))
+	getMenu(MENU_NOR_ACTIONS)
+	
+	showStatus()
+	
+	choice = input(STR_CHOICE)
+	
+	if choice == '0':
+		return Tools.screenFileSelect(file)
+	elif choice == '1':
+	    screenFlagsToggler(file)
+	elif choice == '2':
+	    screenMemClock(file)
+	elif choice == '3':
+	    screenSamuBoot(file)
+	elif choice == '4':
+		screenDowngrade(file)
+	elif choice == '5':
+		screenAdditionalTools(file)
+	elif choice == '6':
+	    quit()
+	
+	screenNorTools(file)
+
+
+
+def getNorInfo(file = '-'):
 	if not checkFileSize(file, NOR_DUMP_SIZE):
 		return False
 	
@@ -476,7 +503,7 @@ def showNorInfo(file = '-'):
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(samu,samu),
 			'UART'			: (STR_ON if getNorData(f, 'UART')[0] == 1 else STR_OFF),
-			'Slot switch'	: getSlotSwitchInfo(f)
+			'Slot switch'	: getSlotSwitchInfo(f),
 		}
 		
 		md5 = getNorPartitionMD5(f, 's0_emc_ipl_'+inactive_slot)
@@ -484,6 +511,4 @@ def showNorInfo(file = '-'):
 			fw2 = Data.EMC_IPL_MD5[md5]['fw']
 			info['FW (backup)'] = (fw2[0] if len(fw2) == 1 else fw2[0]+' <-> '+fw2[-1])
 	
-	showTable(info)
-	
-	return True
+	return info

@@ -68,15 +68,24 @@ def warning(str):
 def getTab(str):
 	return Clr.fg.yellow+'  _'+('_'*len(str))+'_\n'+('_/ '+str+' \_').ljust(LINE_WIDTH, '_')+'\n'+Clr.reset
 
-def showTable(data, pad=16):
+def showTable(data, pad=16, echo = True):
+	table= ''
 	for key in data:
 		if data[key] == '':
 			continue
-		print(' {} : {}'.format(key.ljust(pad,' '),data[key]))
+		table += ' {} : {}\n'.format(('%s'%key).ljust(pad,' '),data[key])
+	if echo:
+		print(table,end='')
+	else:
+		return table
 
 def getMenu(menu, start=0):
-	for n, text in enumerate(menu):
-		print(' '+str(n+start)+': '+text)
+	if type(menu) is dict:
+		for n in menu:
+			print(' %s: %s'%(n,menu[n]))
+	else:
+		for n, text in enumerate(menu):
+			print(' '+str(n+start)+': '+text)
 
 
 STATUS = ''
@@ -95,7 +104,7 @@ def showStatus():
 
 from lang.en import *
 
-APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.5 '
+APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.7 '
 TITLE = DIVIDER_BOLD+APP_NAME+('by Andy_maN').rjust(LINE_WIDTH-len(APP_NAME)-1)+'\n'+DIVIDER_BOLD
 
 # Fill strings

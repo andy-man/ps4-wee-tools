@@ -34,37 +34,6 @@ def printSnvsEntries(base,entries):
 
 
 
-def screenSysconTools(file):
-	os.system('cls')
-	print(TITLE+getTab(STR_SYSCON_INFO))
-	
-	if not showSysconInfo(file):
-		return Tools.screenFileSelect()
-	
-	print(getTab(STR_ACTIONS))
-	getMenu(MENU_SC_ACTIONS)
-	
-	showStatus()
-	
-	choice = input(STR_CHOICE)
-	
-	if choice == '0':
-	    return Tools.screenFileSelect()
-	elif choice == '1':
-		toggleDebug(file)
-	elif choice == '2':
-		screenActiveSNVS(file)
-	elif choice == '3':
-		screenAutoPatchSNVS(file)
-	elif choice == '4':
-		screenManualPatchSNVS(file)
-	elif choice == '5':
-	    exit(1)
-	
-	screenSysconTools(file)
-
-
-
 def screenActiveSNVS(file, block = False):
 	os.system('cls')
 	print(TITLE+getTab(STR_LAST_SVNS))
@@ -193,7 +162,41 @@ def screenManualPatchSNVS(file):
 
 
 
-def showSysconInfo(file):
+def screenSysconTools(file):
+	os.system('cls')
+	print(TITLE+getTab(STR_SYSCON_INFO))
+	
+	info = getSysconInfo(file)
+	if not info:
+		return Tools.screenFileSelect(file)
+	
+	showTable(info)
+	
+	print(getTab(STR_ACTIONS))
+	getMenu(MENU_SC_ACTIONS)
+	
+	showStatus()
+	
+	choice = input(STR_CHOICE)
+	
+	if choice == '0':
+	    return Tools.screenFileSelect(file)
+	elif choice == '1':
+		toggleDebug(file)
+	elif choice == '2':
+		screenActiveSNVS(file)
+	elif choice == '3':
+		screenAutoPatchSNVS(file)
+	elif choice == '4':
+		screenManualPatchSNVS(file)
+	elif choice == '5':
+	    quit()
+	
+	screenSysconTools(file)
+
+
+
+def getSysconInfo(file):
 	if not checkFileSize(file, SYSCON_DUMP_SIZE):
 		return False
 	
@@ -221,6 +224,4 @@ def showSysconInfo(file):
 			'Patchable'		: STR_NO if isSysconPatchable(entries) == 0 else STR_PROBABLY
 		}
 	
-	showTable(info)
-	
-	return True
+	return info

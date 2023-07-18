@@ -1,9 +1,7 @@
 # Original idea: Zecoxao
 
 import sys, os, struct, hashlib, hmac
-
 from Crypto.Cipher import AES
-from Crypto.Util import Counter
 
 P_SEED_KEY = bytes.fromhex('E973A44C578757A73492625D2CE2D76B')
 P_SEED = bytes.fromhex('DF0C2552DFC7F4F089B9D52DAA0E572A')

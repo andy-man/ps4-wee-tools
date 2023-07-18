@@ -3,11 +3,20 @@
 # part of ps4 wee tools project
 #==========================================================
 
+MENU_FILE_SELECTION = {
+	'a':'Show all files / Toggle filters [bin,pup]',
+	'f':'Build sflash0 dump',
+	's':'Build SBL2/PUP',
+	'c':'Compare bin files in current folder',
+	'e':'Exit',
+}
+
 MENU_ADDTIONAL = [
 	'Extract NOR\'s partitions',
 	'Build dump from extracted files',
 	'Get HDD EAP keys [keys.bin]',
 	'Base validation and entropy stats',
+	'Create EMC cfw (only for Fat 1xxx/11xx)',
 ]
 
 MENU_NOR_ACTIONS = [
@@ -55,8 +64,11 @@ STR_NOR_FLAGS			= 'NOR flags'
 STR_NOR_EXTRACT			= 'NOR extractor'
 STR_NOR_BUILD			= 'NOR builder'
 STR_HDD_KEY				= 'HDD eap key'
+STR_SLB2_BUILDER		= 'SLB2 builder'
+STR_UNPACK_SLB2			= 'SLB2 unpacker'
+STR_EMC_CFW				= 'EMC CFW (Aeolia)'
 
-
+STR_EMPTY_FILE_LIST		= ' File list is empty'
 STR_NO_FOLDER			= ' Folder {} doesn\'t exists'
 STR_EXTRACTING			= ' Extracting sflash0 to {} folder'
 STR_FILES_CHECK			= ' Checking files'
@@ -87,8 +99,9 @@ STR_ABORT				= ' Action was aborted'
 STR_NIY					= ' Function is not implemented yet'
 STR_CLEAN_FLAGS			= ' Clean all system flags'
 STR_UNK_FILE_TYPE		= ' Unknown file type'
+STR_UNK_CONTENT			= ' Unknown content'
 STR_UART				= ' UART is set to '
-STR_DEBUG				= ' Sycon debug is set to '
+STR_DEBUG				= ' Syscon debug is set to '
 
 STR_DIFF_SLOT_VALUES	= ' Values in slots are different!'
 STR_SYSFLAGS_CLEAN		= ' Sys flags were cleared. Tip: turn on UART'
@@ -170,7 +183,7 @@ STR_INFO_SC_MPATCH = '\n'\
 
 STR_ABOUT_EAP = 'About EAP keys'
 STR_INFO_HDD_EAP = '\n'\
-' These keys allows you to explore PS4 HDD files with PC\n'\
+' These keys allow you to explore PS4 HDD files with PC\n'\
 ' You can find additional info by visiting:\n '\
 
 STR_APP_HELP = '\n'\

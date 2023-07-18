@@ -15,7 +15,7 @@ def main(args):
     elif len(args) == 1:
     	if args[0] in ['help','-help','h','-h','?']:
     		Tools.screenHelp()
-    	else:
+    	elif not Tools.launchTool(args[0]):
     		Tools.screenFileSelect(args[0])
     else:
     	Tools.screenFileSelect()

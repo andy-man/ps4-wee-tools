@@ -6,6 +6,12 @@ import hashlib, os, math
 from lang._i18n_ import *
 
 
+
+INFO_FILE_NOR = '_sflash0_.txt'
+INFO_FILE_SLB2 = '_slb2_.txt'
+
+
+
 def getData(file, off, len):
 	#file must be in rb/r+b mode
 	file.seek(off);
