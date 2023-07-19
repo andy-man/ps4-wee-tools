@@ -34,27 +34,30 @@ def printSnvsEntries(base,entries):
 
 
 
-def screenActiveSNVS(file, block = False):
+def screenActiveSNVS(file, block = ''):
 	os.system('cls')
 	print(TITLE+getTab(STR_LAST_SVNS))
-	
-
 	
 	with open(file, 'rb') as f:
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
 	
-	entries = SNVS.getLastDataEntries() if block == False else SNVS.getDataBlockEntries(block)
-	base = SNVS.getLastDataBlockOffset(True) if block == False else SNVS.getDataBlockOffset(block, True)
-	
 	active = SNVS.active_entry.getLink()
-	print(' Active {} current {}\n'.format(active, block if block else active))
+	block = active if block == '' else block
+	
+	entries = SNVS.getDataBlockEntries(block)
+	base = SNVS.getDataBlockOffset(block, True)
+	
+	print(STR_SYSCON_BLOCK.format(block, active))
 	printSnvsEntries(base, entries)
 	
-	#input(STR_BACK)
+	showStatus()
+	
 	try:
-		num = int(input(DIVIDER+' Select data block [0-7]'))
+		num = int(input(DIVIDER+STR_SC_BLOCK_SELECT))
 		if num >= 0 and num <= 7:
 			block = num
+		else:
+			setStatus(STR_ERROR_CHOICE)
 	except:
 		return
 	
@@ -91,7 +94,7 @@ def screenAutoPatchSNVS(file):
 	options = MENU_PATCHES
 	options[1] = options[1].format(len(entries) - index)
 	
-	print(Clr.fg.cyan+STR_PATCH_INDEXES.format(cur_o, pre_o)+Clr.reset)
+	print(highlight(STR_PATCH_INDEXES.format(cur_o, pre_o)))
 	getMenu(options,1)
 	showStatus()
 	
@@ -134,7 +137,11 @@ def screenAutoPatchSNVS(file):
 
 def screenManualPatchSNVS(file):
 	os.system('cls')
-	print(TITLE+STR_INFO_SC_MPATCH+getTab(STR_MPATCH_SVNS))
+	print(TITLE+getTab(STR_ABOUT_MPATCH))
+	
+	print(STR_INFO_SC_MPATCH)
+	
+	print(getTab(STR_MPATCH_SVNS))
 	
 	with open(file, 'r+b') as f:
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
@@ -144,21 +151,29 @@ def screenManualPatchSNVS(file):
 		print(STR_LAST_DATA.format(records_count, len(entries)))
 		print()
 		
-		base = SNVS.getLastDataBlockOffset(True) + NvsEntry.getEntrySize() * (len(entries) - records_count)
-		printSnvsEntries(base, entries[-records_count:])
+		last_offset = SNVS.getLastDataBlockOffset(True) + NvsEntry.getEntrySize() * len(entries)
+		printSnvsEntries(last_offset - NvsEntry.getEntrySize() * records_count, entries[-records_count:])
+		
+		showStatus()
+		
+		print(DIVIDER+'\n 0:'+STR_GO_BACK)
 		
 		try:
 			num = int(input(STR_MPATCH_INPUT))
 		except:
-			return
+			return screenManualPatchSNVS(file)
 		
+		offset = 0
 		if num > 0 and num < len(entries):
 			length = num*NvsEntry.getEntrySize()
-			offset += NvsEntry.getEntrySize() - length
-			setData(f, offset, b'\xFF'*length)
-			setStatus(STR_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(offset,offset + length))
-		else:
+			setData(f, last_offset - length, b'\xFF'*length)
+			
+			setStatus(STR_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(last_offset - length, last_offset))
+		elif num == 0:
 			setStatus(STR_PATCH_CANCELED)
+			return
+	
+	screenManualPatchSNVS(file)
 
 
 

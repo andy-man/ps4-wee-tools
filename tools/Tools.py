@@ -20,8 +20,8 @@ def launchTool(path):
 	if os.path.isdir(path):
 		if os.path.exists(os.path.join(path, Utils.INFO_FILE_NOR)):
 			return NorTools.screenBuildNorDump(path)
-		elif os.path.exists(os.path.join(path, Utils.INFO_FILE_SLB2)):
-			return screenBuildSLB2(path)
+		elif os.path.exists(os.path.join(path, Utils.INFO_FILE_2BLS)):
+			return screenBuild2BLS(path)
 		else:
 			setStatus(STR_UNK_CONTENT + ' {}'.format(path))
 			return 0
@@ -35,7 +35,7 @@ def launchTool(path):
 	elif f_size == SysconTools.SYSCON_DUMP_SIZE:
 		return SysconTools.screenSysconTools(path)
 	elif header[0:len(Slb2.SLB2_HEADER)] == Slb2.SLB2_HEADER:
-		return screenUnpackSLB2(path)
+		return screenUnpack2BLS(path)
 	else:
 		setStatus(STR_UNK_FILE_TYPE + ' {}'.format(path))
 
@@ -79,7 +79,7 @@ def screenFileSelect(path = '', all = False):
 	elif choice == 'f':
 		NorTools.screenBuildNorDump(path)
 	elif choice == 's':
-		screenBuildSLB2(path)
+		screenBuild2BLS(path)
 	elif choice == 'c':
 		file_list = [os.path.join(path, x) for x in os.listdir(path) if not os.path.isdir(os.path.join(path, x)) and f.lower().endswith('.bin')]
 		file_list.sort()
@@ -132,17 +132,17 @@ def screenCompareFiles(list):
 
 
 
-def screenUnpackSLB2(path):
+def screenUnpack2BLS(path):
 	os.system('cls')
-	print(TITLE + getTab(STR_UNPACK_SLB2))
+	print(TITLE + getTab(STR_UNPACK_2BLS))
 	
 	with open(path,'rb') as f:
 		data = f.read()
 	
 	fname = os.path.splitext(os.path.basename(path))[0]
-	folder = os.path.join(os.path.dirname(path), fname+'_slb2')	
+	folder = os.path.join(os.path.dirname(path), fname+'_2bls')	
 	
-	info = Slb2.getGetSlb2Info(data)
+	info = Slb2.getGet2BLSInfo(data)
 	
 	print(highlight(' Header'))
 	head = showTable(info['header'],16,False)
@@ -166,7 +166,7 @@ def screenUnpackSLB2(path):
 		with open(os.path.join(folder, entry['name']),'wb') as out:
 			out.write(data[entry['offset']:entry['offset'] + entry['size']])
 	
-	with open(os.path.join(folder, Utils.INFO_FILE_SLB2),'w') as txt:
+	with open(os.path.join(folder, Utils.INFO_FILE_2BLS),'w') as txt:
 		txt.write(txt_info)
 	
 	print('\n'+STR_SAVED_TO.format(folder))
@@ -175,20 +175,26 @@ def screenUnpackSLB2(path):
 
 
 
-def screenBuildSLB2(path):
+def screenBuild2BLS(path):
 	os.system('cls')
-	print(TITLE + getTab(STR_SLB2_BUILDER))
+	print(TITLE + getTab(STR_2BLS_BUILDER))
 	
-	name = os.path.basename(path).replace('_slb2','.slb2')
+	name = os.path.basename(path).replace('_2bls','')+ '.2bls'
 	file = os.path.join(os.path.dirname(path),name)
 	
-	files = [os.path.join(path,x) for x in os.listdir(path) if os.path.isfile(os.path.join(path, x)) and x != Utils.INFO_FILE_SLB2]
-	data = Slb2.buildSlb2(files)
+	files = [os.path.join(path,x) for x in os.listdir(path) if os.path.isfile(os.path.join(path, x)) and x != Utils.INFO_FILE_2BLS]
+	
+	if len(files) == 0:
+		print(STR_EMPTY_FILE_LIST)
+		input(STR_BACK)
+		return
+	
+	data = Slb2.build2BLS(files)
 	
 	with open(file, 'wb') as out:
 		out.write(data)
 	
-	info = Slb2.getGetSlb2Info(data)
+	info = Slb2.getGet2BLSInfo(data)
 	
 	print(highlight(' Header'))
 	showTable(info['header'])

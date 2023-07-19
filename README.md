@@ -24,12 +24,13 @@ NOR tool
 * System flags cleaning
 * Memory clock editing (GDDR5)
 * SAMU boot flag edit
-* Downgrade by slot switch
+* Downgrade by slot switch (FW revert)
 * Additional tools
   * Extract NOR's partitions
   * Build dump from extracted files
   * Get HDD EAP keys [keys.bin]
   * Base validation and entropy stats
+  * EMC CFW for Aeolia
 
 Syscon tool
 * Syscon check
@@ -67,6 +68,11 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.7.8
+* Added 6 patterns to slot switcher
+* EMC CFW patcher for Aeolia
+* UI bugs fixed
 
 ### v0.7.7
 * SLB2 pack / unpack

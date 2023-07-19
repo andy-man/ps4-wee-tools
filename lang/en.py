@@ -6,7 +6,7 @@
 MENU_FILE_SELECTION = {
 	'a':'Show all files / Toggle filters [bin,pup]',
 	'f':'Build sflash0 dump',
-	's':'Build SBL2/PUP',
+	's':'Build 2BLS/PUP',
 	'c':'Compare bin files in current folder',
 	'e':'Exit',
 }
@@ -24,7 +24,7 @@ MENU_NOR_ACTIONS = [
 	'Flags (UART, RNG, Memtest, etc)',
 	'Memory clocking (GDDR5)',
 	'SAMU boot flag',
-	'Downgrade - CoreOS slot switching',
+	'CoreOS slot switching (FW revert)',
 	'Additional tools',
 	'Exit'
 ]
@@ -52,7 +52,8 @@ STR_SYSCON_INFO			= 'Syscon dump info'
 STR_COMPARE				= 'Compare'
 STR_HELP				= 'Help'
 STR_ACTIONS				= 'Actions'
-STR_DOWNGRADE			= 'Downgrade patterns'
+STR_COREOS_SWITCH		= 'CoreOS switch'
+STR_SWITCH_PATTERNS		= 'Switch patterns'
 STR_MEMCLOCK			= 'Memory clock'
 STR_SAMU_BOOT			= 'SAMU boot'
 STR_SYSFLAGS			= 'System flags'
@@ -64,9 +65,15 @@ STR_NOR_FLAGS			= 'NOR flags'
 STR_NOR_EXTRACT			= 'NOR extractor'
 STR_NOR_BUILD			= 'NOR builder'
 STR_HDD_KEY				= 'HDD eap key'
-STR_SLB2_BUILDER		= 'SLB2 builder'
-STR_UNPACK_SLB2			= 'SLB2 unpacker'
+STR_2BLS_BUILDER		= '2BLS builder'
+STR_UNPACK_2BLS			= '2BLS unpacker'
 STR_EMC_CFW				= 'EMC CFW (Aeolia)'
+
+STR_EMC_CFW_WARN		= ' Currently EMC CFW is only for 10xx/11xx PS4 Fat'
+STR_EMC_NOT_FOUND		= ' EMC FW was not found'
+STR_DECRYPTING			= ' Decrypting'
+STR_ENCRYPTING			= ' Encrypting'
+STR_PATCHING			= ' Patching'
 
 STR_EMPTY_FILE_LIST		= ' File list is empty'
 STR_NO_FOLDER			= ' Folder {} doesn\'t exists'
@@ -116,12 +123,14 @@ STR_PATCH_SUCCESS		= ' Successfully removed {} entries'
 STR_PATCH_SAVED			= ' Patch was saved to {}'
 STR_PATCH_INDEXES		= ' Last 08-0B at 0x{:04X} | Previous at 0x{:04X}\n'
 
+STR_SC_BLOCK_SELECT		= ' Select data block [0-7] '
 STR_MPATCH_INPUT		= ' How many records to clean (from end): '
 STR_CHOICE				= ' Make choice: '
 STR_BACK				= ' Press [ENTER] to go back'
 STR_MEMCLOCK_INPUT		= ' Setup frequency [400 - 2000] / [0 set default (0xFF)] MHz '
 STR_SAMU_INPUT			= ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
 
+STR_SYSCON_BLOCK		= ' Current [{}/7] | {} is active\n'
 STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
@@ -138,7 +147,9 @@ STR_ERROR_CHOICE		= ' Invalid choice'
 STR_OUT_OF_RANGE		= ' Value is out of range!'
 STR_FILES_MATCH			= ' Files are equal'
 STR_FILES_MISMATCH		= ' Files mismatch'
+STR_SIZES_MISMATCH		= ' Sizes mismatch!'
 
+STR_INPUT_SAVE_IM		= ' Save all intermediate files? [y] '
 STR_USE_NEWBLOBS		= ' Use new key blobs? [y] '
 STR_CONFIRM_SEPARATE	= ' Save as separate file? [y] '
 STR_CONFIRM				= ' Input [y] to continue: '
@@ -149,44 +160,51 @@ STR_UNPATCHABLE = ' Can\'t proceed!\n'\
 ' Last SNVS record #{} counter [0x{:02X}] type [0x{:02X}]\n'\
 ' Last 08-0B index = {} / Previous 08-0B index = {}'
 
-STR_OVERCLOCKING = '\n'\
-' Dangerous operation! \n'\
+STR_OVERCLOCKING = ''\
+' Dangerous operation!\n\n'\
 ' Most GDDR5 runs at 6000-8000 MHz. GDDR5 is quad pumped [x4]\n'\
 ' GDDR5 at 8000 MHz technically runs at 2000 MHz\n'\
-' If you have problems, lower frequency to 1000 MHz\n'\
+' If you have problems, decrease frequency to 1000 MHz\n'\
 '\n'\
 ' Effective GDDR5 clock is 1350 MHz\n'\
 ' The frequency is selected experimentally\n'\
 ' - Too high value can lead to LOADBIOS -8 or DCT [*] error\n'\
-' - Too low value leads to AMDINIT error \n'
+' - Too low value leads to AMDINIT error'
 
-STR_PATCHES = '\n'\
-' Be careful: All patches are applied immediatly to file! \n'\
-' Will switch value between available values for chosen option \n'
+STR_PATCHES = ''\
+' Be careful: All patches are applied immediatly to file!\n'\
+' Will switch value between available values for chosen option'
 
-STR_DOWNGRADE = '\n'\
-' Dangerous operation! \n'\
+STR_DOWNGRADE = ''\
+' Dangerous operation!\n\n'\
 ' Slot switching is used for FW revert (downgrade).\n'+\
 ' It also fixes "loadbios" error.\n'\
 ' Make sure you have backup of stock NOR dump and SYSCON.\n'\
 ' Syscon patching required! Otherwise you\'ll get "loadbios" error.\n'\
-' Console will not boot normally.\n'
+' Console will not boot normally.'
 
 STR_ABOUT_MPATCH = 'Manual patch instructions'
-STR_INFO_SC_MPATCH = '\n'\
+STR_INFO_SC_MPATCH = ''\
 ' Every record has 16 bytes length. First byte is always "A5"\n'\
-' The second byte is record "type" usualy in range [08-30] (hex)\n'\
+' The second byte is record "type" usualy in range [0x00-0x30]\n'\
 ' Firmware update takes 4 records with types {}\n'\
 ' To cancel last fw update we need to clean these 4 records (fill 0xFF)\n'\
 ' If there are {},{} types after {} patch is impossible\n'\
-' backup slot is already erased, you\'ll got checkUpdVersion error\n'
+' backup slot is already erased, you\'ll got checkUpdVersion error'
 
 STR_ABOUT_EAP = 'About EAP keys'
-STR_INFO_HDD_EAP = '\n'\
+STR_INFO_HDD_EAP = ''\
 ' These keys allow you to explore PS4 HDD files with PC\n'\
 ' You can find additional info by visiting:\n '\
 
-STR_APP_HELP = '\n'\
+STR_ABOUT_EMC_CFW = 'About EMC CFW'
+STR_INFO_EMC_CFW = ''\
+' Use at your own risk!\n'\
+' Only for Aeolia (PS4 Fat 10xx/11xx)\n'\
+' Grants control over the southbridge and syscon\n\n'\
+' Additional info:\n '
+
+STR_APP_HELP = ''\
 ' Usage: ps4-wee-tools [params] \n'\
 '\n'\
 ' Params: \n\n'\

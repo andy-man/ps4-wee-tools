@@ -59,11 +59,21 @@ STR_2023 = Clr.fg.red+'"20-23"'+Clr.reset
 
 # Common functions
 
+def clearInput(n = 1):
+	for i in range(n):
+		print('\033[1A' + '\033[K', end='')
+
+def link(str):
+	return Clr.underline+Clr.fg.cyan + str + Clr.reset
+
 def highlight(str):
 	return Clr.fg.yellow + str + Clr.reset
 
 def warning(str):
 	return Clr.fg.orange + str + Clr.reset
+
+def green(str):
+	return Clr.fg.green + str + Clr.reset
 
 def getTab(str):
 	return Clr.fg.yellow+'  _'+('_'*len(str))+'_\n'+('_/ '+str+' \_').ljust(LINE_WIDTH, '_')+'\n'+Clr.reset
@@ -104,7 +114,7 @@ def showStatus():
 
 from lang.en import *
 
-APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.7 '
+APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.8 '
 TITLE = DIVIDER_BOLD+APP_NAME+('by Andy_maN').rjust(LINE_WIDTH-len(APP_NAME)-1)+'\n'+DIVIDER_BOLD
 
 # Fill strings
@@ -116,8 +126,10 @@ STR_MEMCLOCK_INPUT	= DIVIDER + STR_MEMCLOCK_INPUT
 STR_SAMU_INPUT		= DIVIDER + STR_SAMU_INPUT
 STR_CONFIRM			= DIVIDER + STR_CONFIRM
 
-STR_INFO_HDD_EAP	= STR_INFO_HDD_EAP + Clr.underline+Clr.fg.cyan + 'https://www.psdevwiki.com/ps4/Mounting_HDD_in_Linux' + Clr.reset
-STR_APP_HELP		= STR_APP_HELP + Clr.underline+Clr.fg.cyan + 'https://github.com/andy-man/ps4-wee-tools' + Clr.reset
+STR_APP_HELP		= STR_APP_HELP + link('https://github.com/andy-man/ps4-wee-tools')
+STR_INFO_HDD_EAP	= STR_INFO_HDD_EAP + link('https://www.psdevwiki.com/ps4/Mounting_HDD_in_Linux')
+STR_INFO_EMC_CFW	= STR_INFO_EMC_CFW + link('https://www.psdevwiki.com/ps4/Southbridge')
+
 STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH.format(STR_080B, STR_0C0F, STR_2023, STR_080B)
 
 # Colorize strings

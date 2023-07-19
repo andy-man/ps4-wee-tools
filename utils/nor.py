@@ -38,12 +38,22 @@ SWITCH_TYPES = [
 SWITCH_BLOBS = [
 	{'t':1, 'v':[0xFF]*8 + [0x00]*8},
 	{'t':1, 'v':[0x00]*8 + [0xFF]*8},
+	
 	{'t':2, 'v':[0xFF]*16},
 	{'t':2, 'v':[0x00]*16},
+	
 	{'t':3, 'v':[0xFF]*4 + [0x00]*12},
 	{'t':3, 'v':[0x00]*4 + [0xFF]*12},
 	{'t':3, 'v':[0xFF]*12 + [0x00]*4},
 	{'t':3, 'v':[0x00]*12 + [0xFF]*4},
+	
+	{'t':3, 'v':[0xFF]*2 + [0xFF]*14},
+	{'t':3, 'v':[0x00]*2 + [0x00]*14},
+	{'t':3, 'v':[0xFF]*1 + [0xFF]*15},
+	{'t':3, 'v':[0x00]*1 + [0x00]*15},
+	
+	{'t':3, 'v':[0xFF,0xF0] + [0x00]*14},
+	{'t':3, 'v':[0x00,0x0F] + [0xFF]*14},
 ]
 
 BOOT_MODES = {b'\xFE':'Development', b'\xFB':'Assist', b'\xFF':'Release'}
@@ -95,6 +105,7 @@ NOR_AREAS = {
 	'HDD':		{'o':0x1C9C00,	'l':60,			't':'s',	'n':'HDD'},
 	'HDD_TYPE':	{'o':0x1C9C3C,	'l':4,			't':'s',	'n':'HDD type'},
 	
+	'EAP_KEY':	{'o':0x1C9200,	'l':0x60,		't':'b',	'n':'Hdd eap key'},			# Length 0x40 / 0x60
 	'SYS_FLAGS':{'o':0x1C9310,	'l':64,			't':'b',	'n':'System flags'},		# Clean FF*64
 	'MEMTEST':	{'o':0x1C9310,	'l':1,			't':'b',	'n':'Memory test'},			# On(01), Off(00/FF)
 	'RNG_KEY':	{'o':0x1C9312,	'l':1,			't':'b',	'n':'RNG/Keystorage test'},	# On(01), Off(00/FF)

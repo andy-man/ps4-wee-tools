@@ -7,6 +7,7 @@ from lang._i18n_ import *
 from utils.nor import *
 from utils.hddeap import getHddEapKey
 import data.data as Data
+import utils.slb2 as Slb2
 import utils.aeolia as Aeolia
 import tools.Tools as Tools
 
@@ -16,7 +17,7 @@ def screenSysFlags(file):
 	
 	with open(file, 'r+b') as f:
 		
-		print(STR_CURRENT+'\n'+DIVIDER_DASH)
+		print(warning(STR_CURRENT)+'\n')
 		flags = getNorData(f, 'SYS_FLAGS')
 		for i in range(0, len(flags), 0x10):
 			print(' '+getHex(flags[i:i+0x10]))
@@ -36,7 +37,10 @@ def screenSysFlags(file):
 
 def screenMemClock(file):
 	os.system('cls')
-	print(TITLE + STR_OVERCLOCKING)
+	print(TITLE + getTab(STR_WARNING))
+	
+	print(warning(STR_OVERCLOCKING))
+	
 	print(getTab(STR_MEMCLOCK))
 	
 	with open(file, 'r+b') as f:
@@ -91,19 +95,21 @@ def screenSamuBoot(file):
 
 def screenDowngrade(file):
 	os.system('cls')
-	print(TITLE + STR_DOWNGRADE)
+	print(TITLE + getTab(STR_COREOS_SWITCH))
+	
+	print(warning(STR_DOWNGRADE))
 	
 	with open(file, 'r+b') as f:
 		
-		print(STR_CURRENT+getSlotSwitchInfo(f))
+		print('\n'+STR_CURRENT+getSlotSwitchInfo(f))
 		
-		print(getTab(STR_DOWNGRADE),end='')
+		print(getTab(STR_SWITCH_PATTERNS),end='')
 		
 		for i in range(1, len(SWITCH_TYPES)):
 			print('\n '+SWITCH_TYPES[i]+'\n')
 			for n in range(len(SWITCH_BLOBS)):
 				if SWITCH_BLOBS[n]['t'] == i:
-					print('  '+str(n+1)+': '+getHex(SWITCH_BLOBS[n]['v']))
+					print(' %2d: %s'%(n+1,getHex(SWITCH_BLOBS[n]['v'])))
 		
 		print(DIVIDER)
 		print(' 0:'+STR_GO_BACK)
@@ -139,7 +145,11 @@ def screenDowngrade(file):
 
 def screenFlagsToggler(file):
 	os.system('cls')
-	print(TITLE + STR_PATCHES + getTab(STR_NOR_FLAGS))
+	print(TITLE+getTab(STR_WARNING))
+	
+	print(warning(STR_PATCHES))
+	
+	print(getTab(STR_NOR_FLAGS))
 	
 	with open(file, 'rb') as f:
 		
@@ -169,6 +179,7 @@ def screenFlagsToggler(file):
 			print(' {:2d}: {:24s}: {}'.format(i+1, name, str))
 	
 	print(DIVIDER)
+	
 	print(' c:'+STR_CLEAN_FLAGS)
 	print(' 0:'+STR_GO_BACK)
 	
@@ -307,9 +318,91 @@ def screenAdditionalTools(file):
 
 def screenEmcCFW(file):
 	os.system('cls')
-	print(TITLE+getTab(STR_EMC_CFW))
+	print(TITLE+getTab(STR_ABOUT_EMC_CFW))
+	print(warning(STR_INFO_EMC_CFW))
 	
-	print(STR_NIY)
+	print(getTab(STR_EMC_CFW))
+	
+	with open(file, 'rb') as f:
+		data = f.read()
+		sku = getNorData(f, 'SKU')
+		print(' SKU '+sku.decode('utf-8','ignore'))
+		
+		if sku[4:6] != b'11' and sku[4:6] != b'10':
+			print(STR_EMC_CFW_WARN)
+			input(STR_BACK)
+			return
+		
+		emc_part = getNorPartition(f, 's0_emc_ipl_a')
+	
+	folder = os.path.dirname(file)
+	filename = os.path.splitext(os.path.basename(file))[0]
+	
+	
+	emc_fw = b''
+	fw_offset = 0
+	fw_size = 0
+	
+	entries = Slb2.getGet2BLSInfo(emc_part)['entries']
+	
+	for key in entries:
+		entry = entries[key]
+		if entry['name'] == 'C0000001':
+			fw_offset = entry['offset']
+			fw_size = entry['size']
+			emc_fw = emc_part[fw_offset:fw_offset+fw_size]
+			break
+	
+	if len(emc_fw) == 0:
+		print(STR_EMC_NOT_FOUND)
+		input(STR_BACK)
+		return
+	
+	save_all = True if input(STR_INPUT_SAVE_IM) == 'y' else False
+	clearInput()
+	
+	# Decrypting current emc fw
+	print('\n'+highlight(STR_DECRYPTING)+'\n')
+	
+	decrypted_fw = Aeolia.decrypt(emc_fw)
+	
+	if save_all:
+		out_file = os.path.join(folder,'emc_fw_orig.bin')
+		savePatchData(out_file, decrypted_fw)
+		print('\n'+green(STR_SAVED_TO.format(out_file)))
+	
+	# Patching (2 patches)
+	print('\n'+highlight(STR_PATCHING)+' [God Mode]\n')
+	
+	p1 = [b"\x03\x00\xFD\x00", b"\x0F\x00\xFD\x00"]
+	patched_fw = decrypted_fw.replace(p1[0], p1[1])
+	print(' %s => %s'%(getHex(p1[0],''),getHex(p1[1],'')))
+	
+	p2 = [b"\x07\x00\xFD\x00", b"\x0F\x00\xFD\x00"]
+	patched_fw = patched_fw.replace(p2[0], p2[1])
+	print(' %s => %s'%(getHex(p2[0],''),getHex(p2[1],'')))
+	
+	if save_all:
+		out_file = os.path.join(folder,'emc_cfw.bin')
+		savePatchData(out_file, patched_fw)
+		print('\n'+green(STR_SAVED_TO.format(out_file)))
+	
+	# Encrypt and save patched data
+	print('\n'+highlight(STR_ENCRYPTING)+'\n')
+	
+	encrypted_fw = Aeolia.encrypt(patched_fw)
+	
+	if save_all:
+		out_file = os.path.join(folder,'emc_cfw_enc.bin')
+		savePatchData(out_file, encrypted_fw)
+		print('\n'+green(STR_SAVED_TO.format(out_file)))
+	
+	if fw_size != len(encrypted_fw):
+		print('\n'+warning(STR_SIZES_MISMATCH))
+	
+	out_file = os.path.join(folder,filename+'_emc_cfw.bin')
+	savePatchData(out_file, data, [{'o':fw_offset + NOR_PARTITIONS['s0_emc_ipl_a']['o'],'d':encrypted_fw}])
+	print('\n'+highlight(STR_SAVED_TO.format(out_file)))
 	
 	input(STR_BACK)
 
@@ -317,9 +410,11 @@ def screenEmcCFW(file):
 
 def screenHddKey(file):
 	os.system('cls')
-	print(TITLE+STR_INFO_HDD_EAP+'\n')
+	print(TITLE+getTab(STR_ABOUT_EAP))
+	print(warning(STR_INFO_HDD_EAP))
 	
-	mode = input(STR_USE_NEWBLOBS)
+	mode = input('\n'+STR_USE_NEWBLOBS)
+	clearInput(2)
 	
 	print(getTab(STR_HDD_KEY))
 	getHddEapKey(file, True if mode == 'y' else False)
@@ -402,10 +497,12 @@ def screenBuildNorDump(folder):
 	
 	if found == len(NOR_PARTITIONS):
 		
+		"""
 		sn = '0'*17
-		with open(folder+os.sep+NOR_PARTITIONS['s0_nvs']['n']) as nvs:
+		with open(folder+os.sep+NOR_PARTITIONS['s0_nvs']['n'],'rb') as nvs:
 			nvs.seek(0x4030)
 			sn = nvs.read(17)
+		"""
 		
 		fname = os.path.join(folder, 'sflash0.bin')
 		

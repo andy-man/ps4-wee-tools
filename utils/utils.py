@@ -7,8 +7,8 @@ from lang._i18n_ import *
 
 
 
-INFO_FILE_NOR = '_sflash0_.txt'
-INFO_FILE_SLB2 = '_slb2_.txt'
+INFO_FILE_NOR	= '_sflash0_.txt'
+INFO_FILE_2BLS	= '_2bls_.txt'
 
 
 
@@ -53,7 +53,7 @@ def getFileMD5(file):
 def getHex(buf,sep=' '):
 	str = ""
 	for c in buf:
-		str += format(c, '02X')+sep
+		str += '{:02X}'.format(c)+sep
 	return str[:len(str)-len(sep)]
 
 
@@ -90,6 +90,7 @@ def savePatchData(file, data, patch = False):
 		for i in range(len(patch)):
 			f.seek(patch[i]['o'],0)
 			f.write(patch[i]['d'])
+
 
 
 def entropy(file):

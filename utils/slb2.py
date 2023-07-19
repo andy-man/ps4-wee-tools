@@ -33,7 +33,8 @@ def align(size, block):
 	return size + (0 if size % block == 0 else block - (size % block))
 
 
-def getGetSlb2Info(data):
+
+def getGet2BLSInfo(data):
 	e = {}
 	h = {}
 	
@@ -61,7 +62,7 @@ def getGetSlb2Info(data):
 
 
 
-def buildSlb2(files):
+def build2BLS(files):
 	
 	if len(files) == 0:
 		return -1
