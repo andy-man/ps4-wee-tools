@@ -3,10 +3,20 @@
 # part of ps4 wee tools project
 #==========================================================
 
+MENU_EAP_KEYS = [
+	'Replace A with B (key_a <= key_b)',
+	'Replace B with A (key_a => key_b)',
+	'Fix magic A *',
+	'Fix magic B *',
+	'Generate new A,B keys (length 0x60) *',
+	'Generate new A,B keys (length 0x40) *',
+	'Clean key B *',
+]
+
 MENU_FILE_SELECTION = {
 	'a':'Show all files / Toggle filters [bin,pup]',
 	'f':'Build sflash0 dump',
-	's':'Build 2BLS/PUP',
+	'b':'Build 2BLS/PUP',
 	'c':'Compare bin files in current folder',
 	'e':'Exit',
 }
@@ -14,7 +24,8 @@ MENU_FILE_SELECTION = {
 MENU_ADDTIONAL = [
 	'Extract NOR\'s partitions',
 	'Build dump from extracted files',
-	'Get HDD EAP keys [keys.bin]',
+	'View / Recover EAP key',
+	'Get HDD keys = decrypt EAP key = create [keys.bin]',
 	'Base validation and entropy stats',
 	'Create EMC cfw (only for Fat 1xxx/11xx)',
 ]
@@ -68,12 +79,34 @@ STR_HDD_KEY				= 'HDD eap key'
 STR_2BLS_BUILDER		= '2BLS builder'
 STR_UNPACK_2BLS			= '2BLS unpacker'
 STR_EMC_CFW				= 'EMC CFW (Aeolia)'
+STR_EAP_KEYS			= 'EAP keys'
+
+STR_NO_INFO				= '- No info -'
+STR_OFF					= 'Off'
+STR_ON					= 'On'
+STR_WARNING				= 'Warning'
+STR_HELP				= 'Help'
+STR_UNKNOWN				= '- Unknown -'
+STR_YES					= 'Yes'
+STR_NO					= 'No'
+STR_PROBABLY			= 'Probably'
+STR_NOT_SURE			= 'not sure'
+STR_DIFF				= 'Different'
+STR_NOT_FOUND			= 'not found'
+STR_BAD_SIZE			= 'bad size'
+STR_OK					= 'OK'
+STR_FAIL				= 'Fail'
+STR_CANCEL				= 'Cancel'
+STR_IS_PART_VALID		= '[{}] {} FW {}'
+STR_SNVS_ENTRIES		= '{} records found at 0x{:5X}'
 
 STR_EMC_CFW_WARN		= ' Currently EMC CFW is only for 10xx/11xx PS4 Fat'
 STR_EMC_NOT_FOUND		= ' EMC FW was not found'
 STR_DECRYPTING			= ' Decrypting'
 STR_ENCRYPTING			= ' Encrypting'
 STR_PATCHING			= ' Patching'
+STR_EXPERIMENTAL		= ' * - experimental functions'
+STR_PERFORMED			= ' Performed action: '
 
 STR_EMPTY_FILE_LIST		= ' File list is empty'
 STR_NO_FOLDER			= ' Folder {} doesn\'t exists'
@@ -82,26 +115,11 @@ STR_FILES_CHECK			= ' Checking files'
 STR_BUILDING			= ' Building file {}'
 
 STR_DONE				= ' All done'
-STR_NO_INFO				= '- No info -'
-STR_OFF					= 'Off'
-STR_ON					= 'On'
 STR_PROGRESS			= ' Progress {:2d}% '
-STR_WARNING				= 'Warning'
-STR_HELP				= 'Help'
-STR_UNKNOWN				= '- Unknown -'
 STR_WAIT				= ' Please wait...'
-STR_YES					= 'Yes'
-STR_NO					= 'No'
-STR_PROBABLY			= 'Probably'
-STR_NOT_SURE			= 'not sure'
 STR_SET_TO				= ' {} was set to [{}]'
-
-STR_DIFF				= 'Different'
-STR_NOT_FOUND			= 'not found'
-STR_BAD_SIZE			= 'bad size'
-STR_OK					= 'OK'
-STR_FAIL				= 'Fail'
 STR_ABORT				= ' Action was aborted'
+STR_FILENAME			= ' Filename: '
 
 STR_NIY					= ' Function is not implemented yet'
 STR_CLEAN_FLAGS			= ' Clean all system flags'
@@ -114,7 +132,6 @@ STR_DIFF_SLOT_VALUES	= ' Values in slots are different!'
 STR_SYSFLAGS_CLEAN		= ' Sys flags were cleared. Tip: turn on UART'
 STR_SAMU_UPD			= ' SAMU flag was set to '
 STR_DOWNGRADE_UPD		= ' Downgrade was set to: '
-STR_SNVS_ENTRIES		= '{} records found at 0x{:5X}'
 STR_LAST_DATA			= ' Last {} records of {}: '
 STR_MEMCLOCK_SET		= ' GDDR5 frequency was set to {:d}MHz [0x{:02X}]'
 
@@ -122,7 +139,6 @@ STR_PATCH_CANCELED		= ' Patch was canceled'
 STR_PATCH_SUCCESS		= ' Successfully removed {} entries'
 STR_PATCH_SAVED			= ' Patch was saved to {}'
 STR_PATCH_INDEXES		= ' Last 08-0B at 0x{:04X} | Previous at 0x{:04X}\n'
-
 STR_SC_BLOCK_SELECT		= ' Select data block [0-7] '
 STR_MPATCH_INPUT		= ' How many records to clean (from end): '
 STR_CHOICE				= ' Make choice: '
@@ -134,7 +150,7 @@ STR_SYSCON_BLOCK		= ' Current [{}/7] | {} is active\n'
 STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
-STR_IS_PART_VALID		= '[{}] {} FW {}'
+
 STR_FW_VERSION			= ' FW version {} / Active slot {}'
 
 STR_COMPARE_RESULT		= ' {} | Result: {}'
@@ -171,8 +187,10 @@ STR_OVERCLOCKING = ''\
 ' - Too high value can lead to LOADBIOS -8 or DCT [*] error\n'\
 ' - Too low value leads to AMDINIT error'
 
-STR_PATCHES = ''\
-' Be careful: All patches are applied immediatly to file!\n'\
+STR_IMMEDIATLY = ''\
+' Be careful: All patches are applied immediatly to the file!'
+
+STR_PATCHES = STR_IMMEDIATLY + '\n'\
 ' Will switch value between available values for chosen option'
 
 STR_DOWNGRADE = ''\

@@ -9,6 +9,7 @@ import utils.utils as Utils
 import utils.slb2 as Slb2
 import tools.NorTools as NorTools
 import tools.SysconTools as SysconTools
+import tools.AdvNorTools as AdvNorTools
 
 
 
@@ -19,7 +20,7 @@ def launchTool(path):
 	
 	if os.path.isdir(path):
 		if os.path.exists(os.path.join(path, Utils.INFO_FILE_NOR)):
-			return NorTools.screenBuildNorDump(path)
+			return AdvNorTools.screenBuildNorDump(path)
 		elif os.path.exists(os.path.join(path, Utils.INFO_FILE_2BLS)):
 			return screenBuild2BLS(path)
 		else:
@@ -77,8 +78,8 @@ def screenFileSelect(path = '', all = False):
 	if choice == 'a':
 		all = False if all else True
 	elif choice == 'f':
-		NorTools.screenBuildNorDump(path)
-	elif choice == 's':
+		AdvNorTools.screenBuildNorDump(path)
+	elif choice == 'b':
 		screenBuild2BLS(path)
 	elif choice == 'c':
 		file_list = [os.path.join(path, x) for x in os.listdir(path) if not os.path.isdir(os.path.join(path, x)) and f.lower().endswith('.bin')]

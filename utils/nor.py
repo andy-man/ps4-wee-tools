@@ -6,6 +6,8 @@ import hashlib, os, math, sys, ctypes
 from utils.utils import *
 import data.data as Data
 
+
+
 NOR_DUMP_SIZE = 0x2000000
 NOR_BACKUP_OFFSET = 0x3000
 NOR_MBR_SIZE = 0x1000
@@ -33,6 +35,7 @@ SWITCH_TYPES = [
 	'Fat 10xx/11xx',
 	'Fat/Slim/PRO 12xx/2xxx/7xxx',
 	'General',
+	'Extra',
 ]
 
 SWITCH_BLOBS = [
@@ -47,13 +50,12 @@ SWITCH_BLOBS = [
 	{'t':3, 'v':[0xFF]*12 + [0x00]*4},
 	{'t':3, 'v':[0x00]*12 + [0xFF]*4},
 	
-	{'t':3, 'v':[0xFF]*2 + [0xFF]*14},
-	{'t':3, 'v':[0x00]*2 + [0x00]*14},
-	{'t':3, 'v':[0xFF]*1 + [0xFF]*15},
-	{'t':3, 'v':[0x00]*1 + [0x00]*15},
-	
-	{'t':3, 'v':[0xFF,0xF0] + [0x00]*14},
-	{'t':3, 'v':[0x00,0x0F] + [0xFF]*14},
+	{'t':4, 'v':[0xFF]*2 + [0x00]*14},
+	{'t':4, 'v':[0x00]*2 + [0xFF]*14},
+	{'t':4, 'v':[0xFF]*1 + [0x00]*15},
+	{'t':4, 'v':[0x00]*1 + [0xFF]*15},
+	{'t':4, 'v':[0xFF,0xF0] + [0x00]*14},
+	{'t':4, 'v':[0x00,0x0F] + [0xFF]*14},
 ]
 
 BOOT_MODES = {b'\xFE':'Development', b'\xFB':'Assist', b'\xFF':'Release'}
@@ -99,12 +101,14 @@ NOR_AREAS = {
 	'MEM_BGM':	{'o':0x1C9003,	'l':1,			't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
 	'SLOW_HDD':	{'o':0x1C9005,	'l':1,			't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
 	'SAFE_BOOT':{'o':0x1C9020,	'l':1,			't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
-	'FW_MIN':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'Minimal FW version?'},
+	'SMI':		{'o':0x1C9060,	'l':4,			't':'b',	'n':'SMI'},
+	'FW_MIN':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'Minimal FW'},
 	'FW_VER':	{'o':0x1C906A,	'l':2,			't':'b',	'n':'FW in active slot'},
 	'SAMUBOOT':	{'o':0x1C9323,	'l':1,			't':'b',	'n':'SAMU enc'},	
 	'HDD':		{'o':0x1C9C00,	'l':60,			't':'s',	'n':'HDD'},
 	'HDD_TYPE':	{'o':0x1C9C3C,	'l':4,			't':'s',	'n':'HDD type'},
 	
+	'EAP_MGC':	{'o':0x1C91FC,	'l':4,			't':'b',	'n':b'\xE5\xE5\xE5\x01'},	# Eap key magic
 	'EAP_KEY':	{'o':0x1C9200,	'l':0x60,		't':'b',	'n':'Hdd eap key'},			# Length 0x40 / 0x60
 	'SYS_FLAGS':{'o':0x1C9310,	'l':64,			't':'b',	'n':'System flags'},		# Clean FF*64
 	'MEMTEST':	{'o':0x1C9310,	'l':1,			't':'b',	'n':'Memory test'},			# On(01), Off(00/FF)
@@ -117,6 +121,7 @@ NOR_AREAS = {
 	'FW_PC':	{'o':0x1CA5D9,	'l':1,			't':'b',	'n':'FW Patch Counter'},
 	'IDU':		{'o':0x1CA600,	'l':1,			't':'b',	'n':'IDU (Kiosk mode)'},	# On(01), Off(00/FF)
 	'UPD_MODE':	{'o':0x1CA601,	'l':1,			't':'b',	'n':'Update mode'},			# On(10), Off(00)
+	'UPD_VAR':	{'o':0x1CA602,	'l':1,			't':'b',	'n':'Update variant'},		# 0x30 hdd
 	'REG_REC':	{'o':0x1CA603,	'l':1,			't':'b',	'n':'Registry recovery'},	# On(01), Off(00)
 	'FW_V':		{'o':0x1CA606,	'l':2,			't':'s',	'n':'FW Version'},
 	'ARCADE':	{'o':0x1CA609,	'l':1,			't':'s',	'n':'Arcade mode'},			# On(01), Off(00/FF)

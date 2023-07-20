@@ -28,6 +28,7 @@ NOR tool
 * Additional tools
   * Extract NOR's partitions
   * Build dump from extracted files
+  * View / Recover HDD EAP keys
   * Get HDD EAP keys [keys.bin]
   * Base validation and entropy stats
   * EMC CFW for Aeolia
@@ -68,6 +69,10 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.7.9
+* EAP key recovery
+* Some optimization
 
 ### v0.7.8
 * Added 6 patterns to slot switcher

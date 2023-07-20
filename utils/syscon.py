@@ -17,6 +17,35 @@ SC_AREAS = {
 	'NVS':		{'o':0x6E000,	'l':0x2000,	't':'b',	'n':'NVS storage'},
 }
 
+SC_E_TYPE = {
+	'MODE0'		: 0x00,
+	'MODE1'		: 0x01,
+	'MODE2'		: 0x02,
+	'MODE3'		: 0x03,
+	'FSM_ON'	: 0x04,
+	'MODE5'		: 0x05,
+	'MODE6'		: 0x06,
+	'FSM_OFF'	: 0x07,
+	'FW_A'		: 0x08,
+	'FW_B'		: 0x09,
+	'LIC1'		: 0x0A,
+	'LIC2'		: 0x0B,
+	'PRE0C'		: 0x0C,
+	'PRE0D'		: 0x0D,
+	'PRE0E'		: 0x0E,
+	'PRE0F'		: 0x0F,
+	'PRE20'		: 0x20,
+	'PRE21'		: 0x21,
+	'PRE22'		: 0x22,
+	'PRE23'		: 0x23,
+}
+
+SC_TYPES_FSM	= [SC_E_TYPE['FSM_ON'], SC_E_TYPE['FSM_OFF']]
+SC_TYPES_MODES	= [SC_E_TYPE['MODE0'], SC_E_TYPE['MODE1'], SC_E_TYPE['MODE2'], SC_E_TYPE['MODE3'], SC_E_TYPE['MODE5'], SC_E_TYPE['MODE6']]
+SC_TYPES_UPD	= [SC_E_TYPE['FW_A'], SC_E_TYPE['FW_B'], SC_E_TYPE['LIC1'], SC_E_TYPE['LIC2']]
+SC_TYPES_PRE0	= [SC_E_TYPE['PRE0C'], SC_E_TYPE['PRE0D'], SC_E_TYPE['PRE0E'], SC_E_TYPE['PRE0F']]
+SC_TYPES_PRE2	= [SC_E_TYPE['PRE20'], SC_E_TYPE['PRE21'], SC_E_TYPE['PRE22'], SC_E_TYPE['PRE23']]
+
 # Functions ===============================================
 
 def setSysconData(file, key, val):
@@ -48,13 +77,13 @@ def getLast_080B_Index(entries):
 	if length < 4:
 		return -1
 	for i in range(length):
-		if entries[length-4-i][1] != SC_UPD_TYPES[0]:
+		if entries[length-4-i][1] != SC_TYPES_UPD[0]:
 			continue
-		if entries[length-3-i][1] != SC_UPD_TYPES[1]:
+		if entries[length-3-i][1] != SC_TYPES_UPD[1]:
 			continue
-		if entries[length-2-i][1] != SC_UPD_TYPES[2]:
+		if entries[length-2-i][1] != SC_TYPES_UPD[2]:
 			continue
-		if entries[length-1-i][1] != SC_UPD_TYPES[3]:
+		if entries[length-1-i][1] != SC_TYPES_UPD[3]:
 			continue
 		return length-i-4
 	return -1
@@ -63,11 +92,11 @@ def getLast_080B_Index(entries):
 
 def isSysconPatchable(records):
 	type = NvsEntry(records[-1]).getIndex()
-	if type in SC_UPD_TYPES:
+	if type in SC_TYPES_UPD:
 		return 1
-	if type in SC_PRE1_TYPE:
+	if type in SC_TYPES_PRE0:
 		return 0
-	if type in SC_PRE2_TYPE:
+	if type in SC_TYPES_PRE2:
 		return 0
 	return 2
 
@@ -262,7 +291,3 @@ NVS_CONFIG = NvsConfig({
 	"header":	{ "length":SYSCON_BLOCK_SIZE, "count":2 },
 	"data":		{ "flat":SYSCON_BLOCK_SIZE, "records":SYSCON_BLOCK_SIZE * 5, "count":8 },
 })
-
-SC_UPD_TYPES = [0x08, 0x09, 0x0A, 0x0B]
-SC_PRE1_TYPE = [0x0C, 0x0D, 0x0E, 0x0F]
-SC_PRE2_TYPE = [0x20, 0x21, 0x22, 0x23]

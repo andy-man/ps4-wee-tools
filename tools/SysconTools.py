@@ -8,6 +8,8 @@ from utils.utils import *
 from utils.syscon import *
 import tools.Tools as Tools
 
+
+
 def toggleDebug(file):
 	with open(file, 'r+b') as f:
 		
@@ -23,12 +25,16 @@ def toggleDebug(file):
 def printSnvsEntries(base,entries):
 	
 	for i,v in enumerate(entries):
-		color = ''
-		if v[1] in SC_UPD_TYPES:
+		color = Clr.fg.d_grey
+		if v[1] in SC_TYPES_MODES:
+			color = Clr.fg.green
+		if v[1] in SC_TYPES_FSM:
+			color = Clr.fg.purple
+		elif v[1] in SC_TYPES_UPD:
 			color = Clr.fg.cyan
-		elif v[1] in SC_PRE1_TYPE:
+		elif v[1] in SC_TYPES_PRE0:
 			color = Clr.fg.orange
-		elif v[1] in SC_PRE2_TYPE:
+		elif v[1] in SC_TYPES_PRE2:
 			color = Clr.fg.red
 		print(' {:5X} | '.format(base + (i * NvsEntry.getEntrySize())) + color + getHex(v)+Clr.reset)
 

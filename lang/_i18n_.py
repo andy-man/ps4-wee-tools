@@ -72,6 +72,9 @@ def highlight(str):
 def warning(str):
 	return Clr.fg.orange + str + Clr.reset
 
+def dark(str):
+	return Clr.fg.d_grey + str + Clr.reset
+
 def green(str):
 	return Clr.fg.green + str + Clr.reset
 
@@ -114,7 +117,7 @@ def showStatus():
 
 from lang.en import *
 
-APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.8 '
+APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.9'
 TITLE = DIVIDER_BOLD+APP_NAME+('by Andy_maN').rjust(LINE_WIDTH-len(APP_NAME)-1)+'\n'+DIVIDER_BOLD
 
 # Fill strings

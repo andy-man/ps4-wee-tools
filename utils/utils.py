@@ -2,13 +2,17 @@
 # Common utils
 # part of ps4 wee tools project
 #==========================================================
-import hashlib, os, math
+import hashlib, os, math, random
 from lang._i18n_ import *
 
 
 
 INFO_FILE_NOR	= '_sflash0_.txt'
 INFO_FILE_2BLS	= '_2bls_.txt'
+
+
+def genRandBytes(size):
+	return bytearray(random.getrandbits(8) for _ in range(size))
 
 
 
@@ -83,9 +87,12 @@ def savePatchData(file, data, patch = False):
 	with open(file, 'wb') as f:
 		f.write(data)
 	
-	if not patch:
-		return
-	
+	if patch:
+		patchFile(file, patch)
+
+
+
+def patchFile(file, patch):
 	with open(file, 'r+b') as f:
 		for i in range(len(patch)):
 			f.seek(patch[i]['o'],0)
