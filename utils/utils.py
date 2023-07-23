@@ -45,6 +45,13 @@ def checkFileSize(file, size):
 
 
 
+def getFilePathWoExt(file, correct = False):
+	name = os.path.splitext(os.path.basename(file))[0]
+	path = os.path.join(os.path.dirname(file),name)
+	return path.replace(" ", "_") if correct else path
+
+
+
 def getFileMD5(file):
     f = open(file, 'rb')
     f.seek(0)

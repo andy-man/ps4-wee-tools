@@ -91,14 +91,24 @@ def getLast_080B_Index(entries):
 
 
 def isSysconPatchable(records):
-	type = NvsEntry(records[-1]).getIndex()
-	if type in SC_TYPES_UPD:
+	
+	last_fw_ind = getLast_080B_Index(records)
+	if last_fw_ind == -1:
+		return 0
+	
+	type = NvsEntry(records[last_fw_ind - 4]).getIndex()
+	if not type in SC_TYPES_UPD:
+		return 2
+	
+	if last_fw_ind == len(records) - 4:
 		return 1
-	if type in SC_TYPES_PRE0:
-		return 0
-	if type in SC_TYPES_PRE2:
-		return 0
-	return 2
+	
+	for i in range(last_fw_ind, len(records)):
+		type = NvsEntry(records[i]).getIndex()
+		if type in SC_TYPES_PRE0 or type in SC_TYPES_PRE2:
+			return 0
+	
+	return 3
 
 # NVS Parser ==============================================
 
@@ -135,6 +145,9 @@ class NvsConfig:
 	
 	def getDataSize(self):
 		return self.getDataLength() * self.getDataCount()
+	
+	def getDataRecordsCount(self):
+		return self.getDataRecordsLength() // NvsEntry.getEntrySize()
 
 
 
@@ -149,10 +162,13 @@ class NvsEntry:
 			self.entry = bytearray(buf)
 	
 	def getHeader(self):
-		return self.entry[:self.getHeaderSize()];
+		return self.entry[:self.getEntryHeadSize()];
 	
 	def getData(self):
-		return self.entry[self.getHeaderSize():self.getHeaderSize()+self.getDataSize()];
+		return self.entry[self.getEntryHeadSize():self.getEntryHeadSize()+self.getEntryDataSize()];
+	
+	def getEntry(self):
+		return self.entry
 	
 	def getCounter(self):
 		return int.from_bytes(self.entry[4:4+3],"little")
@@ -165,8 +181,15 @@ class NvsEntry:
 	def getIndex(self):
 		return int.from_bytes(self.entry[1:1+2],"little")
 	
+	def setIndex(self, val):
+		self.entry[1+0] = val & 0xFF
+		self.entry[1+1] = val >> 8 & 0xFF
+	
 	def getLink(self):
 		return int.from_bytes(self.entry[3:3+1],"little")
+	
+	def setLink(self, val):
+		self.entry[3] = val & 0xFF
 	
 	def hasMagic(self):
 		return self.checkMagic(self.entry)
@@ -196,10 +219,11 @@ class NVStorage:
 	cfg = NvsConfig({})
 	
 	header = b''
-	data = b''	
+	data = b''
 	
 	active_volume = 0
 	active_entry = NvsEntry('')
+	active_entry_num = 1
 	
 	def __init__(self, config, buffer):
 		self.cfg = config
@@ -211,6 +235,15 @@ class NVStorage:
 		self.data = buf[len(self.header):]
 		self.findActive()
 	
+	def getHeader(self):
+		return self.header
+	
+	def getData(self):
+		return self.data
+	
+	def getBytes(self):
+		return self.header + self.data
+	
 	def findActive(self):
 		
 		for volume in range(0, self.cfg.getHeaderCount()):
@@ -219,6 +252,7 @@ class NVStorage:
 			if len(entries) and counter > 0:
 				self.active_volume = volume
 				self.active_entry = NvsEntry(entries[len(entries)-1])
+				self.active_entry_num = len(entries)-1
 		
 		return self.active_volume
 	
@@ -236,6 +270,11 @@ class NVStorage:
 		
 		return entries
 	
+	def getOWC(self):
+		# overwrite count
+		c = len(self.getVolumeEntries()) - 1
+		return 0 if c <= self.cfg.getDataCount() else c // self.cfg.getDataCount()
+	
 	def getLastDataEntries(self):
 		return self.getDataBlockEntries(self.active_entry.getLink())
 	
@@ -244,10 +283,7 @@ class NVStorage:
 	
 	def getDataBlockOffset(self, index = 0, real = False):
 		offset = self.cfg.getDataLength() * index
-		if real:
-			return self.cfg.getOffset() + self.cfg.getHeaderSize() + offset + self.cfg.getDataFlatLength()
-		else:
-			return offset
+		return self.cfg.getOffset() + self.cfg.getHeaderSize() + offset + self.cfg.getDataFlatLength() if real else offset
 	
 	def getDataBlock(self, index = 0):
 		offset = self.getDataBlockOffset(index)
@@ -257,9 +293,13 @@ class NVStorage:
 		block = self.getDataBlock(index)
 		return block[:self.cfg.getDataFlatLength()]
 	
+	def getDataBlockRecords(self, index = 0):
+		block = self.getDataBlock(index)
+		return block[self.cfg.getDataFlatLength():]
+	
 	def getDataBlockEntries(self, index = 0):
 		
-		data = self.getDataBlock(index)[self.cfg.getDataFlatLength():]
+		data = self.getDataBlockRecords(index)
 		step = NvsEntry.getEntrySize()
 		entries = list()
 		
@@ -274,9 +314,78 @@ class NVStorage:
 		offset = (index) * NvsEntry.getEntryHeadSize() + self.cfg.getHeaderLength() * volume;
 		return self.header[offset:offset + NvsEntry.getEntryHeadSize()]
 	
+	def getLastVolumeEntryOffset(self, real = False):
+		return self.getVolumeEntryOffset(self.active_entry_num, real)
+	
+	def getVolumeEntryOffset(self, index, real = False):
+		offset = NvsEntry.getEntryHeadSize() * index
+		return self.cfg.getOffset() + offset if real else offset
+	
 	def getVolumeCounter(self, volume = 0):
 		entry = NvsEntry(self.getVolumeEntry(volume,0))
 		return entry.getCounter()
+	
+	def getDataBlocksOrder(self):
+		v_entries = self.getVolumeEntries()
+		max = len(v_entries) - self.cfg.getDataCount()
+		return [NvsEntry(v_entries[i-1]).getLink() for i in range(len(v_entries), max if max > 0 else 1, -1)]
+	
+	def getAllDataEntries(self):
+		entries = []
+		for n in self.getDataBlocksOrder():
+			entries = self.getDataBlockEntries(n) + entries
+		return entries
+	
+	def getAllFlatData(self):
+		flatdata = []
+		for n in self.getDataBlocksOrder():
+			flatdata = [self.getDataBlockFlat(n)] + flatdata
+		return flatdata
+	
+	def getRebuilded(self):
+		# get all enties and flatdata
+		entries = self.getAllDataEntries()
+		flatdata = self.getAllFlatData()
+		
+		# fix counters
+		for i in range(len(entries)):
+			entry = NvsEntry(entries[i])
+			entry.setCounter(i)
+			entries[i] = entry.getEntry()
+		
+		# create new
+		header = b'\xA5\x00\x00\xFF\xFF\xFF\xFF\xC3'
+		data = b''
+		for i in range(self.cfg.getDataCount()):
+			start = i * self.cfg.getDataRecordsCount()
+			if start >= len(entries):
+				break
+			data += flatdata[i]
+			end = start + self.cfg.getDataRecordsCount()
+			for n in range(start, end if end <= len(entries) else len(entries)):
+				data += entries[n]
+			first = NvsEntry(entries[start])
+			first.setIndex(i)
+			first.setLink(i)
+			header += first.getHeader()
+		
+		# adjust padding
+		hsize = self.cfg.getHeaderSize()
+		if len(header) < hsize:
+			header += b'\xFF'*(hsize - len(header))
+		
+		dsize = self.cfg.getDataSize()
+		if len(data) < dsize:
+			data += b'\xFF'*(dsize - len(data))
+		
+		with open('new_snvs','wb') as f:
+			f.write(header + data)
+		
+		print(len(entries),len(flatdata))
+		print(NvsEntry(entries[0]).getCounter())
+		print(NvsEntry(entries[-1]).getCounter())
+		
+		return header + data
 
 
 
@@ -289,5 +398,5 @@ SNVS_CONFIG = NvsConfig({
 NVS_CONFIG = NvsConfig({ 
 	"offset":	SC_AREAS['NVS']['o'],
 	"header":	{ "length":SYSCON_BLOCK_SIZE, "count":2 },
-	"data":		{ "flat":SYSCON_BLOCK_SIZE, "records":SYSCON_BLOCK_SIZE * 5, "count":8 },
+	"data":		{ "flat":SYSCON_BLOCK_SIZE, "records":SYSCON_BLOCK_SIZE * 2, "count":2 },
 })

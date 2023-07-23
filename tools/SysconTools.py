@@ -40,34 +40,36 @@ def printSnvsEntries(base,entries):
 
 
 
-def screenActiveSNVS(file, block = ''):
+def screenViewSNVS(file, block = ''):
 	os.system('cls')
-	print(TITLE+getTab(STR_LAST_SVNS))
+	print(TITLE+getTab(STR_SVNS_ENTRIES))
 	
 	with open(file, 'rb') as f:
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
 	
+	blocks_count = SNVS_CONFIG.getDataCount()-1
+	records_count = SNVS_CONFIG.getDataRecordsCount()
 	active = SNVS.active_entry.getLink()
 	block = active if block == '' else block
 	
 	entries = SNVS.getDataBlockEntries(block)
 	base = SNVS.getDataBlockOffset(block, True)
 	
-	print(STR_SYSCON_BLOCK.format(block, active))
+	print(STR_SYSCON_BLOCK.format(block, blocks_count, len(entries), records_count, active))
 	printSnvsEntries(base, entries)
 	
 	showStatus()
 	
 	try:
-		num = int(input(DIVIDER+STR_SC_BLOCK_SELECT))
-		if num >= 0 and num <= 7:
+		num = int(input(DIVIDER+STR_SC_BLOCK_SELECT.format(blocks_count)))
+		if num >= 0 and num <= blocks_count:
 			block = num
 		else:
 			setStatus(STR_ERROR_CHOICE)
 	except:
 		return
 	
-	screenActiveSNVS(file, block)
+	screenViewSNVS(file, block)
 
 
 
@@ -79,49 +81,63 @@ def screenAutoPatchSNVS(file):
 		data = f.read()
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
 	
+	# search in last block if not found use previous
 	entries = SNVS.getLastDataEntries()
-	
-	base = SNVS.getLastDataBlockOffset(True)
-	last = NvsEntry(entries[-1])
 	
 	index = getLast_080B_Index(entries)
 	prev_index = getLast_080B_Index(entries[:index])
 	
+	base = SNVS.getLastDataBlockOffset(True)
+	last = NvsEntry(entries[-1])
+	
 	cur_o = index * NvsEntry.getEntrySize() + base
 	pre_o = prev_index * NvsEntry.getEntrySize() + base
 	
-	if index < 0 or prev_index < 0 or not isSysconPatchable(entries):
+	status = isSysconPatchable(entries)
+	if index < 0 or prev_index < 0 or status == 0:
 		print(STR_UNPATCHABLE.format(len(entries),last.getCounter(),last.getIndex(), index, prev_index ))
 		input(STR_BACK)
 		return
 	
-	out_file = os.path.basename(file).replace(" ", "_").rsplit('.', maxsplit=1)[0]
+	out_file = getFilePathWoExt(file,True)
 	
 	options = MENU_PATCHES
 	options[1] = options[1].format(len(entries) - index)
+	options[4] = options[4].format(len(entries) - prev_index)
 	
 	print(highlight(STR_PATCH_INDEXES.format(cur_o, pre_o)))
+	
+	print(' Status: '+MENU_SC_STATUSES[status])
+	recommend = ['-','A','D','B']
+	print(warning(STR_RECOMMEND.format(recommend[status]))+'\n')
+	
 	getMenu(options,1)
 	showStatus()
 	
 	choice = input(STR_CHOICE)
 	
-	if choice == '':
-	    return
-	elif choice == '1':
+	try:
+		c = int(choice)
+	except:
+		return
+	
+	ofile = ''
+	
+	if c == 1:
 		ofile = out_file+'_patch_A.bin'
-		savePatchData(ofile, data, [{'o':cur_o,'d':b'\xFF'*NvsEntry.getEntrySize()*4}]);
-		setStatus(STR_PATCH_SAVED.format(ofile))
-	elif choice == '2':
+		savePatchData(ofile, data, [{'o':cur_o,'d':b'\xFF'*NvsEntry.getEntrySize()*4}])
+	elif c == 2:
 		ofile = out_file+'_patch_B.bin'
-		savePatchData(ofile, data, [{'o':cur_o,'d':b'\xFF'*NvsEntry.getEntrySize()*(len(entries) - index)}]);
-		setStatus(STR_PATCH_SAVED.format(ofile))
-	elif choice == '3':
+		savePatchData(ofile, data, [{'o':cur_o,'d':b'\xFF'*NvsEntry.getEntrySize()*(len(entries) - index)}])
+	elif c == 3:
 		ofile = out_file+'_patch_C.bin'
-		savePatchData(ofile, data, [{'o':cur_o,'d':data[pre_o:pre_o + NvsEntry.getEntrySize()*4]}]);
-		setStatus(STR_PATCH_SAVED.format(ofile))
-	elif choice == '4':
+		savePatchData(ofile, data, [{'o':cur_o,'d':data[pre_o:pre_o + NvsEntry.getEntrySize()*4]}])
+	elif c == 4:
 		ofile = out_file+'_patch_D.bin'
+		offset = pre_o + 4*NvsEntry.getEntrySize(); size = NvsEntry.getEntrySize()*(len(entries) - prev_index - 4)
+		savePatchData(ofile, data, [{'o':offset, 'd':b'\xFF'*size}])
+	elif c == 5:
+		ofile = out_file+'_counters_fix.bin'
 		new_entries = bytearray()
 		prev_c = False
 		for i in range(len(entries)):
@@ -132,8 +148,10 @@ def screenAutoPatchSNVS(file):
 				record.setCounter(cur_c)
 			prev_c = cur_c
 			new_entries += record.entry
-		savePatchData(ofile, data, [{'o':base,'d':new_entries}]);
-		setStatus(STR_PATCH_SAVED.format(ofile))
+		savePatchData(ofile, data, [{'o':base,'d':new_entries}])
+	
+	if ofile:
+		setStatus(STR_SAVED_TO.format(ofile))
 	else:
 		setStatus(STR_ERROR_CHOICE)
 	
@@ -153,9 +171,11 @@ def screenManualPatchSNVS(file):
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
 		entries = SNVS.getLastDataEntries()
 		
+		block = SNVS.active_entry.getLink()
 		records_count = 16 if len(entries) > 16 else len(entries)
-		print(STR_LAST_DATA.format(records_count, len(entries)))
+		print(STR_LAST_SC_ENTRIES.format(records_count, len(entries), block))
 		print()
+		
 		
 		last_offset = SNVS.getLastDataBlockOffset(True) + NvsEntry.getEntrySize() * len(entries)
 		printSnvsEntries(last_offset - NvsEntry.getEntrySize() * records_count, entries[-records_count:])
@@ -169,12 +189,19 @@ def screenManualPatchSNVS(file):
 		except:
 			return screenManualPatchSNVS(file)
 		
-		offset = 0
 		if num > 0 and num < len(entries):
 			length = num*NvsEntry.getEntrySize()
 			setData(f, last_offset - length, b'\xFF'*length)
-			
 			setStatus(STR_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(last_offset - length, last_offset))
+		elif num == len(entries):
+			if SNVS.getOWC() == 0:
+				setData(f, SNVS.getLastVolumeEntryOffset(True), b'\xFF'*NvsEntry.getEntryHeadSize())
+				setData(f, SNVS.getLastDataBlockOffset(True) - SNVS.cfg.getDataFlatLength(), b'\xFF'*SNVS.cfg.getDataLength())
+				setStatus(STR_SC_BLOCK_CLEANED.format(block))
+			else:
+				setStatus(STR_REBUILD_REQUIRED)
+		elif num > len(entries):
+			setStatus(STR_TOO_MUCH.format(num,len(entries)))
 		elif num == 0:
 			setStatus(STR_PATCH_CANCELED)
 			return
@@ -205,12 +232,26 @@ def screenSysconTools(file):
 	elif choice == '1':
 		toggleDebug(file)
 	elif choice == '2':
-		screenActiveSNVS(file)
+		screenViewSNVS(file)
 	elif choice == '3':
 		screenAutoPatchSNVS(file)
 	elif choice == '4':
 		screenManualPatchSNVS(file)
 	elif choice == '5':
+		
+		with open(file, 'rb') as f:
+			data = f.read()
+			SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+			snvs_data = SNVS.getRebuilded()
+		
+		ofile = getFilePathWoExt(file,True) + '_rebuild.bin'
+		
+		with open(ofile, 'wb') as f:
+			 f.write(data)
+			 setSysconData(f, 'SNVS', snvs_data)
+		
+		setStatus(STR_SAVED_TO.format(ofile))
+	elif choice == '6':
 	    quit()
 	
 	screenSysconTools(file)
@@ -228,10 +269,11 @@ def getSysconInfo(file):
 		ver = getSysconData(f, 'VERSION')
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
 		entries = SNVS.getLastDataEntries()
-		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}]'.format(
+		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}] OWC[{}]'.format(
 			SNVS.active_volume,
 			SNVS.active_entry.getLink(),
 			SNVS.active_entry.getCounter(),
+			SNVS.getOWC(),
 		)
 		
 		info = {
@@ -242,7 +284,7 @@ def getSysconInfo(file):
 			'Version'		: '{:X}.{:X}'.format(ver[0],ver[2]),
 			'SNVS'			: snvs_info,
 			'Entries'		: STR_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
-			'Patchable'		: STR_NO if isSysconPatchable(entries) == 0 else STR_PROBABLY
+			'Status'		: MENU_SC_STATUSES[isSysconPatchable(entries)],
 		}
 	
 	return info

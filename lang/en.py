@@ -43,9 +43,10 @@ MENU_NOR_ACTIONS = [
 MENU_SC_ACTIONS = [
 	'Select another file',
 	'Toggle Debug',
-	'Show active SNVS block',
+	'SNVS block viewer',
 	'Auto SNVS patch',
 	'Manual SNVS patch',
+	'Rebuild SNVS',
 	'Exit'
 ]
 
@@ -53,7 +54,15 @@ MENU_PATCHES = [
 	'Method A - last 08-0B will be cleaned (4 records)',
 	'Method B - last 08-0B and below will be cleaned ({} records)',
 	'Method C - last 08-0B will be replaced with previous',
-	'Method D - fix counters (f.e. after method C)',
+	'Method D - clean everything below previous 08-0B ({} records)',
+	'Fix counters (f.e. after method C)',
+]
+
+MENU_SC_STATUSES = [
+	'Not patchable',
+	'Patchable',
+	'Already patched or stuck on update',
+	'Probably',
 ]
 
 STR_FILE_LIST			= 'Files list'
@@ -68,7 +77,7 @@ STR_SWITCH_PATTERNS		= 'Switch patterns'
 STR_MEMCLOCK			= 'Memory clock'
 STR_SAMU_BOOT			= 'SAMU boot'
 STR_SYSFLAGS			= 'System flags'
-STR_LAST_SVNS			= 'Last SNVS entries'
+STR_SVNS_ENTRIES		= 'SNVS entries'
 STR_APATCH_SVNS			= 'SNVS auto patching'
 STR_MPATCH_SVNS			= 'SNVS manual patcher'
 STR_NOR_VALIDATOR		= 'NOR validator'
@@ -132,21 +141,25 @@ STR_DIFF_SLOT_VALUES	= ' Values in slots are different!'
 STR_SYSFLAGS_CLEAN		= ' Sys flags were cleared. Tip: turn on UART'
 STR_SAMU_UPD			= ' SAMU flag was set to '
 STR_DOWNGRADE_UPD		= ' Downgrade was set to: '
-STR_LAST_DATA			= ' Last {} records of {}: '
+STR_LAST_SC_ENTRIES		= ' Showing [{}/{}] entries of active block [{}]'
 STR_MEMCLOCK_SET		= ' GDDR5 frequency was set to {:d}MHz [0x{:02X}]'
 
+STR_RECOMMEND			= ' Recommended method [{}]'
 STR_PATCH_CANCELED		= ' Patch was canceled'
 STR_PATCH_SUCCESS		= ' Successfully removed {} entries'
 STR_PATCH_SAVED			= ' Patch was saved to {}'
 STR_PATCH_INDEXES		= ' Last 08-0B at 0x{:04X} | Previous at 0x{:04X}\n'
-STR_SC_BLOCK_SELECT		= ' Select data block [0-7] '
+STR_SC_BLOCK_SELECT		= ' Select data block [0-{}] '
 STR_MPATCH_INPUT		= ' How many records to clean (from end): '
 STR_CHOICE				= ' Make choice: '
 STR_BACK				= ' Press [ENTER] to go back'
 STR_MEMCLOCK_INPUT		= ' Setup frequency [400 - 2000] / [0 set default (0xFF)] MHz '
 STR_SAMU_INPUT			= ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
+STR_TOO_MUCH			= ' {} is too much, maximum value is {}'
+STR_SC_BLOCK_CLEANED	= ' Block [{}] was entirely cleaned'
+STR_REBUILD_REQUIRED	= ' To remove whole block you need rebuild SNVS at first'
 
-STR_SYSCON_BLOCK		= ' Current [{}/7] | {} is active\n'
+STR_SYSCON_BLOCK		= ' Block [{}/{}] has [{}/{}] entries | Active block is [{}]\n'
 STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
