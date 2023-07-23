@@ -4,13 +4,21 @@
 
 PS4 wee tools help to work with PS4 nor and syscon dumps.
 
-It is free open source alternative for BwE's PS4-NOR-Validator & Syscon-Patcher written in Python to keep it simple.
+It is free open source alternative for BwE's commercial apps.
 
-Currently it provides base functional and can not fully replace those tools.
+Written in Python to keep it simple.
 
-![Main tool](assets/main.png)
+| Nor tool | Syscon tool |
+| --- | --- |
+| ![Main tool](assets/main.png) | ![Syscon tool](assets/syscon.png) |
 
 Was tested with Python 3.8
+
+Since v0.7 **"Crypto"** library is required if you want to run python script directly
+
+It can be easily installed with help of pip
+
+`pip install crypto`
 
 ## Features
 
@@ -35,14 +43,15 @@ NOR tool
 
 Syscon tool
 * Syscon check
-* Patchable check
-* Show active SNVS slot
+* Patchable status check
+* SNVS blocks viewer
 * Manual SNVS patch
-* Auto SNVS patch (4 modes)
+* Auto SNVS patch (5 modes)
+* SNVS rebuilding
 
 Common
 * Multy files compare
-* Pack / Unpack SLB2 files
+* Pack / Unpack 2BLS files
 
 Don't use if you don't understant what is it for!
 
@@ -69,6 +78,13 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.8
+* SNVS rebuilding (Syscon)
+* Manual syscon patch allows to remove entire block
+* Tips for syscon patching
+* Extra syscon patch (stuck on FW update)
+* NVStorage class improvements
 
 ### v0.7.9
 * EAP key recovery

@@ -117,7 +117,7 @@ def showStatus():
 
 from lang.en import *
 
-APP_NAME = ' PS4 ~WEE~ TOOLS v0.7.9'
+APP_NAME = ' PS4 ~WEE~ TOOLS v0.8'
 TITLE = DIVIDER_BOLD+APP_NAME+('by Andy_maN').rjust(LINE_WIDTH-len(APP_NAME)-1)+'\n'+DIVIDER_BOLD
 
 # Fill strings
