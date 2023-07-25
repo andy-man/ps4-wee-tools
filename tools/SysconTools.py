@@ -93,6 +93,7 @@ def screenAutoPatchSNVS(file):
 	cur_o = index * NvsEntry.getEntrySize() + base
 	pre_o = prev_index * NvsEntry.getEntrySize() + base
 	
+	# TODO: add whole entries check SNVS.getAllDataEntries()
 	status = isSysconPatchable(entries)
 	if index < 0 or prev_index < 0 or status == 0:
 		print(STR_UNPATCHABLE.format(len(entries),last.getCounter(),last.getIndex(), index, prev_index ))
@@ -268,7 +269,7 @@ def getSysconInfo(file):
 		debug = STR_ON if debug == 0x84 or debug == 0x85 else STR_OFF
 		ver = getSysconData(f, 'VERSION')
 		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
-		entries = SNVS.getLastDataEntries()
+		records = SNVS.getAllDataEntries()
 		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}] OWC[{}]'.format(
 			SNVS.active_volume,
 			SNVS.active_entry.getLink(),
@@ -284,7 +285,7 @@ def getSysconInfo(file):
 			'Version'		: '{:X}.{:X}'.format(ver[0],ver[2]),
 			'SNVS'			: snvs_info,
 			'Entries'		: STR_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
-			'Status'		: MENU_SC_STATUSES[isSysconPatchable(entries)],
+			'Status'		: MENU_SC_STATUSES[isSysconPatchable(records)],
 		}
 	
 	return info
