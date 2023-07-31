@@ -53,16 +53,14 @@ MENU_SC_ACTIONS = [
 MENU_PATCHES = [
 	'Method A - last 08-0B will be cleaned (4 records)',
 	'Method B - last 08-0B and below will be cleaned ({} records)',
-	'Method C - last 08-0B will be replaced with previous',
-	'Method D - clean everything below previous 08-0B ({} records)',
-	'Fix counters (f.e. after method C)',
+	'Method C - clean everything below previous 08-0B ({} records)',
 ]
 
 MENU_SC_STATUSES = [
 	'Not patchable',
 	'Patchable',
 	'Already patched or stuck on update',
-	'Probably',
+	'Probably patchable',
 ]
 
 STR_FILE_LIST			= 'Files list'
@@ -148,8 +146,8 @@ STR_RECOMMEND			= ' Recommended method [{}]'
 STR_PATCH_CANCELED		= ' Patch was canceled'
 STR_PATCH_SUCCESS		= ' Successfully removed {} entries'
 STR_PATCH_SAVED			= ' Patch was saved to {}'
-STR_PATCH_INDEXES		= ' Last 08-0B at 0x{:04X} | Previous at 0x{:04X}\n'
-STR_SC_BLOCK_SELECT		= ' Select data block [0-{}] '
+STR_PATCH_INDEXES		= ' Last 08-0B - {} | Previous 08-0B - {}\n'
+STR_SC_BLOCK_SELECT		= ' Select data block [0-{}] or show flat [f] '
 STR_MPATCH_INPUT		= ' How many records to clean (from end): '
 STR_CHOICE				= ' Make choice: '
 STR_BACK				= ' Press [ENTER] to go back'
@@ -157,12 +155,14 @@ STR_MEMCLOCK_INPUT		= ' Setup frequency [400 - 2000] / [0 set default (0xFF)] MH
 STR_SAMU_INPUT			= ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
 STR_TOO_MUCH			= ' {} is too much, maximum value is {}'
 STR_SC_BLOCK_CLEANED	= ' Block [{}] was entirely cleaned'
-STR_REBUILD_REQUIRED	= ' To remove whole block you need rebuild SNVS at first'
+STR_REBUILD_REQUIRED	= ' You need rebuild SNVS at first to perform this action'
 
+STR_UNPATCHABLE			= ' Can\'t patch!'
 STR_SYSCON_BLOCK		= ' Block [{}/{}] has [{}/{}] entries | Active block is [{}]\n'
 STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
+STR_SNVS_ENTRY_INFO		= 'Block {} #{} Offset 0x{:04X}'
 
 STR_FW_VERSION			= ' FW version {} / Active slot {}'
 
@@ -185,9 +185,7 @@ STR_CONFIRM				= ' Input [y] to continue: '
 STR_CURRENT				= ' Current: '
 STR_GO_BACK				= ' Go back'
 
-STR_UNPATCHABLE = ' Can\'t proceed!\n'\
-' Last SNVS record #{} counter [0x{:02X}] type [0x{:02X}]\n'\
-' Last 08-0B index = {} / Previous 08-0B index = {}'
+
 
 STR_OVERCLOCKING = ''\
 ' Dangerous operation!\n\n'\

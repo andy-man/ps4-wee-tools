@@ -89,6 +89,20 @@ def getLast_080B_Index(entries):
 	return -1
 
 
+def getRecordPos(index, nvs):
+	data = {}
+	if index < 0:
+		return data
+	
+	block_order = nvs.getDataBlocksOrder()
+	records_per_block = nvs.cfg.getDataRecordsCount()
+	
+	data['block'] = block_order[len(block_order)-1 - index // records_per_block]
+	data['num'] = index % records_per_block
+	data['offset'] = nvs.getDataBlockOffset(data['block'], True) + data['num'] * NvsEntry.getEntrySize()
+	
+	return data
+
 
 def isSysconPatchable(records):
 	
@@ -342,10 +356,11 @@ class NVStorage:
 			flatdata = [self.getDataBlockFlat(n)] + flatdata
 		return flatdata
 	
-	def getRebuilded(self):
+	def getRebuilded(self, entries = False, flatdata = False):
 		# get all enties and flatdata
-		entries = self.getAllDataEntries()
-		flatdata = self.getAllFlatData()
+		entries = self.getAllDataEntries() if entries == False else entries
+		flatdata = self.getAllFlatData() if flatdata == False else flatdata
+		flatlength = self.cfg.getDataFlatLength()
 		
 		# fix counters
 		for i in range(len(entries)):
@@ -360,7 +375,7 @@ class NVStorage:
 			start = i * self.cfg.getDataRecordsCount()
 			if start >= len(entries):
 				break
-			data += flatdata[i]
+			data += b'\xFF'*flatlength if i >= len(flatdata) or len(flatdata[i]) < flatlength else flatdata[i]
 			end = start + self.cfg.getDataRecordsCount()
 			for n in range(start, end if end <= len(entries) else len(entries)):
 				data += entries[n]
