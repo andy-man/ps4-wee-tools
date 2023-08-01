@@ -28,8 +28,8 @@ def printSnvsEntries(base,entries):
 		color = Clr.fg.d_grey
 		if v[1] in SC_TYPES_MODES:
 			color = Clr.fg.green
-		if v[1] in SC_TYPES_FSM:
-			color = Clr.fg.purple
+		if v[1] in SC_TYPES_BOOT:
+			color = Clr.fg.pink
 		elif v[1] in SC_TYPES_UPD:
 			color = Clr.fg.cyan
 		elif v[1] in SC_TYPES_PRE0:
@@ -99,8 +99,9 @@ def screenAutoPatchSNVS(file):
 	entries = SNVS.getAllDataEntries()
 	status = isSysconPatchable(entries)
 	
-	index = getLast_080B_Index(entries)
-	prev_index = getLast_080B_Index(entries[:index])
+	inds = getEntriesByType(SC_TYPES_UPD, entries)
+	index = inds[-1] if len(inds) >= 1 else -1
+	prev_index = inds[-2] if len(inds) >= 2 else -1
 	
 	last_fw = getRecordPos(index, SNVS)
 	prev_fw = getRecordPos(prev_index, SNVS)
@@ -213,6 +214,79 @@ def screenManualPatchSNVS(file):
 
 
 
+def screenBootModes(file):
+	os.system('cls')
+	print(TITLE+getTab(STR_ABOUT_SC_BOOTMODES))
+	print(warning(STR_INFO_SC_BOOTMODES))
+	
+	print(getTab(STR_SC_BOOT_MODES))
+	
+	with open(file, 'r+b') as f:
+		data = f.read()
+		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		entries = SNVS.getAllDataEntries()
+	
+	modes = getEntriesByType(SC_TYPES_BOOT, entries)
+	
+	if len(modes) <= 0:
+		print(warning(STR_SC_NO_BM))
+		input(STR_BACK)
+		return
+	
+	items = []
+	duplicates = []
+	
+	for i in range(len(modes)):
+		inf = getRecordPos(modes[i], SNVS)
+		edata = []
+		for k in range(len(SC_TYPES_BOOT)):
+			edata.append(getHex(NvsEntry(entries[modes[i]+k]).getData(),''))
+		
+		color = ''
+		
+		if edata in items:
+			color = Clr.fg.orange
+			duplicates.append(i+1)
+		else:
+			items.append(edata)
+		
+		item = Clr.fg.pink + edata[0] + Clr.reset + ' ... ' + Clr.fg.pink + edata[-1] + Clr.reset
+		print(color + ' % 2d: Block %d (#%03d) at 0x%04X '%(i+1, inf['block'], inf['num'], inf['offset']) + Clr.reset + item)
+	
+	print()
+	
+	if len(duplicates):
+		print(STR_DUPLICATES.format(len(duplicates),duplicates))
+	
+	showStatus()
+	
+	choice = input(DIVIDER+STR_SC_BM_SELECT.format(len(modes)))
+	
+	try:
+		c = int(choice)
+		
+		out_file = getFilePathWoExt(file,True)
+		
+		if c == len(modes):
+			setStatus(STR_SC_ACTIVE_BM)
+		elif c > 0 and c < len(modes):
+			ofile = out_file+'_bootmode_%d.bin'%(c)
+			sel = modes[c-1]
+			act = modes[-1]
+			# replace last(active) with selected
+			for i in range(len(SC_TYPES_BOOT)):
+				temp = entries[act + i]
+				entries[act + i] = entries[sel + i]
+				entries[sel + i] = temp
+			
+			savePatchData(ofile, data, [{'o':SC_AREAS['SNVS']['o'], 'd':SNVS.getRebuilded(entries)}])
+			setStatus(STR_SAVED_TO.format(ofile))
+	except:
+		return
+	
+	screenBootModes(file)
+
+
 def screenSysconTools(file):
 	os.system('cls')
 	print(TITLE+getTab(STR_SYSCON_INFO))
@@ -254,8 +328,9 @@ def screenSysconTools(file):
 			 setSysconData(f, 'SNVS', snvs_data)
 		
 		setStatus(STR_SAVED_TO.format(ofile))
-		
 	elif choice == '6':
+		screenBootModes(file)
+	elif choice == '7':
 	    quit()
 	
 	screenSysconTools(file)

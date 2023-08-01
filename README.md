@@ -44,10 +44,11 @@ NOR tool
 Syscon tool
 * Syscon check
 * Patchable status check
-* SNVS blocks viewer
+* SNVS blocks viewer (records and flatdata)
 * Manual SNVS patch
-* Auto SNVS patch (5 modes)
+* Auto SNVS patch (3 modes)
 * SNVS rebuilding
+* Boot mode selection
 
 Common
 * Multy files compare

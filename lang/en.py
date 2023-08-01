@@ -47,11 +47,12 @@ MENU_SC_ACTIONS = [
 	'Auto SNVS patch',
 	'Manual SNVS patch',
 	'Rebuild SNVS',
+	'Boot modes (Factory Service Mode / Normal)',
 	'Exit'
 ]
 
 MENU_PATCHES = [
-	'Method A - last 08-0B will be cleaned (4 records)',
+	'Method A - last 08-0B will be deleted (4 records)',
 	'Method B - last 08-0B and below will be cleaned ({} records)',
 	'Method C - clean everything below previous 08-0B ({} records)',
 ]
@@ -87,6 +88,7 @@ STR_2BLS_BUILDER		= '2BLS builder'
 STR_UNPACK_2BLS			= '2BLS unpacker'
 STR_EMC_CFW				= 'EMC CFW (Aeolia)'
 STR_EAP_KEYS			= 'EAP keys'
+STR_SC_BOOT_MODES		= 'Bootmode records'
 
 STR_NO_INFO				= '- No info -'
 STR_OFF					= 'Off'
@@ -156,13 +158,16 @@ STR_SAMU_INPUT			= ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
 STR_TOO_MUCH			= ' {} is too much, maximum value is {}'
 STR_SC_BLOCK_CLEANED	= ' Block [{}] was entirely cleaned'
 STR_REBUILD_REQUIRED	= ' You need rebuild SNVS at first to perform this action'
+STR_SC_NO_BM			= ' Boot modes records were not found!'
+STR_SC_ACTIVE_BM		= ' It\'s already active boot mode!'
 
 STR_UNPATCHABLE			= ' Can\'t patch!'
 STR_SYSCON_BLOCK		= ' Block [{}/{}] has [{}/{}] entries | Active block is [{}]\n'
 STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
-STR_SNVS_ENTRY_INFO		= 'Block {} #{} Offset 0x{:04X}'
+STR_SNVS_ENTRY_INFO		= 'Block {} #{:03d} Offset 0x{:04X}'
+STR_DUPLICATES			= ' {} duplicate(s) found {}'
 
 STR_FW_VERSION			= ' FW version {} / Active slot {}'
 
@@ -184,8 +189,13 @@ STR_CONFIRM_SEPARATE	= ' Save as separate file? [y] '
 STR_CONFIRM				= ' Input [y] to continue: '
 STR_CURRENT				= ' Current: '
 STR_GO_BACK				= ' Go back'
+STR_SC_BM_SELECT		= ' Select boot mode variant [1-{}] '
 
-
+STR_ABOUT_SC_BOOTMODES = 'About boot modes'
+STR_INFO_SC_BOOTMODES = ''\
+' Boot mode records are encrypted, so we can\'t detect its purpose\n'\
+' You should try each of them by yourself to determine what is it for\n'\
+' Keep in mind: some records may have duplicates (marked with color)'
 
 STR_OVERCLOCKING = ''\
 ' Dangerous operation!\n\n'\

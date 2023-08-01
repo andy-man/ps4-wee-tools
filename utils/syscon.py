@@ -22,10 +22,10 @@ SC_E_TYPE = {
 	'MODE1'		: 0x01,
 	'MODE2'		: 0x02,
 	'MODE3'		: 0x03,
-	'FSM_ON'	: 0x04,
-	'MODE5'		: 0x05,
-	'MODE6'		: 0x06,
-	'FSM_OFF'	: 0x07,
+	'BOOT0'		: 0x04,
+	'BOOT1'		: 0x05,
+	'BOOT2'		: 0x06,
+	'BOOT3'		: 0x07,
 	'FW_A'		: 0x08,
 	'FW_B'		: 0x09,
 	'LIC1'		: 0x0A,
@@ -40,8 +40,8 @@ SC_E_TYPE = {
 	'PRE23'		: 0x23,
 }
 
-SC_TYPES_FSM	= [SC_E_TYPE['FSM_ON'], SC_E_TYPE['FSM_OFF']]
-SC_TYPES_MODES	= [SC_E_TYPE['MODE0'], SC_E_TYPE['MODE1'], SC_E_TYPE['MODE2'], SC_E_TYPE['MODE3'], SC_E_TYPE['MODE5'], SC_E_TYPE['MODE6']]
+SC_TYPES_BOOT	= [SC_E_TYPE['BOOT0'], SC_E_TYPE['BOOT1'], SC_E_TYPE['BOOT2'], SC_E_TYPE['BOOT3']]
+SC_TYPES_MODES	= [SC_E_TYPE['MODE0'], SC_E_TYPE['MODE1'], SC_E_TYPE['MODE2'], SC_E_TYPE['MODE3']]
 SC_TYPES_UPD	= [SC_E_TYPE['FW_A'], SC_E_TYPE['FW_B'], SC_E_TYPE['LIC1'], SC_E_TYPE['LIC2']]
 SC_TYPES_PRE0	= [SC_E_TYPE['PRE0C'], SC_E_TYPE['PRE0D'], SC_E_TYPE['PRE0E'], SC_E_TYPE['PRE0F']]
 SC_TYPES_PRE2	= [SC_E_TYPE['PRE20'], SC_E_TYPE['PRE21'], SC_E_TYPE['PRE22'], SC_E_TYPE['PRE23']]
@@ -72,21 +72,18 @@ def checkSysconData(file, key):
 
 
 
-def getLast_080B_Index(entries):
-	length = len(entries)
-	if length < 4:
-		return -1
-	for i in range(length):
-		if entries[length-4-i][1] != SC_TYPES_UPD[0]:
-			continue
-		if entries[length-3-i][1] != SC_TYPES_UPD[1]:
-			continue
-		if entries[length-2-i][1] != SC_TYPES_UPD[2]:
-			continue
-		if entries[length-1-i][1] != SC_TYPES_UPD[3]:
-			continue
-		return length-i-4
-	return -1
+def getEntriesByType(type, entries):
+	indexes = []
+	for i in range(len(entries)-len(type)):
+		found = True
+		for k in range(len(type)):
+			if entries[i+k][1] != type[k]:
+				found = False
+				break
+		if found:
+			indexes.append(i)
+	return indexes
+
 
 
 def getRecordPos(index, nvs):
@@ -104,17 +101,21 @@ def getRecordPos(index, nvs):
 	return data
 
 
+
 def isSysconPatchable(records):
 	
-	last_fw_ind = getLast_080B_Index(records)
-	if last_fw_ind == -1:
+	inds = getEntriesByType(SC_TYPES_UPD, records)
+	
+	if len(inds) == 0:
 		return 0
 	
-	type = NvsEntry(records[last_fw_ind - 4]).getIndex()
+	last_fw_ind = inds[-1]
+	
+	type = NvsEntry(records[last_fw_ind - len(SC_TYPES_UPD)]).getIndex()
 	if not type in SC_TYPES_UPD:
 		return 2
 	
-	if last_fw_ind == len(records) - 4:
+	if last_fw_ind == len(records) - len(SC_TYPES_UPD):
 		return 1
 	
 	for i in range(last_fw_ind, len(records)):
