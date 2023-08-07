@@ -114,9 +114,9 @@ def screenValidate(file):
 
 def screenEapKeyRecovery(file):
 	os.system('cls')
-	print(TITLE+getTab(STR_WARNING))
+	print(TITLE+getTab(STR_ABOUT_EAPKEYS))
 	
-	print(warning(STR_IMMEDIATLY))
+	print(warning(STR_INFO_EAPKEYS + '\n' + STR_IMMEDIATLY))
 	
 	print(getTab(STR_EAP_KEYS))
 	print(STR_FILENAME+file+'\n')

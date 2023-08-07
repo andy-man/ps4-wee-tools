@@ -208,6 +208,12 @@ STR_OVERCLOCKING = ''\
 ' - Too high value can lead to LOADBIOS -8 or DCT [*] error\n'\
 ' - Too low value leads to AMDINIT error'
 
+STR_ABOUT_EAPKEYS = 'About eap keys'
+STR_INFO_EAPKEYS = ''\
+' Eap key may be 0x40 and 0x60 bytes length\n'\
+' PS4 10xx/11xx models usually have only one key\n'\
+' And 12xx/Slim/PRO models have backup key\n'\
+
 STR_IMMEDIATLY = ''\
 ' Be careful: All patches are applied immediatly to the file!'
 

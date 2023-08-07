@@ -2,6 +2,7 @@
 # Encrypt / decrypt utils
 # part of ps4 wee tools project
 #==========================================================
+import struct
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA, HMAC, SHA256
 from utils.utils import getHex as hx
