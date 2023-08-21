@@ -2,7 +2,7 @@
 # UI internationalization
 # part of ps4 wee tools project
 #==========================================================
-import sys
+import sys, os
 
 # Colors stuff
 
@@ -45,93 +45,109 @@ class Clr:
 		cyan		='\033[46m'	if use_clr else ''
 		l_grey		='\033[47m'	if use_clr else ''
 
-# Common vars
+# UI stuff
 
-LINE_WIDTH = 70
+class UI:
+	
+	LINE_WIDTH		= 70
+	
+	STATUS_TXT		= ''
+	STATUS_CLR		= ''
+	
+	DIVIDER			= Clr.fg.yellow + '_'*LINE_WIDTH + Clr.reset + '\n'
+	DIVIDER_DASH	= Clr.fg.yellow + '-'*LINE_WIDTH + Clr.reset + '\n'
+	DIVIDER_BOLD	= '='*LINE_WIDTH + '\n'
+	
+	# Colors
+	
+	def link(str):
+		return Clr.underline + Clr.fg.cyan + str + Clr.reset
+	
+	def cyan(str):
+		return Clr.fg.cyan + str + Clr.reset
+	
+	def highlight(str):
+		return Clr.fg.yellow + str + Clr.reset
+	
+	def error(str):
+		return Clr.fg.red + str + Clr.reset
+	
+	def warning(str):
+		return Clr.fg.orange + str + Clr.reset
+	
+	def dark(str):
+		return Clr.fg.d_grey + str + Clr.reset
+	
+	def green(str):
+		return Clr.fg.green + str + Clr.reset
+	
+	# Funcs
+	
+	def clearInput(n = 1):
+		for i in range(n):
+			print('\033[1A' + '\033[K', end='')
+	
+	def setTitle(str):
+		if sys.platform[:3] == 'win':
+			os.system('title '+str)
+	
+	def getTab(str):
+		return Clr.fg.yellow+'  _'+('_'*len(str))+'_\n'+('_/ '+str+' \_').ljust(UI.LINE_WIDTH, '_')+'\n'+Clr.reset
+	
+	def getTable(data, pad=16):
+		return UI.showTable(data, pad, True)
+	
+	def showTable(data, pad=16, echo = True):
+		table= ''
+		for key in data:
+			if data[key] == '':
+				continue
+			table += ' {} : {}\n'.format(('%s'%key).ljust(pad,' '),data[key])
+		if echo:
+			print(table,end='')
+		else:
+			return table
+	
+	def showMenu(menu, start=0):
+		if type(menu) is dict:
+			for n in menu:
+				print(' %s: %s'%(n,menu[n]))
+		else:
+			for n, text in enumerate(menu):
+				print(' '+str(n+start)+': '+text)
+	
+	def setStatus(v, clr = Clr.fg.yellow):
+		UI.STATUS_TXT = v
+		UI.STATUS_CLR = clr
+	
+	def showStatus():
+		if UI.STATUS_TXT:
+			print(UI.DIVIDER_DASH + UI.STATUS_CLR + UI.STATUS_TXT + Clr.reset)
+			UI.STATUS_TXT = ''
 
-DIVIDER = Clr.fg.yellow + '_'*LINE_WIDTH + Clr.reset + '\n'
-DIVIDER_DASH = Clr.fg.yellow + '-'*LINE_WIDTH + Clr.reset + '\n'
-DIVIDER_BOLD = '='*LINE_WIDTH + '\n'
+# Common strings (used in lang files)
 
 STR_080B = Clr.fg.cyan+'"08-0B"'+Clr.reset
 STR_0C0F = Clr.fg.orange+'"0C-0F"'+Clr.reset
 STR_2023 = Clr.fg.red+'"20-23"'+Clr.reset
 
-# Common functions
-
-def clearInput(n = 1):
-	for i in range(n):
-		print('\033[1A' + '\033[K', end='')
-
-def link(str):
-	return Clr.underline+Clr.fg.cyan + str + Clr.reset
-
-def highlight(str):
-	return Clr.fg.yellow + str + Clr.reset
-
-def warning(str):
-	return Clr.fg.orange + str + Clr.reset
-
-def dark(str):
-	return Clr.fg.d_grey + str + Clr.reset
-
-def green(str):
-	return Clr.fg.green + str + Clr.reset
-
-def getTab(str):
-	return Clr.fg.yellow+'  _'+('_'*len(str))+'_\n'+('_/ '+str+' \_').ljust(LINE_WIDTH, '_')+'\n'+Clr.reset
-
-def showTable(data, pad=16, echo = True):
-	table= ''
-	for key in data:
-		if data[key] == '':
-			continue
-		table += ' {} : {}\n'.format(('%s'%key).ljust(pad,' '),data[key])
-	if echo:
-		print(table,end='')
-	else:
-		return table
-
-def getMenu(menu, start=0):
-	if type(menu) is dict:
-		for n in menu:
-			print(' %s: %s'%(n,menu[n]))
-	else:
-		for n, text in enumerate(menu):
-			print(' '+str(n+start)+': '+text)
-
-
-STATUS = ''
-S_COLOR = ''
-
-def setStatus(v,clr=Clr.fg.yellow):
-	global STATUS, S_COLOR
-	STATUS = v
-	S_COLOR = clr
-
-def showStatus():
-	global STATUS, S_COLOR
-	if STATUS:
-		print(DIVIDER_DASH+S_COLOR+STATUS+Clr.reset)
-		STATUS = ''
-
 from lang.en import *
 
-APP_NAME = ' PS4 ~WEE~ TOOLS v0.8.3'
-TITLE = DIVIDER_BOLD+APP_NAME+('by Andy_maN').rjust(LINE_WIDTH-len(APP_NAME)-1)+'\n'+DIVIDER_BOLD
+APP_NAME = ' PS4 ~WEE~ TOOLS v0.8.5'
+TITLE = UI.DIVIDER_BOLD + APP_NAME+('by Andy_maN').rjust(UI.LINE_WIDTH-len(APP_NAME)-1)+'\n' + UI.DIVIDER_BOLD
 
 # Fill strings
 
-STR_MPATCH_INPUT	= DIVIDER + STR_MPATCH_INPUT
-STR_CHOICE			= DIVIDER + STR_CHOICE
-STR_BACK			= DIVIDER + STR_BACK
-STR_MEMCLOCK_INPUT	= DIVIDER + STR_MEMCLOCK_INPUT
-STR_SAMU_INPUT		= DIVIDER + STR_SAMU_INPUT
-STR_CONFIRM			= DIVIDER + STR_CONFIRM
+STR_MPATCH_INPUT	= UI.DIVIDER + STR_MPATCH_INPUT
+STR_CHOICE			= UI.DIVIDER + STR_CHOICE
+STR_BACK			= UI.DIVIDER + STR_BACK
+STR_MEMCLOCK_INPUT	= UI.DIVIDER + STR_MEMCLOCK_INPUT
+STR_SAMU_INPUT		= UI.DIVIDER + STR_SAMU_INPUT
+STR_CONFIRM			= UI.DIVIDER + STR_CONFIRM
 
-STR_APP_HELP		= STR_APP_HELP + link('https://github.com/andy-man/ps4-wee-tools')
-STR_INFO_HDD_EAP	= STR_INFO_HDD_EAP + link('https://www.psdevwiki.com/ps4/Mounting_HDD_in_Linux')
-STR_INFO_EMC_CFW	= STR_INFO_EMC_CFW + link('https://www.psdevwiki.com/ps4/Southbridge')
+STR_APP_HELP		= STR_APP_HELP + UI.link('https://github.com/andy-man/ps4-wee-tools')
+STR_INFO_HDD_EAP	= STR_INFO_HDD_EAP + UI.link('https://www.psdevwiki.com/ps4/Mounting_HDD_in_Linux')
+STR_INFO_EMC_CFW	= STR_INFO_EMC_CFW + UI.link('https://www.psdevwiki.com/ps4/Southbridge')
 
 STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH.format(STR_080B, STR_0C0F, STR_2023, STR_080B)
 

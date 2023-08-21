@@ -4,21 +4,20 @@
 #==============================================================
 import os
 from lang._i18n_ import *
-from utils.utils import *
-from utils.syscon import *
+import utils.syscon as Syscon
+import utils.utils as Utils
 import tools.Tools as Tools
-
 
 
 def toggleDebug(file):
 	with open(file, 'r+b') as f:
 		
-		cur = getSysconData(f, 'DEBUG')[0]
+		cur = Syscon.getSysconData(f, 'DEBUG')[0]
 		val = b'\x04' if cur == 0x84 or cur == 0x85 else b'\x85'
 		
-		setSysconData(f, 'DEBUG',  val)
+		Syscon.setSysconData(f, 'DEBUG',  val)
 	
-	setStatus(STR_DEBUG+(STR_OFF if val == b'\x04' else STR_ON))
+	UI.setStatus(STR_DEBUG+(STR_OFF if val == b'\x04' else STR_ON))
 
 
 
@@ -26,29 +25,29 @@ def printSnvsEntries(base,entries):
 	
 	for i,v in enumerate(entries):
 		color = Clr.fg.d_grey
-		if v[1] in SC_TYPES_MODES:
+		if v[1] in Syscon.SC_TYPES_MODES:
 			color = Clr.fg.green
-		if v[1] in SC_TYPES_BOOT:
+		elif v[1] in Syscon.SC_TYPES_BOOT:
 			color = Clr.fg.pink
-		elif v[1] in SC_TYPES_UPD:
+		elif v[1] in Syscon.SC_TYPES_UPD:
 			color = Clr.fg.cyan
-		elif v[1] in SC_TYPES_PRE0:
+		elif v[1] in Syscon.SC_TYPES_PRE0:
 			color = Clr.fg.orange
-		elif v[1] in SC_TYPES_PRE2:
+		elif v[1] in Syscon.SC_TYPES_PRE2:
 			color = Clr.fg.red
-		print(' {:5X} | '.format(base + (i * NvsEntry.getEntrySize())) + color + getHex(v)+Clr.reset)
+		print(' {:5X} | '.format(base + (i * Syscon.NvsEntry.getEntrySize())) + color + Utils.hex(v)+Clr.reset)
 
 
 
 def screenViewSNVS(file, block = '', flat = False):
 	os.system('cls')
-	print(TITLE+getTab(STR_SVNS_ENTRIES))
+	print(TITLE+UI.getTab(STR_SVNS_ENTRIES))
 	
 	with open(file, 'rb') as f:
-		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 	
-	blocks_count = SNVS_CONFIG.getDataCount()-1
-	count = SNVS_CONFIG.getDataRecordsCount() if not flat else SNVS.cfg.getDataFlatLength() // NvsEntry.getEntrySize()
+	blocks_count = Syscon.SNVS_CONFIG.getDataCount()-1
+	count = Syscon.SNVS_CONFIG.getDataRecordsCount() if not flat else SNVS.cfg.getDataFlatLength() // Syscon.NvsEntry.getEntrySize()
 	active = SNVS.active_entry.getLink()
 	block = active if block == '' else block
 	
@@ -58,9 +57,9 @@ def screenViewSNVS(file, block = '', flat = False):
 	else:
 		flat = SNVS.getDataBlockFlat(block)
 		entries = []
-		for i in range(0,len(flat),NvsEntry.getEntrySize()):
-			entry = flat[i:i+NvsEntry.getEntrySize()]
-			if entry == b'\xFF'*NvsEntry.getEntrySize():
+		for i in range(0,len(flat),Syscon.NvsEntry.getEntrySize()):
+			entry = flat[i:i+Syscon.NvsEntry.getEntrySize()]
+			if entry == b'\xFF'*Syscon.NvsEntry.getEntrySize():
 				break
 			entries.append(entry)
 		base = SNVS.getDataBlockOffset(block, True) - SNVS.cfg.getDataFlatLength()
@@ -68,10 +67,10 @@ def screenViewSNVS(file, block = '', flat = False):
 	print((' Flat' if flat else '')+STR_SYSCON_BLOCK.format(block, blocks_count, len(entries), count, active))
 	printSnvsEntries(base, entries)
 	
-	showStatus()
+	UI.showStatus()
 	
 	try:
-		c = input(DIVIDER+STR_SC_BLOCK_SELECT.format(blocks_count))
+		c = input(UI.DIVIDER+STR_SC_BLOCK_SELECT.format(blocks_count))
 		
 		if c == 'f':
 			return screenViewSNVS(file, block, True)
@@ -80,7 +79,7 @@ def screenViewSNVS(file, block = '', flat = False):
 		if num >= 0 and num <= blocks_count:
 			block = num
 		else:
-			setStatus(STR_ERROR_CHOICE)
+			UI.setStatus(STR_ERROR_CHOICE)
 	except:
 		return
 	
@@ -90,21 +89,21 @@ def screenViewSNVS(file, block = '', flat = False):
 
 def screenAutoPatchSNVS(file):
 	os.system('cls')
-	print(TITLE+getTab(STR_APATCH_SVNS))
+	print(TITLE+UI.getTab(STR_APATCH_SVNS))
 	
 	with open(file, 'rb') as f:
 		data = f.read()
-		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 	
 	entries = SNVS.getAllDataEntries()
-	status = isSysconPatchable(entries)
+	status = Syscon.isSysconPatchable(entries)
 	
-	inds = getEntriesByType(SC_TYPES_UPD, entries)
+	inds = Syscon.getEntriesByType(Syscon.SC_TYPES_UPD, entries)
 	index = inds[-1] if len(inds) >= 1 else -1
 	prev_index = inds[-2] if len(inds) >= 2 else -1
 	
-	last_fw = getRecordPos(index, SNVS)
-	prev_fw = getRecordPos(prev_index, SNVS)
+	last_fw = Syscon.getRecordPos(index, SNVS)
+	prev_fw = Syscon.getRecordPos(prev_index, SNVS)
 	
 	info = {
 		'General': 'Active[%d] OWC[%d]'%(SNVS.active_entry.getLink(), SNVS.getOWC()),
@@ -114,25 +113,25 @@ def screenAutoPatchSNVS(file):
 		'Status':MENU_SC_STATUSES[status],
 	}
 	
-	showTable(info, 20)
+	UI.showTable(info, 20)
 	print()
 	
 	if status == 0 or index < 0 or prev_index < 0:
-		print(warning(STR_UNPATCHABLE))
+		print(UI.warning(STR_UNPATCHABLE))
 		input(STR_BACK)
 		return
 	
 	recommend = ['-','A','C','B']
-	print(warning(STR_RECOMMEND.format(recommend[status]))+'\n')
+	print(UI.warning(STR_RECOMMEND.format(recommend[status]))+'\n')
 	
 	options = MENU_PATCHES
 	options[1] = options[1].format(len(entries) - index)
 	options[2] = options[2].format(len(entries) - prev_index + 4)
 	
-	getMenu(options,1)
-	showStatus()
+	UI.showMenu(options,1)
+	UI.showStatus()
 	
-	out_file = getFilePathWoExt(file,True)
+	out_file = Utils.getFilePathWoExt(file,True)
 	choice = input(STR_CHOICE)
 	
 	try:
@@ -154,10 +153,10 @@ def screenAutoPatchSNVS(file):
 		snvs_data = SNVS.getRebuilded(entries[:prev_index + 4])
 	
 	if ofile and snvs_data:
-		savePatchData(ofile, data, [{'o':SC_AREAS['SNVS']['o'], 'd':snvs_data}])
-		setStatus(STR_SAVED_TO.format(ofile))
+		Utils.savePatchData(ofile, data, [{'o':Syscon.SC_AREAS['SNVS']['o'], 'd':snvs_data}])
+		UI.setStatus(STR_SAVED_TO.format(ofile))
 	else:
-		setStatus(STR_ERROR_CHOICE)
+		UI.setStatus(STR_ERROR_CHOICE)
 	
 	screenAutoPatchSNVS(file)
 
@@ -165,14 +164,14 @@ def screenAutoPatchSNVS(file):
 
 def screenManualPatchSNVS(file):
 	os.system('cls')
-	print(TITLE+getTab(STR_ABOUT_MPATCH))
+	print(TITLE+UI.getTab(STR_ABOUT_MPATCH))
 	
 	print(STR_INFO_SC_MPATCH)
 	
-	print(getTab(STR_MPATCH_SVNS))
+	print(UI.getTab(STR_MPATCH_SVNS))
 	
 	with open(file, 'r+b') as f:
-		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 		entries = SNVS.getLastDataEntries()
 		
 		block = SNVS.active_entry.getLink()
@@ -180,13 +179,12 @@ def screenManualPatchSNVS(file):
 		print(STR_LAST_SC_ENTRIES.format(records_count, len(entries), block))
 		print()
 		
+		last_offset = SNVS.getLastDataBlockOffset(True) + Syscon.NvsEntry.getEntrySize() * len(entries)
+		printSnvsEntries(last_offset - Syscon.NvsEntry.getEntrySize() * records_count, entries[-records_count:])
 		
-		last_offset = SNVS.getLastDataBlockOffset(True) + NvsEntry.getEntrySize() * len(entries)
-		printSnvsEntries(last_offset - NvsEntry.getEntrySize() * records_count, entries[-records_count:])
+		UI.showStatus()
 		
-		showStatus()
-		
-		print(DIVIDER+'\n 0:'+STR_GO_BACK)
+		print(UI.DIVIDER+'\n 0:'+STR_GO_BACK)
 		
 		try:
 			num = int(input(STR_MPATCH_INPUT))
@@ -194,20 +192,20 @@ def screenManualPatchSNVS(file):
 			return screenManualPatchSNVS(file)
 		
 		if num > 0 and num < len(entries):
-			length = num*NvsEntry.getEntrySize()
-			setData(f, last_offset - length, b'\xFF'*length)
-			setStatus(STR_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(last_offset - length, last_offset))
+			length = num * Syscon.NvsEntry.getEntrySize()
+			Utils.setData(f, last_offset - length, b'\xFF'*length)
+			UI.setStatus(STR_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(last_offset - length, last_offset))
 		elif num == len(entries):
 			if SNVS.getOWC() == 0:
-				setData(f, SNVS.getLastVolumeEntryOffset(True), b'\xFF'*NvsEntry.getEntryHeadSize())
-				setData(f, SNVS.getLastDataBlockOffset(True) - SNVS.cfg.getDataFlatLength(), b'\xFF'*SNVS.cfg.getDataLength())
-				setStatus(STR_SC_BLOCK_CLEANED.format(block))
+				Utils.setData(f, SNVS.getLastVolumeEntryOffset(True), b'\xFF'*Syscon.NvsEntry.getEntryHeadSize())
+				Utils.setData(f, SNVS.getLastDataBlockOffset(True) - SNVS.cfg.getDataFlatLength(), b'\xFF'*SNVS.cfg.getDataLength())
+				UI.setStatus(STR_SC_BLOCK_CLEANED.format(block))
 			else:
-				setStatus(STR_REBUILD_REQUIRED)
+				UI.setStatus(STR_REBUILD_REQUIRED)
 		elif num > len(entries):
-			setStatus(STR_TOO_MUCH.format(num,len(entries)))
+			UI.setStatus(STR_TOO_MUCH.format(num,len(entries)))
 		elif num == 0:
-			setStatus(STR_PATCH_CANCELED)
+			UI.setStatus(STR_PATCH_CANCELED)
 			return
 	
 	screenManualPatchSNVS(file)
@@ -216,20 +214,20 @@ def screenManualPatchSNVS(file):
 
 def screenBootModes(file):
 	os.system('cls')
-	print(TITLE+getTab(STR_ABOUT_SC_BOOTMODES))
-	print(warning(STR_INFO_SC_BOOTMODES))
+	print(TITLE+UI.getTab(STR_ABOUT_SC_BOOTMODES))
+	print(UI.warning(STR_INFO_SC_BOOTMODES))
 	
-	print(getTab(STR_SC_BOOT_MODES))
+	print(UI.getTab(STR_SC_BOOT_MODES))
 	
 	with open(file, 'r+b') as f:
 		data = f.read()
-		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 		entries = SNVS.getAllDataEntries()
 	
-	modes = getEntriesByType(SC_TYPES_BOOT, entries)
+	modes = Syscon.getEntriesByType(Syscon.SC_TYPES_BOOT, entries)
 	
 	if len(modes) <= 0:
-		print(warning(STR_SC_NO_BM))
+		print(UI.warning(STR_SC_NO_BM))
 		input(STR_BACK)
 		return
 	
@@ -237,10 +235,10 @@ def screenBootModes(file):
 	duplicates = []
 	
 	for i in range(len(modes)):
-		inf = getRecordPos(modes[i], SNVS)
+		inf = Syscon.getRecordPos(modes[i], SNVS)
 		edata = []
-		for k in range(len(SC_TYPES_BOOT)):
-			edata.append(getHex(NvsEntry(entries[modes[i]+k]).getData(),''))
+		for k in range(len(Syscon.SC_TYPES_BOOT)):
+			edata.append(Utils.hex(Syscon.NvsEntry(entries[modes[i]+k]).getData(),''))
 		
 		color = ''
 		
@@ -258,55 +256,92 @@ def screenBootModes(file):
 	if len(duplicates):
 		print(STR_DUPLICATES.format(len(duplicates),duplicates))
 	
-	showStatus()
+	UI.showStatus()
 	
-	choice = input(DIVIDER+STR_SC_BM_SELECT.format(len(modes)))
+	choice = input(UI.DIVIDER+STR_SC_BM_SELECT.format(len(modes)))
 	
 	try:
 		c = int(choice)
 		
-		out_file = getFilePathWoExt(file,True)
+		out_file = Utils.getFilePathWoExt(file,True)
 		
 		if c == len(modes):
-			setStatus(STR_SC_ACTIVE_BM)
+			UI.setStatus(STR_SC_ACTIVE_BM)
 		elif c > 0 and c < len(modes):
 			ofile = out_file+'_bootmode_%d.bin'%(c)
 			sel = modes[c-1]
 			act = modes[-1]
 			# replace last(active) with selected
-			for i in range(len(SC_TYPES_BOOT)):
+			for i in range(len(Syscon.SC_TYPES_BOOT)):
 				temp = entries[act + i]
 				entries[act + i] = entries[sel + i]
 				entries[sel + i] = temp
 			
-			savePatchData(ofile, data, [{'o':SC_AREAS['SNVS']['o'], 'd':SNVS.getRebuilded(entries)}])
-			setStatus(STR_SAVED_TO.format(ofile))
+			Utils.savePatchData(ofile, data, [{'o':Syscon.SC_AREAS['SNVS']['o'], 'd':SNVS.getRebuilded(entries)}])
+			UI.setStatus(STR_SAVED_TO.format(ofile))
 	except:
 		return
 	
 	screenBootModes(file)
 
 
+
+def rebuildSyscon(file):
+	with open(file, 'rb') as f:
+		data = f.read()
+		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
+	
+	ofile = Utils.getFilePathWoExt(file,True) + '_rebuild.bin'
+	
+	with open(ofile, 'wb') as f:
+		 f.write(data)
+		 Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded())
+	
+	UI.setStatus(STR_SAVED_TO.format(ofile))
+
+
+
+def cleanSyscon(file):
+	with open(file, 'rb') as f:
+		data = f.read()
+		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
+	
+	entries = SNVS.getAllDataEntries()
+	clean = []
+	for i in range(len(entries)):
+		if entries[i][1] <= 0x0B:
+			clean.append(entries[i])
+	
+	ofile = Utils.getFilePathWoExt(file,True) + '_clean.bin'
+	
+	with open(ofile, 'wb') as f:
+		 f.write(data)
+		 Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded(clean))
+	
+	UI.setStatus(STR_SAVED_TO.format(ofile))
+
+
+
 def screenSysconTools(file):
 	os.system('cls')
-	print(TITLE+getTab(STR_SYSCON_INFO))
+	print(TITLE+UI.getTab(STR_SYSCON_INFO))
 	
 	info = getSysconInfo(file)
 	if not info:
 		return Tools.screenFileSelect(file)
 	
-	showTable(info)
+	UI.showTable(info)
 	
-	print(getTab(STR_ACTIONS))
-	getMenu(MENU_SC_ACTIONS)
+	print(UI.getTab(STR_ACTIONS))
+	UI.showMenu(MENU_SC_ACTIONS,1)
+	print(UI.DIVIDER)
+	UI.showMenu(MENU_EXTRA)
 	
-	showStatus()
+	UI.showStatus()
 	
 	choice = input(STR_CHOICE)
 	
-	if choice == '0':
-	    return Tools.screenFileSelect(file)
-	elif choice == '1':
+	if choice == '1':
 		toggleDebug(file)
 	elif choice == '2':
 		screenViewSNVS(file)
@@ -315,38 +350,33 @@ def screenSysconTools(file):
 	elif choice == '4':
 		screenManualPatchSNVS(file)
 	elif choice == '5':
-		
-		with open(file, 'rb') as f:
-			data = f.read()
-			SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
-			snvs_data = SNVS.getRebuilded()
-		
-		ofile = getFilePathWoExt(file,True) + '_rebuild.bin'
-		
-		with open(ofile, 'wb') as f:
-			 f.write(data)
-			 setSysconData(f, 'SNVS', snvs_data)
-		
-		setStatus(STR_SAVED_TO.format(ofile))
+		rebuildSyscon(file)
 	elif choice == '6':
 		screenBootModes(file)
 	elif choice == '7':
-	    quit()
+		cleanSyscon(file)
+	
+	elif choice == 's':
+	    return Tools.screenFileSelect(file)
+	elif choice == 'f':
+		return Tools.screenSysconFlasher(file)
+	elif choice == 'm':
+	    return Tools.screenMainMenu()
 	
 	screenSysconTools(file)
 
 
 
 def getSysconInfo(file):
-	if not checkFileSize(file, SYSCON_DUMP_SIZE):
+	if not Utils.checkFileSize(file, Syscon.DUMP_SIZE):
 		return False
 	
 	with open(file, 'rb') as f:
-		magic = checkSysconData(f, 'MAGIC_1') and checkSysconData(f, 'MAGIC_2') and checkSysconData(f, 'MAGIC_3')
-		debug = getSysconData(f, 'DEBUG')[0]
+		magic = Syscon.checkSysconData(f, 'MAGIC_1') and Syscon.checkSysconData(f, 'MAGIC_2') and Syscon.checkSysconData(f, 'MAGIC_3')
+		debug = Syscon.getSysconData(f, 'DEBUG')[0]
 		debug = STR_ON if debug == 0x84 or debug == 0x85 else STR_OFF
-		ver = getSysconData(f, 'VERSION')
-		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		ver = Syscon.getSysconData(f, 'VERSION')
+		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 		records = SNVS.getAllDataEntries()
 		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}] OWC[{}]'.format(
 			SNVS.active_volume,
@@ -357,13 +387,13 @@ def getSysconInfo(file):
 		
 		info = {
 			'FILE'			: os.path.basename(file),
-			'MD5'			: getFileMD5(file),
+			'MD5'			: Utils.getFileMD5(file),
 			'Magic'			: ('True' if magic else 'False'),
 			'Debug'			: debug,
 			'Version'		: '{:X}.{:X}'.format(ver[0],ver[2]),
 			'SNVS'			: snvs_info,
 			'Entries'		: STR_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
-			'Status'		: MENU_SC_STATUSES[isSysconPatchable(records)],
+			'Status'		: MENU_SC_STATUSES[Syscon.isSysconPatchable(records)],
 		}
 	
 	return info

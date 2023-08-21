@@ -5,10 +5,16 @@
 import hashlib, os, math, random
 from lang._i18n_ import *
 
+# Common consts
+
+INFO_FILE_SFLASH	= '_sflash0_.txt'
+INFO_FILE_2BLS		= '_2bls_.txt'
 
 
-INFO_FILE_NOR	= '_sflash0_.txt'
-INFO_FILE_2BLS	= '_2bls_.txt'
+
+def checkCtrl(s, key):
+	return ord(s) + 0x40 == ord(key)
+
 
 
 def genRandBytes(size):
@@ -61,7 +67,7 @@ def getFileMD5(file):
 
 
 
-def getHex(buf,sep=' '):
+def hex(buf,sep=' '):
 	str = ""
 	for c in buf:
 		str += '{:02X}'.format(c)+sep
@@ -75,18 +81,6 @@ def swapBytes(arr):
 		res[i] = arr[i+1]
 		res[i+1] = arr[i]
 	return bytes(res)
-
-
-
-def rawToClock(raw):
-	if (0x10 <= raw <= 0x50):
-		return (raw - 0x10) * 25 + 400
-	return 0
-
-
-
-def clockToRaw(frq):
-	return (frq - 400) // 25 + 0x10
 
 
 

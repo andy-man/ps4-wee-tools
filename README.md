@@ -8,17 +8,17 @@ It is free open source alternative for BwE's commercial apps.
 
 Written in Python to keep it simple.
 
-| Nor tool | Syscon tool |
-| --- | --- |
-| ![Main tool](assets/main.png) | ![Syscon tool](assets/syscon.png) |
-
 Was tested with Python 3.8
 
-Since v0.7 **"Crypto"** library is required if you want to run python script directly
+**Dependencies**
 
-It can be easily installed with help of pip
+If you want to run python script directly you need these libs
 
-`pip install crypto`
+(It can be easily installed with help of pip)
+
+`pip install crypto` since v0.7
+
+`pip install pyserial` since v0.8.5
 
 ## Features
 
@@ -51,8 +51,11 @@ Syscon tool
 * Boot mode selection
 
 Common
+* File browser
+* Terminal (UART) with highlighting
 * Multy files compare
 * Pack / Unpack 2BLS files
+* Syscon reader
 
 Don't use if you don't understant what is it for!
 
@@ -61,7 +64,7 @@ Don't use if you don't understant what is it for!
 * fail0verflow
 * zecoxao
 * Al-Azif
-* Darknesmonk
+* DarkNESmonk
 * BwE
 * pearlxcore
 
@@ -79,6 +82,16 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.8.5
+* UART terminal with syntax highlighting
+* Integrated syscon reader (Arduino Nano V3)
+* Preps for integrated flasher (SPIway & syscon)
+* Accurate syscon patch and check
+* Syscon boot mode selection
+* Syscon flatdata viewer
+* FW 10.70 md5
+* bug fixes
 
 ### v0.8
 * SNVS rebuilding (Syscon)

@@ -3,15 +3,17 @@
 # part of ps4 wee tools project
 #==========================================================
 import hashlib, os, math, sys, ctypes
-from utils.utils import *
+from lang._i18n_ import *
 import data.data as Data
+import lang._i18n_ as Lang
+import utils.utils as Utils
 
 
 
-NOR_DUMP_SIZE = 0x2000000
-NOR_BACKUP_OFFSET = 0x3000
-NOR_MBR_SIZE = 0x1000
-NOR_BLOCK_SIZE = 0x200
+DUMP_SIZE = 0x2000000
+BACKUP_OFFSET = 0x3000
+MBR_SIZE = 0x1000
+BLOCK_SIZE = 0x200
 
 PS4_REGIONS = {
 	'00':'Japan',
@@ -132,10 +134,10 @@ NOR_AREAS = {
 }
 
 SOUTHBRIDGES = {
-	'Aeolia A2':	[0x0D, 0x0E],
-	'Belize A0/B0':	[0x20, 0x21],
-	'Baikal B1':	[0x24, 0x25],
-	'Belize 2 A0':	[0x2A, 0x2B],
+	'Aeolia A2':	[0x0D, 0x0E], #CXD90025
+	'Belize A0/B0':	[0x20, 0x21], #CXD90036
+	'Baikal B1':	[0x24, 0x25], #CXD90042
+	'Belize 2 A0':	[0x2A, 0x2B], #CXD90046
 }
 
 TORUS_VERS = {
@@ -157,7 +159,7 @@ class Partition(ctypes.Structure):
     _fields_ = [
         ("start_lba",	ctypes.c_uint32),
         ("n_sectors",	ctypes.c_uint32),
-        ("type",		ctypes.c_uint8),			# part_id?
+        ("type",		ctypes.c_uint8),		# part_id?
         ("flag",		ctypes.c_uint8),
         ("unknown",		ctypes.c_uint16),
         ("padding",		ctypes.c_uint64)
@@ -167,10 +169,10 @@ class MBR_v1(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
         ("magic", 		ctypes.c_uint8 * 0x20),	# SONY COMPUTER ENTERTAINMENT INC.
-        ("version", 	ctypes.c_uint32),			# 1
-        ("mbr1_start",	ctypes.c_uint32),			# ex: 0x10
-        ("mbr2_start",	ctypes.c_uint32),			# ex: 0x18
-        ("unk",			ctypes.c_uint32 * 4),		# ex: (1, 1, 8, 1)
+        ("version", 	ctypes.c_uint32),		# 1
+        ("mbr1_start",	ctypes.c_uint32),		# ex: 0x10
+        ("mbr2_start",	ctypes.c_uint32),		# ex: 0x18
+        ("unk",			ctypes.c_uint32 * 4),	# ex: (1, 1, 8, 1)
         ("reserved",	ctypes.c_uint32),
         ("unused",		ctypes.c_uint8 * 0x1C0)
     ]
@@ -179,11 +181,11 @@ class MBR_v4(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
         ("magic",		ctypes.c_uint8 * 0x20),	# Sony Computer Entertainment Inc.
-        ("version",		ctypes.c_uint32),			# 4
+        ("version",		ctypes.c_uint32),		# 4
         ("n_sectors",	ctypes.c_uint32),
         ("reserved",	ctypes.c_uint64),
-        ("loader_start",ctypes.c_uint32),			# ex: 0x11, 0x309
-        ("loader_count",ctypes.c_uint32),			# ex: 0x267
+        ("loader_start",ctypes.c_uint32),		# ex: 0x11, 0x309
+        ("loader_count",ctypes.c_uint32),		# ex: 0x267
         ("reserved2",	ctypes.c_uint64),
         ("partitions",	Partition * 16)
 	]
@@ -221,17 +223,30 @@ def getMemClock(file):
 
 
 
+def rawToClock(raw):
+	if (0x10 <= raw <= 0x50):
+		return (raw - 0x10) * 25 + 400
+	return 0
+
+
+
+def clockToRaw(frq):
+	return (frq - 400) // 25 + 0x10
+
+
+
 def getSlotSwitchInfo(file):
 	pattern = list(getNorData(file,'CORE_SWCH'))
 	for i in range(0,len(SWITCH_BLOBS)):
 		if SWITCH_BLOBS[i]['v'] == pattern:
 			return SWITCH_TYPES[SWITCH_BLOBS[i]['t']]+' [#'+str(i+1)+']'
-	return SWITCH_TYPES[0]+' '+getHex(bytes(pattern),'')
+	return SWITCH_TYPES[0]+' '+Utils.hex(bytes(pattern),'')
 
 
 
 def getNorFW(f):
 	old_fw = getNorData(f, 'FW_V')
+	#print(getNorData(f, 'FW_VER'),getNorData(f, 'FW_V'))
 	
 	fw = getNorData(f, 'FW_VER') if old_fw[0] == 0xFF else old_fw
 	fw = '{:X}.{:02X}'.format(fw[1], fw[0])
@@ -242,14 +257,16 @@ def getNorFW(f):
 	return {'c':fw, 'min':mfw}
 
 
+
 def getPartitionName(code):
 	return PARTITIONS_TYPES[code] if code in PARTITIONS_TYPES else 'Unk_'+str(code)
+
 
 
 def getNorPartition(f, name):
 	if not name in NOR_PARTITIONS:
 		return ''
-	return getData(f, NOR_PARTITIONS[name]['o'], NOR_PARTITIONS[name]['l'])
+	return Utils.getData(f, NOR_PARTITIONS[name]['o'], NOR_PARTITIONS[name]['l'])
 
 
 
@@ -258,6 +275,21 @@ def getNorPartitionMD5(f, name):
 	if len(data) > 0:
 		return hashlib.md5(data).hexdigest()
 	return ''
+
+
+
+def getDataByPartition(name):
+	
+	if not name:
+		return False
+	elif name.find('eap_kbl') >= 0:
+		return Data.EAP_KBL_MD5
+	elif name.find('emc_ipl') >= 0:
+		return Data.EMC_IPL_MD5
+	elif name.find('wifi') >= 0:
+		return Data.TORUS_FW_MD5
+	
+	return False
 
 
 
@@ -276,10 +308,10 @@ def checkNorPartMagic(f, name):
 
 def getPartitionsInfo(f):
 	# f - file in rb/r+b mode
-	f.seek(NOR_MBR_SIZE)
+	f.seek(MBR_SIZE)
 	active = f.read(1)
 	
-	base = NOR_MBR_SIZE*2 if active == 0x00 else NOR_MBR_SIZE*3
+	base = MBR_SIZE*2 if active == 0x00 else MBR_SIZE*3
 	f.seek(base)
 	mbr = MBR_v4()
 	f.readinto(mbr)
@@ -292,8 +324,8 @@ def getPartitionsInfo(f):
 		
 		partitions.append({
 			'name'		: getPartitionName(p.type),
-			'offset'	: p.start_lba * NOR_BLOCK_SIZE,
-			'size'		: p.n_sectors * NOR_BLOCK_SIZE,
+			'offset'	: p.start_lba * BLOCK_SIZE,
+			'size'		: p.n_sectors * BLOCK_SIZE,
 			'type'		: p.type,
 		})
 	
@@ -306,6 +338,7 @@ def getTorusVersion(f):
 	torus = Data.TORUS_FW_MD5[torus_md5]['t'] if torus_md5 in Data.TORUS_FW_MD5 else 0
 	
 	return TORUS_VERS[torus] if torus in TORUS_VERS else ''
+
 
 
 def getSouthBridge(f):
@@ -322,7 +355,6 @@ def getSouthBridge(f):
 	
 	return '[0x%02X, 0x%02X]'%(emc, eap)
 
-
 # NOR Areas data utils
 
 def getNorAreaName(key):
@@ -335,25 +367,76 @@ def getNorAreaName(key):
 def setNorData(file, key, val):
 	if not key in NOR_AREAS:
 		return False
-	return setData(file, NOR_AREAS[key]['o'], val)
+	return Utils.setData(file, NOR_AREAS[key]['o'], val)
 
 
 
 def setNorDataB(file, key, val):
 	if not key in NOR_AREAS:
 		return False
-	return setData(file, NOR_AREAS[key]['o'] + NOR_BACKUP_OFFSET, val)
+	return Utils.setData(file, NOR_AREAS[key]['o'] + BACKUP_OFFSET, val)
 
 
 
 def getNorData(file, key):
 	if not key in NOR_AREAS:
 		return False
-	return getData(file, NOR_AREAS[key]['o'], NOR_AREAS[key]['l'])
+	return Utils.getData(file, NOR_AREAS[key]['o'], NOR_AREAS[key]['l'])
 
 
 
 def getNorDataB(file, key):
 	if not key in NOR_AREAS:
 		return False
-	return getData(file, NOR_AREAS[key]['o'] + NOR_BACKUP_OFFSET, NOR_AREAS[key]['l'])
+	return Utils.getData(file, NOR_AREAS[key]['o'] + BACKUP_OFFSET, NOR_AREAS[key]['l'])
+
+
+
+def getSFlashInfo(file = '-'):
+	with open(file, 'rb') as f:
+		
+		sku = getNorData(f, 'SKU').decode('utf-8','ignore')
+		
+		fw = getNorFW(f)
+		
+		active_slot = 'a' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'b'
+		inactive_slot = 'a' if active_slot == 'b' else 'b'
+		
+		southbridge = getSouthBridge(f)
+		torus = getTorusVersion(f)
+		
+		samu = getNorData(f, 'SAMUBOOT')[0]
+		region = getConsoleRegion(f)
+		
+		try:
+			hdd = (' / ').join(Utils.swapBytes(getNorData(f, 'HDD')).decode('utf-8').split())
+		except:
+			hdd = STR_NO_INFO
+		
+		info = {
+			'FILE'			: os.path.basename(file),
+			'MD5'			: Utils.getFileMD5(file),
+			'SKU'			: sku,
+			'Region'		: '[{}] {}'.format(region[0], region[1]),
+			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
+			'Southbridge'	: southbridge if southbridge else STR_UNKNOWN,
+			'Torus (WiFi)'	: torus if len(torus) else STR_UNKNOWN,
+			'MAC'			: Utils.hex(getNorData(f, 'MAC'),':'),
+			'HDD'			: hdd,
+			'FW (active)'	: fw['c'] + ' ['+active_slot.upper()+']' + (' [min '+fw['min']+']' if fw['min'] else ''),
+			'FW (backup)'	: '',
+			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
+			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(samu,samu),
+			'UART'			: (Lang.STR_ON if getNorData(f, 'UART')[0] == 1 else Lang.STR_OFF),
+			'Slot switch'	: getSlotSwitchInfo(f),
+		}
+		
+		pname = 's0_emc_ipl_'+inactive_slot
+		md5 = getNorPartitionMD5(f, pname)
+		data = getDataByPartition(pname)
+		
+		if md5 in data:
+			fw2 = data[md5]['fw']
+			info['FW (backup)'] = (fw2[0] if len(fw2) == 1 else fw2[0]+' <-> '+fw2[-1])
+	
+	return info

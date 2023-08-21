@@ -3,10 +3,10 @@
 # part of ps4 wee tools project
 #==========================================================
 import struct
+import utils.utils as Utils
+from lang._i18n_ import *
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA, HMAC, SHA256
-from utils.utils import getHex as hx
-from lang._i18n_ import *
 
 # EMC cfw key stuff
 
@@ -74,13 +74,13 @@ def checkType(type):
 	
 	print(' Type'.ljust(16)+': 0x',end='')
 	if type == b'\x48':
-		print('%s [EMC]'%hx(type))
+		print('%s [EMC]'%Utils.hex(type))
 		type = 'emc'
 	elif type == b'\x68':
-		print('%s [EAP]'%hx(type))
+		print('%s [EAP]'%Utils.hex(type))
 		type = 'eap'
 	else:
-		print('%s [UNK]'%hx(type))
+		print('%s [UNK]'%Utils.hex(type))
 		type = b''
 	
 	return type
@@ -101,7 +101,7 @@ def decrypt(data):
 	body_hmac = hdr[0x50:0x64]
 	zeroes = hdr[0x64:0x6C]
 	
-	print(' ZERO'.ljust(pad)+': %s'%hx(zeroes,''))
+	print(' ZERO'.ljust(pad)+': %s'%Utils.hex(zeroes,''))
 	
 	header_hmac = hdr[0x6C:0x80]
 	body_len = struct.unpack('<L', hdr[0xc:0x10])[0]
@@ -116,8 +116,8 @@ def decrypt(data):
 	
 	hhmac = hhmac.hexdigest().upper()
 	bhmac = bhmac.hexdigest().upper()
-	print(' HHMAC'.ljust(pad)+': %s %s'%(hhmac, STR_OK if hhmac == hx(header_hmac,'') else STR_FAIL))
-	print(' BHMAC'.ljust(pad)+': %s %s'%(bhmac, STR_OK if bhmac == hx(body_hmac,'') else STR_FAIL))
+	print(' HHMAC'.ljust(pad)+': %s %s'%(hhmac, STR_OK if hhmac == Utils.hex(header_hmac,'') else STR_FAIL))
+	print(' BHMAC'.ljust(pad)+': %s %s'%(bhmac, STR_OK if bhmac == Utils.hex(body_hmac,'') else STR_FAIL))
 	
 	return hdr + body
 
@@ -213,9 +213,9 @@ def hddEapKey(eap_key, smi, use_new_blob=False):
 	tweak_key = eap_partition_key[0x00:0x10]
 	data_key = eap_partition_key[0x10:0x20]
 	
-	info['XTS data key'] = hx(data_key,'')
-	info['XTS tweak key'] = hx(tweak_key,'')
+	info['XTS data key'] = Utils.hex(data_key,'')
+	info['XTS tweak key'] = Utils.hex(tweak_key,'')
 	
-	showTable(info)
+	UI.getTable(info)
 	
 	return {'tweak':tweak_key,'data':data_key}

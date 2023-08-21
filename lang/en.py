@@ -13,16 +13,25 @@ MENU_EAP_KEYS = [
 	'Clean key B *',
 ]
 
+MENU_TOOL_SELECTION = [
+	'File browser',
+	'Terminal (UART)',
+	'sFlash r/w (SPIway by hjudges)',
+	'Syscon r/w (SCTool by Abkarino & EgyCnq)',
+	'Syscon r/o (SCRead by DarNESmonk)',
+	'Exit',
+]
+
 MENU_FILE_SELECTION = {
 	'a':'Show all files / Toggle filters [bin,pup]',
 	'f':'Build sflash0 dump',
 	'b':'Build 2BLS/PUP',
 	'c':'Compare bin files in current folder',
-	'e':'Exit',
+	'm':'Go to [Main menu]',
 }
 
 MENU_ADDTIONAL = [
-	'Extract NOR\'s partitions',
+	'Extract sFlash\'s partitions',
 	'Build dump from extracted files',
 	'View / Recover EAP key',
 	'Get HDD keys = decrypt EAP key = create [keys.bin]',
@@ -30,25 +39,28 @@ MENU_ADDTIONAL = [
 	'Create EMC cfw (only for Fat 1xxx/11xx)',
 ]
 
+MENU_EXTRA = {
+	's':'Select another file',
+	'f':'Flash this file (full/parts) back to console',
+	'm':'Open Main menu',
+}
+
 MENU_NOR_ACTIONS = [
-	'Select another file',
 	'Flags (UART, RNG, Memtest, etc)',
 	'Memory clocking (GDDR5)',
 	'SAMU boot flag',
 	'CoreOS slot switching (FW revert)',
 	'Additional tools',
-	'Exit'
 ]
 
 MENU_SC_ACTIONS = [
-	'Select another file',
 	'Toggle Debug',
 	'SNVS block viewer',
 	'Auto SNVS patch',
 	'Manual SNVS patch',
 	'Rebuild SNVS',
 	'Boot modes (Factory Service Mode / Normal)',
-	'Exit'
+	'Clean SNVS (sc factory reset)',
 ]
 
 MENU_PATCHES = [
@@ -64,6 +76,8 @@ MENU_SC_STATUSES = [
 	'Probably patchable',
 ]
 
+STR_PORTS_LIST			= 'Serial ports'
+STR_MAIN_MENU			= 'Main menu'
 STR_FILE_LIST			= 'Files list'
 STR_NOR_INFO			= 'NOR dump info'
 STR_ADDITIONAL			= 'Additional tools'
@@ -89,6 +103,8 @@ STR_UNPACK_2BLS			= '2BLS unpacker'
 STR_EMC_CFW				= 'EMC CFW (Aeolia)'
 STR_EAP_KEYS			= 'EAP keys'
 STR_SC_BOOT_MODES		= 'Bootmode records'
+STR_INFO				= 'Info'
+STR_SC_READER			= 'Syscon reader'
 
 STR_NO_INFO				= '- No info -'
 STR_OFF					= 'Off'
@@ -108,6 +124,12 @@ STR_FAIL				= 'Fail'
 STR_CANCEL				= 'Cancel'
 STR_IS_PART_VALID		= '[{}] {} FW {}'
 STR_SNVS_ENTRIES		= '{} records found at 0x{:5X}'
+STR_SERIAL_MONITOR		= 'Terminal'
+
+STR_NO_PORTS			= ' No one serial port was found'
+STR_PORT_UNAVAILABLE	= ' Selected port is unavailable'
+STR_PORT_CLOSED			= ' Port is closed'
+STR_STOP_MONITORING		= ' Monitoring was stopped by user'
 
 STR_EMC_CFW_WARN		= ' Currently EMC CFW is only for 10xx/11xx PS4 Fat'
 STR_EMC_NOT_FOUND		= ' EMC FW was not found'
@@ -126,6 +148,7 @@ STR_BUILDING			= ' Building file {}'
 STR_DONE				= ' All done'
 STR_PROGRESS			= ' Progress {:2d}% '
 STR_WAIT				= ' Please wait...'
+STR_WAITING				= ' Waiting...'
 STR_SET_TO				= ' {} was set to [{}]'
 STR_ABORT				= ' Action was aborted'
 STR_FILENAME			= ' Filename: '
@@ -175,6 +198,7 @@ STR_COMPARE_RESULT		= ' {} | Result: {}'
 STR_INCORRECT_SIZE		= ' {} - incorrect dump size!'
 STR_FILE_NOT_EXISTS		= ' File {} doesn\'t exist!'
 STR_SAVED_TO			= ' Saved to {}'
+STR_SAVING_TO			= ' Saving to {}'
 STR_ERROR_INPUT			= ' Incorrect input'
 STR_ERROR_DEF_VAL		= ' Setting default values'
 STR_ERROR_CHOICE		= ' Invalid choice'
@@ -190,6 +214,20 @@ STR_CONFIRM				= ' Input [y] to continue: '
 STR_CURRENT				= ' Current: '
 STR_GO_BACK				= ' Go back'
 STR_SC_BM_SELECT		= ' Select boot mode variant [1-{}] '
+STR_OPEN_IN_SCTOOL		= ' Open file in syscon tool? [y] '
+
+STR_READING_DUMP_N		= ' Reading dump {}'
+STR_CHIP_NOT_RESPOND	= ' Chip doesn\'t respond, check wiring and push reset button'
+STR_HOW_MUCH_DUMPS		= ' How much dumps to read? [max 10] '
+
+STR_INFO_MONITOR = ''\
+' Ctrl+Q [enter] - quit monitor\n'\
+' Ctrl+R [enter] - restart monitor'
+
+STR_ABOUT_SC_GLITCH = 'About Syscon Glitch'
+STR_INFO_SC_GLITCH = ''\
+' Syscon reader by DarkNESmonk (Arduino Nano V3 CH340)\n'\
+' Look at </assets/hw/syscon_reader> folder for more info'
 
 STR_ABOUT_SC_BOOTMODES = 'About boot modes'
 STR_INFO_SC_BOOTMODES = ''\
@@ -224,7 +262,7 @@ STR_DOWNGRADE = ''\
 ' Dangerous operation!\n\n'\
 ' Slot switching is used for FW revert (downgrade).\n'+\
 ' It also fixes "loadbios" error.\n'\
-' Make sure you have backup of stock NOR dump and SYSCON.\n'\
+' Make sure you have backup of stock sFlash dump and SYSCON.\n'\
 ' Syscon patching required! Otherwise you\'ll get "loadbios" error.\n'\
 ' Console will not boot normally.'
 
@@ -253,11 +291,9 @@ STR_APP_HELP = ''\
 ' Usage: ps4-wee-tools [params] \n'\
 '\n'\
 ' Params: \n\n'\
-'  <file> - auto detects file type and loads appropriate tool\n'\
-'  <folder> - build dump from files from supplied folder\n'\
-'  <file1> <file2> ... - compare files (with MD5 info)\n'\
-'  -help - show this help screen\n'\
-'\n'\
-' File selection works only for *.bin files within app\'s directory\n'\
+'  <file>              : load appropriate tool for supplied file\n'\
+'  <folder>            : build dump with files from supplied folder\n'\
+'  <file1> <file2> ... : compare files (with MD5 info)\n'\
+'  --help              : show this help screen\n'\
 '\n'\
 ' Home: '

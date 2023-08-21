@@ -4,8 +4,11 @@
 #==========================================================
 from utils.utils import *
 
-SYSCON_DUMP_SIZE = 0x80000
-SYSCON_BLOCK_SIZE = 0x400
+
+
+BLOCK_SIZE	= 0x400
+BLOCK_COUNT	= 512
+DUMP_SIZE	= BLOCK_SIZE * BLOCK_COUNT
 
 SC_AREAS = {
 	'MAGIC_1':	{'o':0x00000,	'l':2,		't':'b',	'n':b'\x80\x01'},
@@ -400,12 +403,12 @@ class NVStorage:
 
 SNVS_CONFIG = NvsConfig({ 
 	"offset":	SC_AREAS['SNVS']['o'],
-	"header":	{ "length":SYSCON_BLOCK_SIZE, "count":2 }, 
-	"data":		{ "flat":SYSCON_BLOCK_SIZE, "records":SYSCON_BLOCK_SIZE * 5, "count":8 },
+	"header":	{ "length":BLOCK_SIZE, "count":2 }, 
+	"data":		{ "flat":BLOCK_SIZE, "records":BLOCK_SIZE * 5, "count":8 },
 })
 
 NVS_CONFIG = NvsConfig({ 
 	"offset":	SC_AREAS['NVS']['o'],
-	"header":	{ "length":SYSCON_BLOCK_SIZE, "count":2 },
-	"data":		{ "flat":SYSCON_BLOCK_SIZE, "records":SYSCON_BLOCK_SIZE * 2, "count":2 },
+	"header":	{ "length":BLOCK_SIZE, "count":2 },
+	"data":		{ "flat":BLOCK_SIZE, "records":BLOCK_SIZE * 2, "count":2 },
 })
