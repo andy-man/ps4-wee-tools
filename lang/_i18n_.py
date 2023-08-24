@@ -4,6 +4,8 @@
 #==========================================================
 import sys, os
 
+APP_VERSION = '0.8.6'
+
 # Colors stuff
 
 use_clr = True
@@ -133,7 +135,7 @@ STR_2023 = Clr.fg.red+'"20-23"'+Clr.reset
 
 from lang.en import *
 
-APP_NAME = ' PS4 ~WEE~ TOOLS v0.8.5'
+APP_NAME = ' PS4 ~WEE~ TOOLS v' + APP_VERSION
 TITLE = UI.DIVIDER_BOLD + APP_NAME+('by Andy_maN').rjust(UI.LINE_WIDTH-len(APP_NAME)-1)+'\n' + UI.DIVIDER_BOLD
 
 # Fill strings

@@ -220,9 +220,12 @@ STR_READING_DUMP_N		= ' Reading dump {}'
 STR_CHIP_NOT_RESPOND	= ' Chip doesn\'t respond, check wiring and push reset button'
 STR_HOW_MUCH_DUMPS		= ' How much dumps to read? [max 10] '
 
+STR_EMC_CMD_MODE		= 'Turning EMC cmd mode [{}]'
+
 STR_INFO_MONITOR = ''\
 ' Ctrl+Q [enter] - quit monitor\n'\
-' Ctrl+R [enter] - restart monitor'
+' Ctrl+R [enter] - restart monitor\n'\
+' Ctrl+E [enter] - toggle EMC cmd mode (adds checksum after cmd)'
 
 STR_ABOUT_SC_GLITCH = 'About Syscon Glitch'
 STR_INFO_SC_GLITCH = ''\

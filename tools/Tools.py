@@ -146,7 +146,7 @@ def screenNorFlasher(file = ''):
 
 
 
-def screenSerialMonitor(port = ''):
+def screenSerialMonitor(port = '', emc_mode = False):
 	
 	port = port if port else screenChoosePort()
 	if not port:
@@ -174,18 +174,27 @@ def screenSerialMonitor(port = ''):
 		txt = input()
 		if not len(txt):
 			continue
-		if Utils.checkCtrl(txt[0],'R'):
+		elif Utils.checkCtrl(txt[0],'R'):
 			serial.sp.close()
 			os.system('cls')
 			time.sleep(0.1) # port open/close need some delay
 			return screenSerialMonitor(port)
-		if Utils.checkCtrl(txt[0],'Q'):
+		elif Utils.checkCtrl(txt[0],'Q'):
 			serial.sp.close()
 			UI.clearInput()
 			print('\n' + UI.highlight(STR_STOP_MONITORING))
 			break
-		else:
-			serial.sendText(txt)
+		elif Utils.checkCtrl(txt[0],'E'):
+			UI.clearInput()
+			emc_mode = False if emc_mode else True
+			print('\n' + UI.highlight(STR_EMC_CMD_MODE.format(STR_ON if emc_mode else STR_OFF)))
+			continue
+		elif emc_mode:
+			txt = Utils.getEmcCmd(txt)
+			UI.clearInput()
+			print(txt)
+			
+		serial.sendText(txt)
 	if serial.err:
 		print(' '+UI.error(serial.err))
 	input(STR_BACK)

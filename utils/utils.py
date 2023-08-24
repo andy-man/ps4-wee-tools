@@ -12,6 +12,13 @@ INFO_FILE_2BLS		= '_2bls_.txt'
 
 
 
+def getEmcCmd(str):
+	sum = 0
+	for i in range(len(str)):
+		sum += ord(str[i])
+	return str + ':%02X'%(sum & 0xFF)
+
+
 def checkCtrl(s, key):
 	return ord(s) + 0x40 == ord(key)
 

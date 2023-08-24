@@ -83,6 +83,9 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
+### v0.8.6
+* EMC cmd mode
+
 ### v0.8.5
 * UART terminal with syntax highlighting
 * Integrated syscon reader (Arduino Nano V3)
