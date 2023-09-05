@@ -93,6 +93,7 @@ NOR_AREAS = {
 	
 	'ACT_SLOT':	{'o':0x001000,	'l':1,			't':'b',	'n':'Active slot'},			# 0x00 - A 0x80 - B
 	
+	'BOARD_ID':	{'o':0x1C4000,	'l':8,			't':'b',	'n':'Board ID'},			# SAA-001, SAB-00, etc
 	'MAC':		{'o':0x1C4021,	'l':6,			't':'b',	'n':'MAC Address'},
 	'MB_SN':	{'o':0x1C8000,	'l':16,			't':'s',	'n':'Motherboard Serial'},
 	'SN':		{'o':0x1C8030,	'l':17,			't':'s',	'n':'Console Serial'},
@@ -407,6 +408,15 @@ def getSFlashInfo(file = '-'):
 		
 		samu = getNorData(f, 'SAMUBOOT')[0]
 		region = getConsoleRegion(f)
+		board = getNorData(f, 'BOARD_ID')
+		
+		mb_codes = {
+			b'\x03\02': 'SA',
+			b'\x04\x01': 'HA',
+			b'\x05\x02': 'NV',
+		}
+		
+		mobo = (mb_codes[board[0:2]] if board[0:2] in mb_codes else '??') + chr(ord('A')-1+board[2])
 		
 		try:
 			hdd = (' / ').join(Utils.swapBytes(getNorData(f, 'HDD')).decode('utf-8').split())
@@ -416,7 +426,7 @@ def getSFlashInfo(file = '-'):
 		info = {
 			'FILE'			: os.path.basename(file),
 			'MD5'			: Utils.getFileMD5(file),
-			'SKU'			: sku,
+			'SKU / Board ID': sku + ' [' + UI.highlight(Utils.hex(board, ':')) + '] ~' + mobo + '-00?',
 			'Region'		: '[{}] {}'.format(region[0], region[1]),
 			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
 			'Southbridge'	: southbridge if southbridge else STR_UNKNOWN,
