@@ -14,8 +14,9 @@ class WeeSerial:
 		'error'		: Clr.fg.red,
 		'warn'		: Clr.fg.orange,
 		'release'	: Clr.fg.green,
-		'network'	: Clr.fg.cyan,
-		'samu'		: Clr.fg.blue,
+		'network'	: Clr.fg.blue,
+		'samu'		: Clr.fg.cyan,
+		'standby'	: Clr.bg.purple,
 	}
 	
 	cfg = {
@@ -30,10 +31,10 @@ class WeeSerial:
 		'write_timeout'	: 120,
 	}
 	
-	enc		= 'utf-8'
+	ENCODING	= 'utf-8'
+	
 	sp		= False
 	alive	= False
-	buf		= b''
 	err		= ''
 	
 	def __init__(self, port, cfg = {}):
@@ -51,7 +52,6 @@ class WeeSerial:
 			self.sp.flushInput()
 			self.sp.flushOutput()
 			
-			self.buf = ''
 		except Exception as e:
 			err = str(e)
     
@@ -60,7 +60,7 @@ class WeeSerial:
 			self.sp.close()
     
 	def error(self, msg):
-		print(' '+msg)
+		self.printf(UI.error(' '+msg+'\n\n'))
 	
 	def printf(self, str, erase = False):
 		print(('\r ' if erase else '') + str, end='')
@@ -77,17 +77,27 @@ class WeeSerial:
 			return self.err
 		return '%s %d %d %s %d (%s)'%(self.sp.port, self.sp.baudrate, self.sp.bytesize, self.sp.parity, self.sp.stopbits, 'open' if self.sp.is_open else 'closed')
     
+	def testPatterns(self, path):
+		if os.path.isfile(path):
+			with open(path, 'r') as file:
+				lines = file.readlines()
+				for line in lines:
+					self.printline(line)
+	
+	def printline(self, line):
+		patterns = self.patterns
+		for k in patterns:
+			if k in line.lower():
+				line = patterns[k] + line + Clr.reset
+				break
+		self.printf(line)
+	
 	def monitor(self):
-		pattern = self.patterns
 		while self.sp.is_open and self.alive:
 			try:
 				line = self.sp.readline()
-				line = line.decode(self.enc,'ignore')
-				for k in pattern:
-					if k in line.lower():
-						line = pattern[k] + line + Clr.reset
-						break
-				self.printf(line)
+				line = line.decode(self.ENCODING,'ignore')
+				self.printline(line)
 			except Exception as e:
 				self.err = str(e)
 				self.alive = False
@@ -108,7 +118,7 @@ class WeeSerial:
 		return self.sp[key] if key and key in self.sp else self.sp
 	
 	def sendText(self, txt, EOL = b'\n\r'):
-		return self.send((txt).encode(self.enc,'ignore') + EOL)
+		return self.send((txt).encode(self.ENCODING,'ignore') + EOL)
     
 	def send(self, bytes):
 		try:
@@ -116,38 +126,7 @@ class WeeSerial:
 		except Exception as e:
 			self.error(str(e))
 	
-	# SPI flasher
-	
-	def write(self, s):
-		if isinstance(s, int):
-			s = chr(s)
-		elif isinstance(s,tuple) or isinstance(s,list):
-			s = ''.join([chr(c) for c in s])
-		self.buf += s
-		while len(self.buf) > self.BUFSIZE:
-			self.sp.write(self.buf[:self.BUFSIZE])
-			self.buf = self.buf[self.BUFSIZE:]
-	
-	def flush(self):
-		if len(self.buf):
-			self.sp.write(self.buf)
-			self.sp.flush()
-			self.buf = ''
-	
-	def read(self, size):
-		self.flush()
-		data = self.sp.read(size)
-		return data
-	
-	def readbyte(self):
-		return ord(self.read(1))
-	
 	def close(self):
-		self.printf('Closing serial port')
-		if self.sp is None:
-			self.printf('Device already closed')
-		else:
+		if not self.sp is None:
 			self.sp.close()
-			self.printf('Done')
-
-
+	

@@ -216,6 +216,6 @@ def hddEapKey(eap_key, smi, use_new_blob=False):
 	info['XTS data key'] = Utils.hex(data_key,'')
 	info['XTS tweak key'] = Utils.hex(tweak_key,'')
 	
-	UI.getTable(info)
+	UI.showTable(info)
 	
 	return {'tweak':tweak_key,'data':data_key}

@@ -19,6 +19,7 @@ def getEmcCmd(str):
 	return str + ':%02X'%(sum & 0xFF)
 
 
+
 def checkCtrl(s, key):
 	return ord(s) + 0x40 == ord(key)
 

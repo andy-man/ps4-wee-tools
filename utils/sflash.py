@@ -134,12 +134,12 @@ NOR_AREAS = {
 	'CORE_SWCH':{'o':0x201000,	'l':16,			't':'b',	'n':'Slot switch hack'},
 }
 
-SOUTHBRIDGES = {
-	'Aeolia A2':	[0x0D, 0x0E], #CXD90025
-	'Belize A0/B0':	[0x20, 0x21], #CXD90036
-	'Baikal B1':	[0x24, 0x25], #CXD90042
-	'Belize 2 A0':	[0x2A, 0x2B], #CXD90046
-}
+SOUTHBRIDGES = [
+	{'code':[0x0D, 0x0E], 'name':'Aeolia A2',	'ic':'CXD90025'},
+	{'code':[0x20, 0x21], 'name':'Belize A0/B0','ic':'CXD90036'},
+	{'code':[0x24, 0x25], 'name':'Baikal B1',	'ic':'CXD90042'},
+	{'code':[0x2A, 0x2B], 'name':'Belize 2 A0',	'ic':'CXD90046'},
+]
 
 TORUS_VERS = {
 	0x03: 'Version 1',
@@ -350,11 +350,13 @@ def getSouthBridge(f):
 	emc = Data.EMC_IPL_MD5[emc_md5]['t'] if emc_md5 in Data.EMC_IPL_MD5 else 0
 	eap = Data.EAP_KBL_MD5[eap_md5]['t'] if eap_md5 in Data.EAP_KBL_MD5 else 0
 	
-	for key in SOUTHBRIDGES:
-		if SOUTHBRIDGES[key] == [emc, eap]:
-			return key
+	code = [emc, eap]
 	
-	return '[0x%02X, 0x%02X]'%(emc, eap)
+	for k in range(len(SOUTHBRIDGES)):
+		if SOUTHBRIDGES[k]['code'] == code:
+			return SOUTHBRIDGES[k]
+	
+	return {'code':code, 'name':STR_UNKNOWN, 'ic':'??'},
 
 # NOR Areas data utils
 
@@ -403,20 +405,17 @@ def getSFlashInfo(file = '-'):
 		active_slot = 'a' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'b'
 		inactive_slot = 'a' if active_slot == 'b' else 'b'
 		
-		southbridge = getSouthBridge(f)
+		SB = getSouthBridge(f)
 		torus = getTorusVersion(f)
 		
 		samu = getNorData(f, 'SAMUBOOT')[0]
 		region = getConsoleRegion(f)
 		board = getNorData(f, 'BOARD_ID')
 		
-		mb_codes = {
-			b'\x03\02': 'SA',
-			b'\x04\x01': 'HA',
-			b'\x05\x02': 'NV',
-		}
+		mb_codes = { 2: 'CV', 3: 'SA', 4: 'HV', 5: 'NV', }
 		
-		mobo = (mb_codes[board[0:2]] if board[0:2] in mb_codes else '??') + chr(ord('A')-1+board[2])
+		mobo = (mb_codes[board[0]] if board[0] in mb_codes else '??') + chr(ord('A')-1+board[2])
+		retail = 'Retail' if board[1] == 2 else 'Non-Retail'
 		
 		try:
 			hdd = (' / ').join(Utils.swapBytes(getNorData(f, 'HDD')).decode('utf-8').split())
@@ -427,9 +426,9 @@ def getSFlashInfo(file = '-'):
 			'FILE'			: os.path.basename(file),
 			'MD5'			: Utils.getFileMD5(file),
 			'SKU / Board ID': sku + ' [' + UI.highlight(Utils.hex(board, ':')) + '] ~' + mobo + '-00?',
-			'Region'		: '[{}] {}'.format(region[0], region[1]),
+			'Region'		: '[{}] {} / {}'.format(region[0], region[1], retail),
 			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
-			'Southbridge'	: southbridge if southbridge else STR_UNKNOWN,
+			'Southbridge'	: '%s [%s] [%02X:%02X]'%(SB['name'], SB['ic'], SB['code'][0], SB['code'][1]),
 			'Torus (WiFi)'	: torus if len(torus) else STR_UNKNOWN,
 			'MAC'			: Utils.hex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,

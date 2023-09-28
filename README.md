@@ -22,7 +22,7 @@ If you want to run python script directly you need these libs
 
 ## Features
 
-NOR tool
+**NOR tool**
 * PS4 Nor dump info
   * MD5, SKU, Region, SN / Mobo SN, Southbridge
   * Torus (WiFi), MAC, HDD, FW (current, minimal), FW2 ver probability
@@ -41,7 +41,7 @@ NOR tool
   * Base validation and entropy stats
   * EMC CFW for Aeolia
 
-Syscon tool
+**Syscon tool**
 * Syscon check
 * Patchable status check
 * SNVS blocks viewer (records and flatdata)
@@ -50,9 +50,10 @@ Syscon tool
 * SNVS rebuilding
 * Boot mode selection
 
-Common
+**Common**
 * File browser
 * Terminal (UART) with highlighting
+* SPIway flasher
 * Multy files compare
 * Pack / Unpack 2BLS files
 * Syscon reader
@@ -61,9 +62,11 @@ Don't use if you don't understant what is it for!
 
 ## Credits
 
-* fail0verflow
+* Judges
+* Abkarino
 * zecoxao
 * Al-Azif
+* fail0verflow
 * DarkNESmonk
 * BwE
 * pearlxcore
@@ -82,6 +85,15 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.8.8
+* SPIway flasher
+* Flags toggler update
+* Minor bug fixes
+
+### v0.8.7
+* New md5 hashes (11.00)
+* Board_id info
 
 ### v0.8.6
 * EMC cmd mode

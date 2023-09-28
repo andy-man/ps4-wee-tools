@@ -4,7 +4,7 @@
 #==========================================================
 import sys, os
 
-APP_VERSION = '0.8.7'
+APP_VERSION = '0.8.8'
 
 # Colors stuff
 
@@ -93,39 +93,61 @@ class UI:
 		if sys.platform[:3] == 'win':
 			os.system('title '+str)
 	
-	def getTab(str):
-		return Clr.fg.yellow+'  _'+('_'*len(str))+'_\n'+('_/ '+str+' \_').ljust(UI.LINE_WIDTH, '_')+'\n'+Clr.reset
+	@classmethod
+	def getTab(cls, str):
+		return Clr.fg.yellow+'  _'+('_'*len(str))+'_\n'+('_/ '+str+' \_').ljust(cls.LINE_WIDTH, '_')+'\n'+Clr.reset
 	
 	def getTable(data, pad=16):
-		return UI.showTable(data, pad, True)
-	
-	def showTable(data, pad=16, echo = True):
-		table= ''
+		table = []
+		
 		for key in data:
 			if data[key] == '':
 				continue
-			table += ' {} : {}\n'.format(('%s'%key).ljust(pad,' '),data[key])
-		if echo:
-			print(table,end='')
-		else:
-			return table
+			table.append(' {} : {}'.format(('%s'%key).ljust(pad,' '),data[key]))
+		
+		return table
 	
-	def showMenu(menu, start=0):
+	@classmethod
+	def showTable(cls, data, pad=16):
+		table = cls.getTable(data, pad)
+		print('\n'.join(table))
+	
+	def showTableEx(data, cols=2, pad=16):
+		lines = []
+		for n in range(cols):
+			line = ''
+			for k in range(n, len(data), cols):
+				line += data[k].ljust(pad,' ')
+			lines.append(line)
+		print('\n'.join(lines))
+	
+	def getMenu(menu, start=0):
+		lines = []
+		
 		if type(menu) is dict:
 			for n in menu:
-				print(' %s: %s'%(n,menu[n]))
+				lines.append(' %s: %s'%(n,menu[n]))
 		else:
 			for n, text in enumerate(menu):
-				print(' '+str(n+start)+': '+text)
+				lines.append(' '+str(n+start)+': '+text)
+		
+		return lines
 	
-	def setStatus(v, clr = Clr.fg.yellow):
-		UI.STATUS_TXT = v
-		UI.STATUS_CLR = clr
+	@classmethod
+	def showMenu(cls, menu, start=0):
+		lines = cls.getMenu(menu, start)
+		print('\n'.join(lines))
 	
-	def showStatus():
-		if UI.STATUS_TXT:
-			print(UI.DIVIDER_DASH + UI.STATUS_CLR + UI.STATUS_TXT + Clr.reset)
-			UI.STATUS_TXT = ''
+	@classmethod
+	def setStatus(cls, v, clr = Clr.fg.yellow):
+		cls.STATUS_TXT = v
+		cls.STATUS_CLR = clr
+	
+	@classmethod
+	def showStatus(cls):
+		if cls.STATUS_TXT:
+			print(cls.DIVIDER_DASH + cls.STATUS_CLR + cls.STATUS_TXT + Clr.reset)
+			cls.STATUS_TXT = ''
 
 # Common strings (used in lang files)
 
@@ -150,6 +172,7 @@ STR_CONFIRM			= UI.DIVIDER + STR_CONFIRM
 STR_APP_HELP		= STR_APP_HELP + UI.link('https://github.com/andy-man/ps4-wee-tools')
 STR_INFO_HDD_EAP	= STR_INFO_HDD_EAP + UI.link('https://www.psdevwiki.com/ps4/Mounting_HDD_in_Linux')
 STR_INFO_EMC_CFW	= STR_INFO_EMC_CFW + UI.link('https://www.psdevwiki.com/ps4/Southbridge')
+STR_INFO_SPIWAY		= STR_INFO_SPIWAY + UI.link('https://www.psdevwiki.com/ps4/SPIway')
 
 STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH.format(STR_080B, STR_0C0F, STR_2023, STR_080B)
 

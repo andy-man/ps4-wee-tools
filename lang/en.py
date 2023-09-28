@@ -13,12 +13,27 @@ MENU_EAP_KEYS = [
 	'Clean key B *',
 ]
 
+MENU_SPIWAY = [
+	'Read all',
+	'Read area',
+	'Read block',
+	'Write all',
+	'Write area',
+	'Write block',
+	'Verify all',
+	'Verify area',
+	'Verify block',
+	'Erase all',
+	'Erase area',
+	'Erase block',
+]
+
 MENU_TOOL_SELECTION = [
 	'File browser',
 	'Terminal (UART)',
-	'sFlash r/w (SPIway by hjudges)',
+	'sFlash r/w (SPIway by Judges)',
 	'Syscon r/w (SCTool by Abkarino & EgyCnq)',
-	'Syscon r/o (SCRead by DarNESmonk)',
+	'Syscon r/o (SCRead by DarkNESmonk)',
 	'Exit',
 ]
 
@@ -38,6 +53,12 @@ MENU_ADDTIONAL = [
 	'Base validation and entropy stats',
 	'Create EMC cfw (only for Fat 1xxx/11xx)',
 ]
+
+MENU_EXTRA_FLASHER = {
+	's':'Select file',
+	'f':'Launch Tool for this file',
+	'm':'Open Main menu',
+}
 
 MENU_EXTRA = {
 	's':'Select another file',
@@ -76,6 +97,14 @@ MENU_SC_STATUSES = [
 	'Probably patchable',
 ]
 
+MENU_SPW_ACTS = {
+	'read':		'Reading',
+	'write':	'Writing',
+	'verify':	'Verifying',
+	'erase':	'Erasing',
+}
+
+STR_SECONDS				= '{:0.0f} seconds'
 STR_PORTS_LIST			= 'Serial ports'
 STR_MAIN_MENU			= 'Main menu'
 STR_FILE_LIST			= 'Files list'
@@ -105,6 +134,7 @@ STR_EAP_KEYS			= 'EAP keys'
 STR_SC_BOOT_MODES		= 'Bootmode records'
 STR_INFO				= 'Info'
 STR_SC_READER			= 'Syscon reader'
+STR_SPIWAY				= 'SPIway by Judges & Abkarino'
 
 STR_NO_INFO				= '- No info -'
 STR_OFF					= 'Off'
@@ -197,6 +227,7 @@ STR_FW_VERSION			= ' FW version {} / Active slot {}'
 STR_COMPARE_RESULT		= ' {} | Result: {}'
 STR_INCORRECT_SIZE		= ' {} - incorrect dump size!'
 STR_FILE_NOT_EXISTS		= ' File {} doesn\'t exist!'
+STR_ERROR_FILE_REQ		= ' You need to select file first'
 STR_SAVED_TO			= ' Saved to {}'
 STR_SAVING_TO			= ' Saving to {}'
 STR_ERROR_INPUT			= ' Incorrect input'
@@ -207,6 +238,8 @@ STR_FILES_MATCH			= ' Files are equal'
 STR_FILES_MISMATCH		= ' Files mismatch'
 STR_SIZES_MISMATCH		= ' Sizes mismatch!'
 
+STR_CHOOSE_AREA			= ' Choose area: '
+STR_INPUT_BLOCK			= ' Input start block [count]: '
 STR_INPUT_SAVE_IM		= ' Save all intermediate files? [y] '
 STR_USE_NEWBLOBS		= ' Use new key blobs? [y] '
 STR_CONFIRM_SEPARATE	= ' Save as separate file? [y] '
@@ -222,10 +255,38 @@ STR_HOW_MUCH_DUMPS		= ' How much dumps to read? [max 10] '
 
 STR_EMC_CMD_MODE		= 'Turning EMC cmd mode [{}]'
 
+STR_CHIP_CONFIG			= ' Chip config'
+STR_FILE_INFO			= ' File info'
+STR_VERIFY				= ' Verify'
+
+STR_SPW_PROGRESS		= 'Block %03d [%d KB / %d KB] %d%% %s '
+STR_SPW_ERROR_CHIP		= 'Unsupported chip!'
+STR_SPW_ERROR_VERSION	= 'Unsupported version! (v%d.%02d required)'
+STR_SPW_ERROR_ERASE		= 'Error erasing chip!'
+STR_SPW_ERROR_ERASE_BLK	= 'Block %d - error erasing block'
+STR_SPW_ERROR_DATA_SIZE	= 'Incorrent data size %d'
+STR_SPW_ERROR_LENGTH	= 'Incorrect length %d != %d!'
+STR_SPW_ERROR_BLK_CHK	= 'Error! Block verification failed (block=%d)'
+STR_SPW_ERROR_WRITE		= 'Error while writing!'
+STR_SPW_ERROR_READ		= 'Teensy receive buffer timeout! Disconnect and reconnect Teensy!'
+STR_SPW_ERROR_VERIFY	= 'Verification error!'
+STR_SPW_ERROR_PROTECTED	= 'Device is write-protected!'
+STR_SPW_ERROR_UNKNOWN	= 'Received unknown error! (Got 0x%02x)'
+STR_SPW_ERROR_UNK_STATUS= 'Unknown status code!'
+STR_SPW_ERR_BLOCK_ALIGN	= 'Expecting file size to be a multiplication of block size: %d'
+STR_SPW_ERR_DATA_SIZE	= 'Data is %d bytes long (expected %d)!'
+STR_SPW_ERR_OVERFLOW	= 'Chip has %d blocks. Writing outside the chip\'s capacity!'
+
 STR_INFO_MONITOR = ''\
 ' Ctrl+Q [enter] - quit monitor\n'\
 ' Ctrl+R [enter] - restart monitor\n'\
 ' Ctrl+E [enter] - toggle EMC cmd mode (adds checksum after cmd)'
+
+STR_ABOUT_SPIWAY = 'About SPIway'
+STR_INFO_SPIWAY = ''\
+' SPIway - sflash r/w with random block access support (Teensy++ 2.0)\n'\
+' Look at </assets/hw/spiway> folder for diagrams and Teensy\'s FW\n'\
+' More info at PSDevWiki: '
 
 STR_ABOUT_SC_GLITCH = 'About Syscon Glitch'
 STR_INFO_SC_GLITCH = ''\

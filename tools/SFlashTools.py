@@ -159,7 +159,7 @@ def screenFlagsToggler(file):
 	with open(file, 'rb') as f:
 		
 		patches = [
-			{'k':'UART',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON]},
+			{'k':'UART',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON], 'b':True},
 			{'k':'MEMTEST',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON]},
 			{'k':'RNG_KEY',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON]},
 			{'k':'BTNSWAP',		'v':[b'\x00',b'\x01'],			'd':['O - select','X - select']},
@@ -218,7 +218,8 @@ def toggleFlag(file, patch):
 		val = patch['v'][i]
 		
 		SFlash.setNorData(f, patch['k'],  patch['v'][i])
-		if 'b' in patch:
+		if 'b' in patch and patch['b'] == True:
+			# Set flag in backup area
 			SFlash.setNorDataB(f, patch['k'], patch['v'][i])
 	
 	UI.setStatus(STR_SET_TO.format(SFlash.getNorAreaName(patch['k']),patch['d'][i]))
