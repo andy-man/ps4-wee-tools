@@ -396,9 +396,11 @@ class SpiFlasher(WeeSerial):
 		
 		start = time.time()
 		
-		for b in range(block, block+count):
+		for b in range(block, block + count):
 			
-			res = self.__writeBlock(data[(self.Config.BLOCK_SIZE * b):(self.Config.BLOCK_SIZE * b + self.Config.BLOCK_SIZE)], b, verify)
+			offset = self.Config.BLOCK_SIZE * (block - b)
+			
+			res = self.__writeBlock(data[offset:offset + self.Config.BLOCK_SIZE], b, verify)
 			if res == False:
 				self.error(STR_SPW_ERROR_WRITE)
 				return False

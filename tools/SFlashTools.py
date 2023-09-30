@@ -128,6 +128,7 @@ def screenDowngrade(file):
 			UI.setStatus(STR_ERROR_CHOICE)
 		else:
 			pattern = SFlash.SWITCH_BLOBS[choice-1]
+			ofile = ''
 			
 			c = input('\n'+UI.highlight(STR_CONFIRM_SEPARATE))
 			
@@ -143,6 +144,10 @@ def screenDowngrade(file):
 			else:
 				SFlash.setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
 				UI.setStatus(STR_DOWNGRADE_UPD + SFlash.SWITCH_TYPES[pattern['t']] + ' [' + str(choice)+']')
+			
+			c = input('\n'+UI.highlight(STR_FLASH_PATCHED))
+			if c == 'y':
+				Tools.screenNorFlasher(ofile if ofile else file, '', 'write', 1)
 	
 	screenDowngrade(file)
 

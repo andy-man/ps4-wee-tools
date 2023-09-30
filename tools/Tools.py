@@ -100,7 +100,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 		if path and os.path.isfile(path):
 			with open(path,"rb") as file:
 				file.seek(cfg.BLOCK_SIZE * block)
-				data = file.read(cfg.BLOCK_SIZE * (count if count else cfg.BLOCK_COUNT))
+				data = file.read(cfg.BLOCK_SIZE * (count if count > 0 else cfg.BLOCK_COUNT))
 				flasher.writeChip(data, False, block, count)
 				print()
 		else:
@@ -614,6 +614,7 @@ def chooseBNC(mode = 0, block_size = 0):
 	
 	if mode == 1:
 		areas = [
+			{'n':'PS4 Full dump',		'o':0,											'l':SFlash.DUMP_SIZE},
 			{'n':'PS4 Base Info',		'o':SFlash.NOR_PARTITIONS['s0_header']['o'],	'l':SFlash.NOR_PARTITIONS['s0_blank']['o']},
 			{'n':'PS4 Flags (NVS)',		'o':SFlash.NOR_PARTITIONS['s0_nvs']['o'],		'l':SFlash.NOR_PARTITIONS['s0_nvs']['l']},
 			{'n':'PS4 CoreOS switch',	'o':SFlash.NOR_AREAS['CORE_SWCH']['o'],			'l':SFlash.NOR_AREAS['CORE_SWCH']['l']},
@@ -622,16 +623,16 @@ def chooseBNC(mode = 0, block_size = 0):
 			areas[i]['b'] = areas[i]['o'] // block_size
 			areas[i]['c'] = areas[i]['l'] // block_size + (1 if areas[i]['l'] % block_size else 0)
 		
-		UI.showMenu(['[%d %d] %s'%(areas[i]['b'], areas[i]['c'], areas[i]['n']) for i in range(len(areas))], 1)
+		UI.showMenu(['[%03d %03d] %s'%(areas[i]['b'], areas[i]['c'], areas[i]['n']) for i in range(len(areas))])
 		num = input(UI.DIVIDER+STR_CHOOSE_AREA)
 		print()
 		try:
-			num = int(num) - 1
+			num = int(num)
 			if num < len(areas):
 				block = areas[num]['b']
 				count = areas[num]['c']
 		except:
-			num = -1
+			num = 0
 	
 	if mode == 2:
 		str = input(STR_INPUT_BLOCK)

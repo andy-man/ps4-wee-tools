@@ -20,6 +20,8 @@ If you want to run python script directly you need these libs
 
 `pip install pyserial` since v0.8.5
 
+Teensy Loader Application - can be found **[here](https://www.pjrc.com/teensy/loader.html)**
+
 ## Features
 
 **NOR tool**

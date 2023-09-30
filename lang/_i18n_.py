@@ -4,7 +4,7 @@
 #==========================================================
 import sys, os
 
-APP_VERSION = '0.8.8'
+APP_VERSION = '0.8.9'
 
 # Colors stuff
 

@@ -395,6 +395,27 @@ def getNorDataB(file, key):
 
 
 
+def getMobo(board):
+	#mb_codes = 0x1c4000
+	codes = { 2: 'CV', 3: 'SA', 4: 'HA', 5: 'NV', }
+	
+	prefix = codes[board[0]] if board[0] in codes else '??'
+	
+	#mb_suffix = 0x1c4002 - All prefix 'CV' is 'N', all 'HA' is 'C', 'NV' is 'A','B' and 'G' no exist 'C'
+	suffix = '?'
+	if prefix == 'CV' and board[2] == 1: suffix = 'N'
+	if prefix == 'HA' and board[2] == 1: suffix = 'C'
+	if prefix == 'NV' and board[2] == 3: suffix = 'G'
+	if prefix == 'SA' or (prefix == 'NV' and board[2] <= 2):
+		suffix = chr(ord('A')-1+board[2])
+	
+	#mb_rev = Revision of board - ??? No exist SAA, SAB, SAC and HAC > 001, all are 001 - if board[0] <= 'HA' and board[2] <= 'C' Revision is 001
+	rev = '001' if board[0] <= 4 and board[2] <= 3 else '00?'
+	
+	return {'name':prefix + suffix + '-' + rev, 'type':'Retail' if board[1] == 2 else 'Non-Retail'}
+
+
+
 def getSFlashInfo(file = '-'):
 	with open(file, 'rb') as f:
 		
@@ -411,11 +432,7 @@ def getSFlashInfo(file = '-'):
 		samu = getNorData(f, 'SAMUBOOT')[0]
 		region = getConsoleRegion(f)
 		board = getNorData(f, 'BOARD_ID')
-		
-		mb_codes = { 2: 'CV', 3: 'SA', 4: 'HV', 5: 'NV', }
-		
-		mobo = (mb_codes[board[0]] if board[0] in mb_codes else '??') + chr(ord('A')-1+board[2])
-		retail = 'Retail' if board[1] == 2 else 'Non-Retail'
+		mobo = getMobo(board)
 		
 		try:
 			hdd = (' / ').join(Utils.swapBytes(getNorData(f, 'HDD')).decode('utf-8').split())
@@ -425,8 +442,8 @@ def getSFlashInfo(file = '-'):
 		info = {
 			'FILE'			: os.path.basename(file),
 			'MD5'			: Utils.getFileMD5(file),
-			'SKU / Board ID': sku + ' [' + UI.highlight(Utils.hex(board, ':')) + '] ~' + mobo + '-00?',
-			'Region'		: '[{}] {} / {}'.format(region[0], region[1], retail),
+			'SKU / Board ID': sku + ' [' + UI.highlight(Utils.hex(board, ':')) + '] ~' + mobo['name'],
+			'Region'		: '[{}] {} / {}'.format(region[0], region[1], mobo['type']),
 			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
 			'Southbridge'	: '%s [%s] [%02X:%02X]'%(SB['name'], SB['ic'], SB['code'][0], SB['code'][1]),
 			'Torus (WiFi)'	: torus if len(torus) else STR_UNKNOWN,

@@ -248,6 +248,7 @@ STR_CURRENT				= ' Current: '
 STR_GO_BACK				= ' Go back'
 STR_SC_BM_SELECT		= ' Select boot mode variant [1-{}] '
 STR_OPEN_IN_SCTOOL		= ' Open file in syscon tool? [y] '
+STR_FLASH_PATCHED		= ' Flash patched to console (SPIway)? [y] '
 
 STR_READING_DUMP_N		= ' Reading dump {}'
 STR_CHIP_NOT_RESPOND	= ' Chip doesn\'t respond, check wiring and push reset button'
