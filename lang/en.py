@@ -13,7 +13,7 @@ MENU_EAP_KEYS = [
 	'Clean key B *',
 ]
 
-MENU_SPIWAY = [
+MENU_FLASHER = [
 	'Read all',
 	'Read area',
 	'Read block',
@@ -28,6 +28,14 @@ MENU_SPIWAY = [
 	'Erase block',
 ]
 
+MENU_SERIAL_MONITOR = {
+	'Ctrl+Q':'quit monitor',
+	'Ctrl+R':'restart monitor',
+	'Ctrl+E':'toggle EMC cmd mode',
+	'Ctrl+B':'show bytecodes < 0x20',
+	'Ctrl+L':'log to file',
+}
+
 MENU_TOOL_SELECTION = [
 	'File browser',
 	'Terminal (UART)',
@@ -41,7 +49,8 @@ MENU_FILE_SELECTION = {
 	'a':'Show all files / Toggle filters [bin,pup]',
 	'f':'Build sflash0 dump',
 	'b':'Build 2BLS/PUP',
-	'c':'Compare bin files in current folder',
+	'r':'Batch rename (extract dump info to filename)',
+	'c':'Compare files in current folder',
 	'm':'Go to [Main menu]',
 }
 
@@ -71,6 +80,7 @@ MENU_NOR_ACTIONS = [
 	'Memory clocking (GDDR5)',
 	'SAMU boot flag',
 	'CoreOS slot switching (FW revert)',
+	'Legitimate CoreOS Patch',
 	'Additional tools',
 ]
 
@@ -135,7 +145,11 @@ STR_SC_BOOT_MODES		= 'Bootmode records'
 STR_INFO				= 'Info'
 STR_SC_READER			= 'Syscon reader'
 STR_SPIWAY				= 'SPIway by Judges & Abkarino'
+STR_SCF					= 'Syscon Flasher by Abkarino'
+STR_LEG_PATCH			= 'Legitimate CoreOS Patch'
 
+STR_EQUAL				= 'Equal'
+STR_NOT_EQUAL			= 'Not equal'
 STR_NO_INFO				= '- No info -'
 STR_OFF					= 'Off'
 STR_ON					= 'On'
@@ -177,6 +191,7 @@ STR_BUILDING			= ' Building file {}'
 
 STR_DONE				= ' All done'
 STR_PROGRESS			= ' Progress {:2d}% '
+STR_PROGRESS_KB			= ' Progress: {}KB / {}KB'
 STR_WAIT				= ' Please wait...'
 STR_WAITING				= ' Waiting...'
 STR_SET_TO				= ' {} was set to [{}]'
@@ -224,7 +239,6 @@ STR_DUPLICATES			= ' {} duplicate(s) found {}'
 
 STR_FW_VERSION			= ' FW version {} / Active slot {}'
 
-STR_COMPARE_RESULT		= ' {} | Result: {}'
 STR_INCORRECT_SIZE		= ' {} - incorrect dump size!'
 STR_FILE_NOT_EXISTS		= ' File {} doesn\'t exist!'
 STR_ERROR_FILE_REQ		= ' You need to select file first'
@@ -254,7 +268,9 @@ STR_READING_DUMP_N		= ' Reading dump {}'
 STR_CHIP_NOT_RESPOND	= ' Chip doesn\'t respond, check wiring and push reset button'
 STR_HOW_MUCH_DUMPS		= ' How much dumps to read? [max 10] '
 
-STR_EMC_CMD_MODE		= 'Turning EMC cmd mode [{}]'
+STR_EMC_CMD_MODE		= 'Turning EMC cmd mode: [{}]'
+STR_SHOW_BYTECODES		= 'Show byte codes < 0x20: [{}]'
+STR_MONITOR_STATUS		= 'RX/TX: %d/%d (bytes) Elapsed: %d (sec)'
 
 STR_CHIP_CONFIG			= ' Chip config'
 STR_FILE_INFO			= ' File info'
@@ -272,16 +288,48 @@ STR_SPW_ERROR_WRITE		= 'Error while writing!'
 STR_SPW_ERROR_READ		= 'Teensy receive buffer timeout! Disconnect and reconnect Teensy!'
 STR_SPW_ERROR_VERIFY	= 'Verification error!'
 STR_SPW_ERROR_PROTECTED	= 'Device is write-protected!'
-STR_SPW_ERROR_UNKNOWN	= 'Received unknown error! (Got 0x%02x)'
+STR_SPW_ERROR_UNKNOWN	= 'Received unknown error!'
 STR_SPW_ERROR_UNK_STATUS= 'Unknown status code!'
 STR_SPW_ERR_BLOCK_ALIGN	= 'Expecting file size to be a multiplication of block size: %d'
 STR_SPW_ERR_DATA_SIZE	= 'Data is %d bytes long (expected %d)!'
 STR_SPW_ERR_OVERFLOW	= 'Chip has %d blocks. Writing outside the chip\'s capacity!'
 
-STR_INFO_MONITOR = ''\
-' Ctrl+Q [enter] - quit monitor\n'\
-' Ctrl+R [enter] - restart monitor\n'\
-' Ctrl+E [enter] - toggle EMC cmd mode (adds checksum after cmd)'
+STR_SCF_ERROR_VERSION	= 'Unsupported version! (v%d.%02d required)'
+STR_SCF_ERROR_WRITE_BLK	= 'Error writing block %d'
+STR_SCF_ERROR_ERASE_BLK	= 'Error erasing block %d'
+STR_SCF_ERROR_READ_BLK	= 'Error reading block %d'
+STR_SCF_ERROR_ERASE_CHIP= 'Error during chip erasing'
+
+STR_SCF_ERR_INT			= 'Error during initialization'
+STR_SCF_ERR_READ		= 'Read error'
+STR_SCF_ERR_ERASE		= 'Erase error'
+STR_SCF_ERR_WRITE		= 'Write error'
+STR_SCF_ERR_CMD_LEN		= 'Incorrect command length'
+STR_SCF_ERR_CMD_EXEC	= 'Error while executing command'
+STR_SCF_ERR_UNKNOWN		= 'Received unknown error!'
+STR_SCF_ERR_UNK_STATUS	= 'Unknown status code!'
+
+STR_CANT_USE			= 'Can\'t use this'
+STR_DIFF_SN				= 'Serial numbers are different!'
+STR_SSP_EQUAL			= 'Slot switch patterns are equal!'
+
+STR_ABOUT_LEG_PATCH = 'About Legitimate CoreOS Patch'
+STR_INFO_LEG_PATCH = ''\
+' This method is only suitable for working consoles!\n'\
+' Because it requires updating via PS4 safe menu\n'\
+'\n'\
+' 1) Read first dump (if you\'ve not done it already)\n'\
+' 2) Update the console to the SAME version via safe mode\n'\
+' 3) Read second dump (both slots have equal FW)\n'\
+'\n'\
+' Now you can patch first dump with data from second one'
+
+STR_ABOUT_SCF = 'About Syscon Flasher'
+STR_INFO_SCF = ''\
+' Syscon Flasher allows you to r/w original PS4 syscon chip (RL78/G13)\n'\
+' Currently hardware part is based on Teensy boards (2.0++/4.0/4.1)\n'\
+' Look at </assets/hw/syscon_flasher> for diagrams and Teensy\'s FW\n'\
+' More info here: '
 
 STR_ABOUT_SPIWAY = 'About SPIway'
 STR_INFO_SPIWAY = ''\

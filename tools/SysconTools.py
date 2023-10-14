@@ -372,12 +372,13 @@ def getSysconInfo(file):
 		return False
 	
 	with open(file, 'rb') as f:
-		magic = Syscon.checkSysconData(f, 'MAGIC_1') and Syscon.checkSysconData(f, 'MAGIC_2') and Syscon.checkSysconData(f, 'MAGIC_3')
+		magic = Syscon.checkSysconData(f, ['MAGIC_1','MAGIC_2','MAGIC_3'])
 		debug = Syscon.getSysconData(f, 'DEBUG')[0]
 		debug = STR_ON if debug == 0x84 or debug == 0x85 else STR_OFF
 		ver = Syscon.getSysconData(f, 'VERSION')
 		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 		records = SNVS.getAllDataEntries()
+		fw_info = Syscon.checkSysconFW(f)
 		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}] OWC[{}]'.format(
 			SNVS.active_volume,
 			SNVS.active_entry.getLink(),
@@ -388,9 +389,10 @@ def getSysconInfo(file):
 		info = {
 			'FILE'			: os.path.basename(file),
 			'MD5'			: Utils.getFileMD5(file),
-			'Magic'			: ('True' if magic else 'False'),
+			'Magic'			: STR_OK if magic else STR_FAIL,
 			'Debug'			: debug,
-			'Version'		: '{:X}.{:X}'.format(ver[0],ver[2]),
+			'FW'			: 'v{:X}.{:02x}'.format(ver[0],ver[2]),
+			'FW MD5'		: '{} - {}'.format(fw_info['md5'], (STR_OK+' ['+fw_info['fw']+']') if fw_info['fw'] else STR_FAIL),
 			'SNVS'			: snvs_info,
 			'Entries'		: STR_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
 			'Status'		: MENU_SC_STATUSES[Syscon.isSysconPatchable(records)],

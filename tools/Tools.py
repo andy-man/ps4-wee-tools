@@ -6,11 +6,11 @@ import os, sys, time, datetime
 from lang._i18n_ import *
 from utils.serial import WeeSerial
 from utils.spiway import SpiFlasher
+from utils.scflasher import SysconFlasher, sysconReader
 import utils.utils as Utils
 import utils.slb2 as Slb2
 import utils.sflash as SFlash
 import utils.syscon as Syscon
-import utils.syscon_rw as SysconRW
 import tools.SFlashTools as SFlashTools
 import tools.SysconTools as SysconTools
 import tools.AdvSFlashTools as AdvSFlashTools
@@ -25,6 +25,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 		return
 	
 	flasher = SpiFlasher(port)
+	flasher.reset()
 	
 	os.system('cls')
 	print(TITLE+UI.getTab(STR_ABOUT_SPIWAY))
@@ -34,6 +35,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	if flasher.err or flasher.sp.is_open == False:
 		print(UI.warning(STR_PORT_UNAVAILABLE))
 		print(UI.warning(flasher.err))
+		flasher.close()
 		input(STR_BACK)
 		return
 	
@@ -84,7 +86,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	
 	if act == 'read':
 		sfx = '_full' if block == 0 and count == 0 else '_b%d-%d'%(block,block+count)
-		path = 'dump_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + sfx + '.bin'
+		path = os.path.join(os.getcwd(), 'dump_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + sfx + '.bin')
 		data = flasher.readChip(block, count)
 		print()
 		if data:
@@ -131,13 +133,13 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 		UI.showTable({
 			'File': os.path.basename(path),
 			'MD5': Utils.getFileMD5(path),
-			'Size': '%d MB'%(os.stat(path).st_size // (1024*1024)),
+			'Size': '%d MB'%(os.stat(path).st_size // 1024**2),
 		})
 	
 	# Action done
 	
 	print(UI.getTab(STR_ACTIONS))
-	UI.showTableEx(UI.getMenu(MENU_SPIWAY,1), 3, 17)
+	UI.showTableEx(UI.getMenu(MENU_FLASHER,1), 4, 17)
 	print(UI.DIVIDER)
 	UI.showMenu(MENU_EXTRA_FLASHER)
 	
@@ -177,58 +179,156 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 
 
 
-def glitchAndReadSyscon(sp, file):
+def screenSysconFlasher(path = '', port = '', act = '', mode = False):
+	port = port if port else screenChoosePort()
+	if not port:
+		UI.setStatus(STR_NO_PORTS)
+		return
 	
-	if not sp.is_open:
-		sp.open()
-		if not sp.is_open:
-			print(UI.error(STR_PORT_CLOSED))
-			return
+	flasher = SysconFlasher(port)
+	#flasher.reset()
 	
-	print(STR_WAITING+'\n')
-	time.sleep(2)
+	os.system('cls')
+	print(TITLE+UI.getTab(STR_ABOUT_SCF))
+	print(UI.warning(STR_INFO_SCF))
+	print(UI.getTab(STR_SCF))
 	
-	sp.write(b'\x00')
+	if flasher.err or flasher.sp.is_open == False:
+		print(UI.warning(STR_PORT_UNAVAILABLE))
+		print(UI.warning(flasher.err))
+		flasher.disconnect()
+		input(STR_BACK)
+		return
 	
-	wait = True
-	start_time = time.time()
+	info = flasher.connect()
+	ver_maj, ver_min = info['VER']
+	UI.showTable({
+		'Version':'%d.%02d'%(ver_maj, ver_min),
+		'Memory':'%d bytes'%info['RAM'],
+		'Debug Mode':info['DEBUG'],
+	})
+	print()
 	
-	while wait:
-		resp = sp.read(1)
-		
-		if resp == b'\xEE':
-			print('\n'+UI.warning(STR_CHIP_NOT_RESPOND))
-		
-		if resp == b'\x00':
-			print(UI.cyan(' [GLITCH]'))
-		
-		if resp == b'\x91':
-			print(UI.green(' [OCD CMD] connect'))
-			while True:
-				resp = sp.read(1)
-				if resp == b'\x94':
-					print(UI.green(' [OCD CMD] exec'))
-					wait = False
-					sp.read(1)
-					break
+	if info['VER'] != flasher.VERSION:
+		flasher.close()
+		input(STR_BACK)
+		return
 	
-	with open(file, 'wb') as f:
-		counter = 0
+	info = flasher.getChipInfo()
+	
+	print(UI.highlight(STR_CHIP_CONFIG)+':\n')
+	UI.showTable(info)
+	print()
+	
+	# Show current file info
+	if act != 'read' and path and os.path.isfile(path):
+		print(UI.highlight(STR_FILE_INFO)+':\n')
+		UI.showTable({
+			'File':		os.path.basename(path),
+			'MD5':		Utils.getFileMD5(path),
+			'Size':		'%d KB'%(os.stat(path).st_size // 1024),
+		})
+		print(end=('\n' if act else ''))
+	
+	# Perform action
+	
+	cfg = flasher.Config
+	
+	if act:
+		print(' '+UI.highlight(MENU_SPW_ACTS[act] if act in MENU_SPW_ACTS else STR_UNKNOWN)+'\n')
+		block, count = chooseBNC(mode, cfg.BLOCK_SIZE, True)
+	
+	if act == 'read':
+		sfx = '_full' if block == 0 and count == 0 else '_b%d-%d'%(block,block+count)
+		path = os.path.join(os.getcwd(), 'syscon_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + sfx + '.bin')
+		data = flasher.readChip(block, count)
 		print()
-		while True:
-			data = sp.read(Syscon.BLOCK_SIZE)
-			counter += Syscon.BLOCK_SIZE;
-			
-			f.write(data)
-			
-			print(UI.highlight(' Progress: {}KB / {}KB'.format(os.stat(file).st_size // 2**10, Syscon.DUMP_SIZE // 2**10))+'\r',end='')
-			sys.stdout.flush()
-			
-			if counter >= Syscon.DUMP_SIZE:
-				sp.close()
-				break
+		if data:
+			with open(path, "wb") as file:
+				file.seek(cfg.TOTAL_SIZE - 1)
+				file.write(b'\x00')
+				file.seek(cfg.BLOCK_SIZE * block)
+				file.write(data)
+		else:
+			path = ''
 	
-	return time.time() - start_time
+	elif act == 'write':
+		if path and os.path.isfile(path):
+			with open(path,"rb") as file:
+				file.seek(cfg.BLOCK_SIZE * block)
+				data = file.read(cfg.BLOCK_SIZE * (count if count > 0 else cfg.BLOCK_COUNT))
+				flasher.writeChip(data, block, count)
+				print()
+		else:
+			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+	
+	elif act == 'verify':
+		if path and os.path.isfile(path):
+			with open(path,"rb") as file:
+				file.seek(cfg.BLOCK_SIZE * block)
+				data = file.read(cfg.BLOCK_SIZE * (count if count else cfg.BLOCK_COUNT))
+				vdata = flasher.readChip(block, count)
+				print('\n'+STR_VERIFY+': '+(STR_OK if data == vdata else STR_FAIL)+'\n')
+		else:
+			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+	
+	elif act == 'erase':
+		flasher.eraseChip(block, count)
+		print()
+	
+	if act:
+		print(STR_DONE)
+	
+	flasher.close()
+	
+	# Show file info after read action
+	if act == 'read' and path and os.path.isfile(path):
+		print('\n'+UI.highlight(STR_FILE_INFO)+':\n')
+		UI.showTable({
+			'File': os.path.basename(path),
+			'MD5': Utils.getFileMD5(path),
+			'Size': '%d KB'%(os.stat(path).st_size // 1024),
+		})
+	
+	# Action done
+	
+	print(UI.getTab(STR_ACTIONS))
+	UI.showTableEx(UI.getMenu(MENU_FLASHER,1), 4, 17)
+	print(UI.DIVIDER)
+	UI.showMenu(MENU_EXTRA_FLASHER)
+	
+	UI.showStatus()
+	
+	act = ''
+	mode = False
+	
+	choice = input(STR_CHOICE)
+	
+	if choice == '0':
+		return
+	elif choice in ['1','2','3']:
+		act = 'read'
+		mode = int(choice) - 1
+	elif choice in ['4','5','6']:
+		act = 'write'
+		mode = int(choice) - 4
+	elif choice in ['7','8','9']:
+		act = 'verify'
+		mode = int(choice) - 7
+	elif choice in ['10','11','12']:
+		act = 'erase'
+		mode = int(choice) - 10
+	elif choice == 's':
+	    path = screenFileSelect(path, False, True)
+	elif choice == 'f':
+		if path and os.path.isfile(path):
+			return SysconTools.screenSysconTools(path)
+		else:
+			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+	elif choice == 'm':
+	    return screenMainMenu()
+	
+	screenSysconFlasher(path, port, act, mode)
 
 
 
@@ -268,7 +368,7 @@ def screenSysconReader(port = '', file = ''):
 		print(UI.warning(STR_READING_DUMP_N.format(n+1)))
 		ofile = file + '{:02}.bin'.format(n+1)
 		
-		sec = glitchAndReadSyscon(serial.sp, ofile)
+		sec = sysconReader(serial.sp, ofile)
 		
 		md5 = Utils.getFileMD5(ofile)
 		if p_md5 != False and p_md5 != md5:
@@ -295,12 +395,6 @@ def screenSysconReader(port = '', file = ''):
 
 
 
-def screenSysconFlasher(file = '', port = '', action = ''):
-	UI.setStatus(' Syscon Flasher:'+STR_NIY)
-	return
-
-
-
 def screenSerialMonitor(port = '', emc_mode = False):
 	
 	port = port if port else screenChoosePort()
@@ -311,9 +405,8 @@ def screenSerialMonitor(port = '', emc_mode = False):
 	serial = WeeSerial(port)
 	
 	os.system('cls')
-	print(TITLE + UI.getTab(STR_INFO))
-	print(' '+UI.green(serial.getPortInfo()))
-	print('\n'+UI.warning(STR_INFO_MONITOR))
+	print(TITLE + UI.getTab(serial.getPortInfo()))
+	UI.showTableEx(UI.getMenu(MENU_SERIAL_MONITOR), 2)
 	
 	print(UI.getTab(STR_SERIAL_MONITOR))
 	
@@ -329,6 +422,11 @@ def screenSerialMonitor(port = '', emc_mode = False):
 		txt = input()
 		if not len(txt):
 			continue
+		elif Utils.checkCtrl(txt[0],'L'):
+			UI.clearInput()
+			serial.LOG = False if serial.LOG else datetime.datetime.now().strftime('uart_%Y-%m-%d_%H-%M-%S.txt')
+			print('\n' + UI.highlight('UART log: {}'.format(serial.LOG if serial.LOG else STR_OFF)) + '\n')
+			continue
 		elif Utils.checkCtrl(txt[0],'R'):
 			serial.sp.close()
 			os.system('cls')
@@ -343,6 +441,11 @@ def screenSerialMonitor(port = '', emc_mode = False):
 			UI.clearInput()
 			emc_mode = False if emc_mode else True
 			print('\n' + UI.highlight(STR_EMC_CMD_MODE.format(STR_ON if emc_mode else STR_OFF)))
+			continue
+		elif Utils.checkCtrl(txt[0],'B'):
+			UI.clearInput()
+			serial.SHOWCODES = False if serial.SHOWCODES else True
+			print('\n' + UI.highlight(STR_SHOW_BYTECODES.format(STR_ON if serial.SHOWCODES else STR_OFF)))
 			continue
 		elif emc_mode:
 			txt = Utils.getEmcCmd(txt)
@@ -364,7 +467,7 @@ def screenChoosePort():
 	
 	for i in range(len(ports)):
 		port = ports[i]
-		print(' % 2s: %s - %s'%(i+1, port['port'], port['desc']))
+		print(' % 2s: %s - %s'%(i+1, port['port'].ljust(6), port['desc']))
     
 	if not len(ports):
 		print(UI.warning(STR_NO_PORTS))
@@ -421,11 +524,11 @@ def screenMainMenu():
 
 
 
-def screenFileSelect(path = '', all = False, ret = False):
+def screenFileSelect(path = False, all = False, ret = False):
 	os.system('cls')
 	print(TITLE + UI.getTab(STR_FILE_LIST+' '+('[all]' if all else '[bin, pup]')))
 	
-	path = path if os.path.exists(path) else os.getcwd()
+	path = path if path and os.path.exists(path) else os.getcwd()
 	path = path if os.path.isdir(path) else os.path.dirname(path)
 	
 	print(Clr.fg.l_grey+(' %s\n'%path)+Clr.reset)
@@ -461,9 +564,37 @@ def screenFileSelect(path = '', all = False, ret = False):
 	elif choice == 'b':
 		screenBuild2BLS(path)
 	elif choice == 'c':
-		file_list = [os.path.join(path, x) for x in os.listdir(path) if not os.path.isdir(os.path.join(path, x)) and x.lower().endswith('.bin')]
-		file_list.sort()
+		file_list = [os.path.join(path, x) for x in files] # Force bin only: if x.lower().endswith('.bin')
 		screenCompareFiles(file_list)
+	elif choice == 'r':
+		for file in files:
+			fpath = os.path.join(path, file)
+			f_size = os.stat(fpath).st_size
+			new_name = ''
+			if f_size == SFlash.DUMP_SIZE:
+				with open(fpath, 'rb') as f:
+					sku = SFlash.getNorData(f, 'SKU', True)[:9].replace('-','')
+					sn = SFlash.getNorData(f, 'SN', True)
+					sb = SFlash.getSouthBridge(f)['ic'][-2:]
+					mobo = SFlash.getMobo(SFlash.getNorData(f, 'BOARD_ID'))['name']
+					slot = 'a' if SFlash.getNorData(f, 'ACT_SLOT') == b'\x00' else 'b'
+					fw = SFlash.getNorFW(f, slot)
+				new_name = '_'.join([sku, sn if sn else '0'*10, sb, mobo, fw['c'], slot, '-'.join(fw['b'])]).upper()
+			elif f_size == Syscon.DUMP_SIZE:
+				with open(fpath, 'rb') as f:
+					fw = Syscon.getSysconData(f, 'VERSION')
+					SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
+					records = SNVS.getAllDataEntries()
+					order = ''.join(str(x) for x in SNVS.getDataBlocksOrder())
+					status = MENU_SC_STATUSES[Syscon.isSysconPatchable(records)].replace(' ','_').lower()
+				new_name = '_'.join(['syscon', '%X.%02X'%(fw[0],fw[2]), '%d'%len(records), '['+order+']', status])
+			
+			if new_name:
+				new_fpath = os.path.join(path, new_name + '.bin')
+				#i = 1; while os.path.exists(new_fpath): new_fpath = os.path.join(path, new_name + '_%d.bin'%i)
+				if not os.path.exists(new_fpath):
+					os.rename(fpath, new_fpath)
+	
 	elif choice == 'm':
 		return screenMainMenu()
 	elif choice != '':
@@ -495,20 +626,22 @@ def screenCompareFiles(list):
 		return
 	
 	res = True
-	c_md5 = False
+	hashes = []
 	for i, file in enumerate(list):
 		if not file or not os.path.isfile(file):
 			print((STR_FILE_NOT_EXISTS).format(file))
 			continue
 		else:
 			md5 = Utils.getFileMD5(file)
-			c_md5 = md5 if not c_md5 else c_md5
-			if c_md5 != md5:
-				res = False
-			print((' [{}] {}').format(md5,  os.path.basename(file)))
+			if not md5 in hashes:
+				hashes.append(md5)
+			print((' {: 2}: [{}] {}').format(i+1, md5,  os.path.basename(file)))
 	
 	print(UI.DIVIDER)
-	print(STR_COMPARE_RESULT.format((STR_FILES_MATCH if res else STR_FILES_MISMATCH), res))
+	UI.showTable({
+		'Result':STR_OK if len(hashes) == 1 else STR_FAIL,
+		'Hashes count':len(hashes),
+	})
 	input(STR_BACK)
 	
 	screenFileSelect()
@@ -607,18 +740,25 @@ def screenHelp():
 
 
 
-def chooseBNC(mode = 0, block_size = 0):
+def chooseBNC(mode = 0, block_size = 0, syscon = False):
 	
 	block = 0
 	count = 0
 	
 	if mode == 1:
-		areas = [
-			{'n':'PS4 Full dump',		'o':0,											'l':SFlash.DUMP_SIZE},
-			{'n':'PS4 Base Info',		'o':SFlash.NOR_PARTITIONS['s0_header']['o'],	'l':SFlash.NOR_PARTITIONS['s0_blank']['o']},
-			{'n':'PS4 Flags (NVS)',		'o':SFlash.NOR_PARTITIONS['s0_nvs']['o'],		'l':SFlash.NOR_PARTITIONS['s0_nvs']['l']},
-			{'n':'PS4 CoreOS switch',	'o':SFlash.NOR_AREAS['CORE_SWCH']['o'],			'l':SFlash.NOR_AREAS['CORE_SWCH']['l']},
-		]
+		if syscon:
+			areas = [
+				{'n':'Syscon BOOT0',		'o':0,								'l':Syscon.BLOCK_SIZE},
+				{'n':'Syscon Firmware',		'o':Syscon.SC_AREAS['FW']['o'],		'l':Syscon.SC_AREAS['FW']['l']},
+				{'n':'Syscon SNVS/NVS',		'o':Syscon.SC_AREAS['SNVS']['o'],	'l':Syscon.SC_AREAS['SNVS']['l']+Syscon.SC_AREAS['NVS']['l']},
+			]
+		else:
+			areas = [
+				{'n':'PS4 Full dump',		'o':0,											'l':SFlash.DUMP_SIZE},
+				{'n':'PS4 Base Info',		'o':SFlash.NOR_PARTITIONS['s0_header']['o'],	'l':SFlash.NOR_PARTITIONS['s0_blank']['o']},
+				{'n':'PS4 Flags (NVS)',		'o':SFlash.NOR_PARTITIONS['s0_nvs']['o'],		'l':SFlash.NOR_PARTITIONS['s0_nvs']['l']},
+				{'n':'PS4 CoreOS switch',	'o':SFlash.NOR_AREAS['CORE_SWCH']['o'],			'l':SFlash.NOR_AREAS['CORE_SWCH']['l']},
+			]
 		for i in range(len(areas)):
 			areas[i]['b'] = areas[i]['o'] // block_size
 			areas[i]['c'] = areas[i]['l'] // block_size + (1 if areas[i]['l'] % block_size else 0)

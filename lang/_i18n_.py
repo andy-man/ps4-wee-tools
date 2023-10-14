@@ -3,8 +3,9 @@
 # part of ps4 wee tools project
 #==========================================================
 import sys, os
+import utils.utils as Utils
 
-APP_VERSION = '0.8.9'
+APP_VERSION = '0.9.0'
 
 # Colors stuff
 
@@ -89,9 +90,9 @@ class UI:
 		for i in range(n):
 			print('\033[1A' + '\033[K', end='')
 	
-	def setTitle(str):
+	def setTitle(str = ''):
 		if sys.platform[:3] == 'win':
-			os.system('title '+str)
+			os.system('title ' + (str if str else APP_NAME.strip()))
 	
 	@classmethod
 	def getTab(cls, str):
@@ -112,13 +113,13 @@ class UI:
 		table = cls.getTable(data, pad)
 		print('\n'.join(table))
 	
-	def showTableEx(data, cols=2, pad=16):
-		lines = []
-		for n in range(cols):
-			line = ''
-			for k in range(n, len(data), cols):
-				line += data[k].ljust(pad,' ')
-			lines.append(line)
+	@classmethod
+	def showTableEx(cls, data, cols = 2, width = False):
+		width = width if width else cls.LINE_WIDTH // cols
+		rows = Utils.ceil(len(data),cols)
+		lines = [''] * rows
+		for i in range(len(data)):
+			lines[i % rows] += data[i].ljust(width, ' ')
 		print('\n'.join(lines))
 	
 	def getMenu(menu, start=0):
@@ -173,6 +174,7 @@ STR_APP_HELP		= STR_APP_HELP + UI.link('https://github.com/andy-man/ps4-wee-tool
 STR_INFO_HDD_EAP	= STR_INFO_HDD_EAP + UI.link('https://www.psdevwiki.com/ps4/Mounting_HDD_in_Linux')
 STR_INFO_EMC_CFW	= STR_INFO_EMC_CFW + UI.link('https://www.psdevwiki.com/ps4/Southbridge')
 STR_INFO_SPIWAY		= STR_INFO_SPIWAY + UI.link('https://www.psdevwiki.com/ps4/SPIway')
+STR_INFO_SCF		= STR_INFO_SCF + UI.link('https://github.com/AbkarinoMHM/PS4SysconTools')
 
 STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH.format(STR_080B, STR_0C0F, STR_2023, STR_080B)
 

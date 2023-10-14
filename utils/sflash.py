@@ -135,7 +135,8 @@ NOR_AREAS = {
 }
 
 SOUTHBRIDGES = [
-	{'code':[0x0D, 0x0E], 'name':'Aeolia A2',	'ic':'CXD90025'},
+	{'code':[0x01, 0x02], 'name':'Aeolia A0',	'ic':'CXD90025'},
+	{'code':[0x0D, 0x0E], 'name':'Aeolia A1/A2','ic':'CXD90025'},
 	{'code':[0x20, 0x21], 'name':'Belize A0/B0','ic':'CXD90036'},
 	{'code':[0x24, 0x25], 'name':'Baikal B1',	'ic':'CXD90042'},
 	{'code':[0x2A, 0x2B], 'name':'Belize 2 A0',	'ic':'CXD90046'},
@@ -211,7 +212,7 @@ PARTITIONS_TYPES = {
 # Functions ===============================================
 
 def getConsoleRegion(file):
-	code = getNorData(file,'REGION').decode('utf-8','ignore')
+	code = getNorData(file,'REGION', True)
 	desc = PS4_REGIONS[code] if code in PS4_REGIONS else STR_UNKNOWN
 	return [code, desc]
 
@@ -245,7 +246,7 @@ def getSlotSwitchInfo(file):
 
 
 
-def getNorFW(f):
+def getNorFW(f, active_slot = ''):
 	old_fw = getNorData(f, 'FW_V')
 	#print(getNorData(f, 'FW_VER'),getNorData(f, 'FW_V'))
 	
@@ -255,7 +256,18 @@ def getNorFW(f):
 	mfw = getNorData(f, 'FW_MIN')
 	mfw = '{:X}.{:02X}'.format(mfw[1], mfw[0]) if mfw[0] != 0xFF else ''
 	
-	return {'c':fw, 'min':mfw}
+	bfw = ['']
+	if active_slot:
+		slot = 'a' if active_slot == 'b' else 'b'
+		pname = 's0_emc_ipl_'+slot
+		md5 = getNorPartitionMD5(f, pname)
+		data = getDataByPartition(pname)
+		
+		if md5 in data:
+			fw2 = data[md5]['fw']
+			bfw = fw2 if len(fw2) == 1 else [fw2[0], fw2[-1]]
+	
+	return {'c':fw, 'b':bfw, 'min':mfw}
 
 
 
@@ -344,19 +356,20 @@ def getTorusVersion(f):
 
 def getSouthBridge(f):
 	
-	emc_md5 = getNorPartitionMD5(f, 's0_emc_ipl_a')
-	eap_md5 = getNorPartitionMD5(f, 's0_eap_kbl')
+	md5_emc_a = getNorPartitionMD5(f, 's0_emc_ipl_a')
+	md5_emc_b = getNorPartitionMD5(f, 's0_emc_ipl_b')
+	md5_eap = getNorPartitionMD5(f, 's0_eap_kbl')
 	
-	emc = Data.EMC_IPL_MD5[emc_md5]['t'] if emc_md5 in Data.EMC_IPL_MD5 else 0
-	eap = Data.EAP_KBL_MD5[eap_md5]['t'] if eap_md5 in Data.EAP_KBL_MD5 else 0
-	
-	code = [emc, eap]
+	emc_a = Data.EMC_IPL_MD5[md5_emc_a]['t'] if md5_emc_a in Data.EMC_IPL_MD5 else 0
+	emc_b = Data.EMC_IPL_MD5[md5_emc_b]['t'] if md5_emc_b in Data.EMC_IPL_MD5 else 0
+	eap = Data.EAP_KBL_MD5[md5_eap]['t'] if md5_eap in Data.EAP_KBL_MD5 else 0
 	
 	for k in range(len(SOUTHBRIDGES)):
-		if SOUTHBRIDGES[k]['code'] == code:
+		code = SOUTHBRIDGES[k]['code']
+		if code[0] in [emc_a, emc_b] or code[1] == eap:
 			return SOUTHBRIDGES[k]
 	
-	return {'code':code, 'name':STR_UNKNOWN, 'ic':'??'},
+	return {'code':[emc_a if emc_a else emc_b, eap], 'name':STR_UNKNOWN, 'ic':'XX'}
 
 # NOR Areas data utils
 
@@ -381,17 +394,19 @@ def setNorDataB(file, key, val):
 
 
 
-def getNorData(file, key):
+def getNorData(file, key, decode = False):
 	if not key in NOR_AREAS:
-		return False
-	return Utils.getData(file, NOR_AREAS[key]['o'], NOR_AREAS[key]['l'])
+		return 'False' if decode else False
+	data = Utils.getData(file, NOR_AREAS[key]['o'], NOR_AREAS[key]['l'])
+	return data.decode('utf-8','ignore').strip('\x00') if decode else data
 
 
 
-def getNorDataB(file, key):
+def getNorDataB(file, key, decode = False):
 	if not key in NOR_AREAS:
-		return False
-	return Utils.getData(file, NOR_AREAS[key]['o'] + BACKUP_OFFSET, NOR_AREAS[key]['l'])
+		return 'False' if decode else False
+	data = Utils.getData(file, NOR_AREAS[key]['o'] + BACKUP_OFFSET, NOR_AREAS[key]['l'])
+	return data.decode('utf-8','ignore').strip('\x00') if decode else data
 
 
 
@@ -410,7 +425,7 @@ def getMobo(board):
 		suffix = chr(ord('A')-1+board[2])
 	
 	#mb_rev = Revision of board - ??? No exist SAA, SAB, SAC and HAC > 001, all are 001 - if board[0] <= 'HA' and board[2] <= 'C' Revision is 001
-	rev = '001' if board[0] <= 4 and board[2] <= 3 else '00?'
+	rev = '001' if board[0] <= 4 and board[2] <= 3 else '00X'
 	
 	return {'name':prefix + suffix + '-' + rev, 'type':'Retail' if board[1] == 2 else 'Non-Retail'}
 
@@ -419,13 +434,10 @@ def getMobo(board):
 def getSFlashInfo(file = '-'):
 	with open(file, 'rb') as f:
 		
-		sku = getNorData(f, 'SKU').decode('utf-8','ignore')
-		
-		fw = getNorFW(f)
-		
 		active_slot = 'a' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'b'
-		inactive_slot = 'a' if active_slot == 'b' else 'b'
 		
+		sku = getNorData(f, 'SKU', True)
+		fw = getNorFW(f, active_slot)
 		SB = getSouthBridge(f)
 		torus = getTorusVersion(f)
 		
@@ -444,25 +456,17 @@ def getSFlashInfo(file = '-'):
 			'MD5'			: Utils.getFileMD5(file),
 			'SKU / Board ID': sku + ' [' + UI.highlight(Utils.hex(board, ':')) + '] ~' + mobo['name'],
 			'Region'		: '[{}] {} / {}'.format(region[0], region[1], mobo['type']),
-			'SN / Mobo SN'	: getNorData(f, 'SN').decode('utf-8','ignore')+' / '+getNorData(f, 'MB_SN').decode('utf-8','ignore'),
+			'SN / Mobo SN'	: getNorData(f, 'SN', True)+' / '+getNorData(f, 'MB_SN', True),
 			'Southbridge'	: '%s [%s] [%02X:%02X]'%(SB['name'], SB['ic'], SB['code'][0], SB['code'][1]),
 			'Torus (WiFi)'	: torus if len(torus) else STR_UNKNOWN,
 			'MAC'			: Utils.hex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
 			'FW (active)'	: fw['c'] + ' ['+active_slot.upper()+']' + (' [min '+fw['min']+']' if fw['min'] else ''),
-			'FW (backup)'	: '',
+			'FW (backup)'	: ' <-> '.join(fw['b']),
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
 			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(samu,samu),
 			'UART'			: (Lang.STR_ON if getNorData(f, 'UART')[0] == 1 else Lang.STR_OFF),
 			'Slot switch'	: getSlotSwitchInfo(f),
 		}
-		
-		pname = 's0_emc_ipl_'+inactive_slot
-		md5 = getNorPartitionMD5(f, pname)
-		data = getDataByPartition(pname)
-		
-		if md5 in data:
-			fw2 = data[md5]['fw']
-			info['FW (backup)'] = (fw2[0] if len(fw2) == 1 else fw2[0]+' <-> '+fw2[-1])
 	
 	return info
