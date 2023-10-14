@@ -19,6 +19,9 @@ def getEmcCmd(str):
 	return str + ':%02X'%(sum & 0xFF)
 
 
+def ceil(a, b):
+	return (a // b) + (1 if a % b else 0)
+
 
 def checkCtrl(s, key):
 	return ord(s) + 0x40 == ord(key)
@@ -27,6 +30,13 @@ def checkCtrl(s, key):
 
 def genRandBytes(size):
 	return bytearray(random.getrandbits(8) for _ in range(size))
+
+
+
+def getMemData(data, offset, lenght):
+	if len(data) >= offset+lenght:
+		return data[offset : offset+lenght]
+	return b''
 
 
 
@@ -92,17 +102,22 @@ def swapBytes(arr):
 
 
 
-def savePatchData(file, data, patch = False):
-	with open(file, 'wb') as f:
+def getFileContents(path):
+	with open(path, 'rb') as f:
+		return f.read()
+
+
+
+def savePatchData(path, data, patch = False):
+	with open(path, 'wb') as f:
 		f.write(data)
-	
 	if patch:
-		patchFile(file, patch)
+		patchFile(path, patch)
 
 
 
-def patchFile(file, patch):
-	with open(file, 'r+b') as f:
+def patchFile(path, patch):
+	with open(path, 'r+b') as f:
 		for i in range(len(patch)):
 			f.seek(patch[i]['o'],0)
 			f.write(patch[i]['d'])

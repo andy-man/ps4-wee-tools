@@ -9,7 +9,7 @@ import os
 def writeVar(f, name, var):
 	f.write(name+" = {\n")
 	for key in var:
-		f.write("'%s' : { 't':%s, 'fw':%s},\n" %(key, var[key]['t'], var[key]['fw']))
+		f.write("'%s' : { 't':%s, 'fw':%s},\n" %(key.lower(), var[key]['t'], var[key]['fw']))
 	f.write("}\n\n")
 
 def addEntry(var, md5, type, fw):
@@ -24,13 +24,13 @@ eap_kbl = {}
 emc_ipl = {}
 torus_fw = {}
 
-FILE = 'md5.txt'
+fname = 'md5.txt'
 
-if not os.path.exists(FILE):
-	input('File not found')
+if not os.path.exists(fname):
+	input('File %s not found'%fname)
 	exit(1)
 # Using readlines()
-f = open(FILE, 'r')
+f = open(fname, 'r')
 Lines = f.readlines()
 for line in Lines:
 	line = line.strip()
@@ -56,3 +56,11 @@ writeVar(f, 'EMC_IPL_MD5', emc_ipl)
 writeVar(f, 'TORUS_FW_MD5', torus_fw)
 
 f.close()
+
+print('eap_kbl %d'%len(eap_kbl))
+print('emc_ipl %d'%len(emc_ipl))
+print('torus_fw %d'%len(torus_fw))
+print()
+print('Total %d'%(len(eap_kbl) + len(emc_ipl) + len(torus_fw)))
+
+input()

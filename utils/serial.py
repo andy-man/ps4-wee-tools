@@ -2,7 +2,7 @@
 # serial lib
 # part of ps4 wee tools project
 #==========================================================
-import serial, threading, sys
+import serial, threading, sys, time
 from lang._i18n_ import *
 from serial.tools import list_ports
 
@@ -32,10 +32,16 @@ class WeeSerial:
 	}
 	
 	ENCODING	= 'utf-8'
+	EOL			= b'\n\r'
+	SHOWCODES	= False
+	LOG			= False
 	
-	sp		= False
-	alive	= False
-	err		= ''
+	TX			= 0
+	RX			= 0
+	
+	sp			= False
+	alive		= False
+	err			= ''
 	
 	def __init__(self, port, cfg = {}):
 		
@@ -54,6 +60,7 @@ class WeeSerial:
 			
 		except Exception as e:
 			err = str(e)
+			self.error(str(e))
     
 	def __del__(self):
 		if self.sp and self.sp.is_open:
@@ -92,16 +99,57 @@ class WeeSerial:
 				break
 		self.printf(line)
 	
+	def getLines(self, buf):
+		txt = ''
+		lines = []
+		prev_c = ''
+		
+		for c in buf:
+			if c in self.EOL:
+				if prev_c in self.EOL and c != prev_c:
+					txt = ''
+				else:
+					lines.append(txt+'\n')
+					txt = ''
+			elif c >= 0x20:
+				txt += chr(c)
+			elif self.SHOWCODES:
+				txt += UI.highlight(':%02X')%(c)
+			
+			prev_c = c
+		
+		if len(txt):
+			lines.append(txt)
+		
+		return lines
+	
 	def monitor(self):
+		
+		self.RX = 0
+		self.TX = 0
+		start = time.time()
+		
 		while self.sp.is_open and self.alive:
 			try:
-				line = self.sp.readline()
-				line = line.decode(self.ENCODING,'ignore')
-				self.printline(line)
+				self.RX += self.sp.in_waiting
+				if self.sp.in_waiting > 0:
+					buf = self.sp.read(self.sp.in_waiting)
+					if self.LOG:
+						with open(self.LOG, 'ab') as log:
+							log.write(buf)
+					for line in self.getLines(buf):
+						self.printline(line)
+				
+				time.sleep(0.1)
+				
+				UI.setTitle(STR_MONITOR_STATUS%(self.RX, self.TX, time.time() - start))
+			
 			except Exception as e:
 				self.err = str(e)
 				self.alive = False
 				break
+		
+		UI.setTitle()
     
 	def startMonitor(self):
 		if not self.sp:
@@ -118,11 +166,16 @@ class WeeSerial:
 		return self.sp[key] if key and key in self.sp else self.sp
 	
 	def sendText(self, txt, EOL = b'\n\r'):
-		return self.send((txt).encode(self.ENCODING,'ignore') + EOL)
+		txt = (txt).encode(self.ENCODING,'ignore') + EOL
+		if self.LOG:
+			with open(self.LOG, 'ab') as log:
+				log.write(txt)
+		return self.send(txt)
     
 	def send(self, bytes):
 		try:
 			self.sp.write(bytes)
+			self.TX += len(bytes)
 		except Exception as e:
 			self.error(str(e))
 	

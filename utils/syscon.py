@@ -10,10 +10,26 @@ BLOCK_SIZE	= 0x400
 BLOCK_COUNT	= 512
 DUMP_SIZE	= BLOCK_SIZE * BLOCK_COUNT
 
+MD5_SC_FW = {
+	'125cd5cc2d854e5f2812f060a7031044':'1.00_0',
+	'baea46d4d5bf6d9b00b51bda40db0f48':'1.0b_0',
+	'6741017a1499384dd7b07dc6def28d1e':'2.06_1',
+	'fa4dddb3f17315ecc028bf725b7702b1':'2.06_2',
+	'1c70248c249f0ac4f0c5555499afa6ef':'2.13_1',
+	'45ebe778279ca58b6bf200ff1bd2cb9e':'2.13_2',
+	'581d42d6a6c83992521420a23f02427c':'2.13_3',
+	'39a1bdd270d0dc2bdce8d81e7525af41':'2.23_1',
+	'a7d36425e5881770b2e9c4f925ced39f':'2.23_2',
+	'c42c250bbb7b30acd2f3960cfad9c8e3':'2.23_3',
+	'f7e0a6157fa9c04944b927051b5d4196':'2.23_4',
+	'263bd07f5b80f64aca8a107fee27ee08':'2.26_0',
+}
+
 SC_AREAS = {
 	'MAGIC_1':	{'o':0x00000,	'l':2,		't':'b',	'n':b'\x80\x01'},
 	'MAGIC_2':	{'o':0x000C4,	'l':10,		't':'s',	'n':b':Not:Used:'},
 	'MAGIC_3':	{'o':0x00132,	'l':14,		't':'s',	'n':b' Sony Computer'},
+	'FW':		{'o':0x00000,	'l':0x60000,'t':'b',	'n':'Syscon FW'},
 	'DEBUG':	{'o':0x000C3,	'l':1,		't':'b',	'n':'Debug flag 0x04=off 0x85/0x84=on'},
 	'VERSION':	{'o':0x00100,	'l':4,		't':'b',	'n':'FW version'},
 	'SNVS':		{'o':0x60000,	'l':0xE000,	't':'b',	'n':'SNVS storage'},
@@ -58,26 +74,40 @@ def setSysconData(file, key, val):
 
 
 
-def getSysconData(file, key):
+def getSysconData(fod, key):
 	if not key in SC_AREAS:
 		return False
-	return getData(file, SC_AREAS[key]['o'], SC_AREAS[key]['l'])
-
-
-
-def checkSysconData(file, key):
-	if not key in SC_AREAS:
-		return False
-	if getData(file, SC_AREAS[key]['o'], SC_AREAS[key]['l']) == SC_AREAS[key]['n']:
-		return True
+	if isinstance(fod, bytes):
+		return getMemData(fod, SC_AREAS[key]['o'], SC_AREAS[key]['l'])
 	else:
-		return False
+		return getData(fod, SC_AREAS[key]['o'], SC_AREAS[key]['l'])
+
+
+
+def checkSysconData(fod, keys):
+	for key in keys:
+		if getSysconData(fod, key) != SC_AREAS[key]['n']:
+			return False
+	return True
+
+
+
+def checkSysconFW(file):
+	fw = bytearray(getSysconData(file, 'FW'))
+	# All hashes was calculated for non-debug syscon (0x04)
+	fw[SC_AREAS['DEBUG']['o']] = 0x04
+	md5 = hashlib.md5(fw).hexdigest()
+	
+	if md5 in MD5_SC_FW:
+		return {'md5':md5, 'fw':MD5_SC_FW[md5]}
+	else:
+		return {'md5':md5, 'fw':False}
 
 
 
 def getEntriesByType(type, entries):
 	indexes = []
-	for i in range(len(entries)-len(type)):
+	for i in range(len(entries)-len(type)+1):
 		found = True
 		for k in range(len(type)):
 			if entries[i+k][1] != type[k]:

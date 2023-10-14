@@ -11,14 +11,14 @@ from utils.serial import WeeSerial
 
 class SpiFlasher(WeeSerial):
 	
-	VERSION			= [0,60] # Teensy programm version here
+	VERSION			= [0,60] # Teensy programm HW version here
 	DISABLE_PULLUPS	= 0
 	
 	BUFFER			= b''
 	BUFFER_SIZE		= 0x8000
 	
 	ICs = [
-		# Ven_ID Dev_ID Brand Type Blocks Addr_length 3B_cmd Sec_per_block Sec_count
+		#Ven_ID	Dev_ID	Brand Type	Blocks	Addr_length	3B_cmd	Sec_per_block	Sec_count
 		[0xC2,	0x1920,	'Macronix',	'MX25L25635F',	512,	4],
 		[0xC2,	0x1820,	'Macronix',	'MX25L12872F',	256,	3],
 		[0xC2,	0x1120,	'Macronix',	'MX25L1006E',	2,		3],
@@ -73,22 +73,23 @@ class SpiFlasher(WeeSerial):
 	
 	# Teensy commands
 	class Cmd:
-		PING1				= 0
-		PING2				= 1
-		BOOTLOADER			= 2
-		IO_LOCK				= 3
-		IO_RELEASE			= 4
-		PULLUPS_DISABLE		= 5
-		PULLUPS_ENABLE		= 6
-		SPI_ID				= 7
-		SPI_READBLOCK		= 8
-		SPI_WRITESECTOR		= 9
-		SPI_ERASEBLOCK		= 10
-		SPI_ERASECHIP		= 11
-		SPI_3BYTE_ADDRESS	= 12
-		SPI_4BYTE_ADDRESS	= 13
-		SPI_3BYTE_CMDS		= 14
-		SPI_4BYTE_CMDS		= 15
+		PING1				= 0  # Params: - / Return: VERSION_MAJOR[1]
+		PING2				= 1  # Params: - / Return: VERSION_MINOR[1] + Freemem[2]
+		BOOTLOADER			= 2  # Params: - / Return: - / Exit to bootloader mode
+		IO_LOCK				= 3  # - not implemented - in spiway fw
+		IO_RELEASE			= 4  # - not implemented - in spiway fw
+		PULLUPS_DISABLE		= 5  # Params: - / Return: - / Set IO_PULLUPS to 0x00
+		PULLUPS_ENABLE		= 6  # Params: - / Return: - / Set IO_PULLUPS to 0xFF
+		SPI_ID				= 7  # Params: - / Return: VENDOR_ID[1] + DEVICE_ID[2]
+		SPI_READBLOCK		= 8  # Params: ADDRESS[4] / Return: STATUS[1] + DATA[BLOCK_SIZE]
+		SPI_WRITESECTOR		= 9  # Params: ADDRESS[4] + DATA[SEC_SIZE] / Return: STATUS[1]
+		SPI_ERASEBLOCK		= 10 # Params: ADDRESS[4] / Return: STATUS[1]
+		SPI_ERASECHIP		= 11 # Params: - / Return: STATUS[1]
+		SPI_3BYTE_ADDRESS	= 12 # Params: - / Return: - / Set mode: SPI_ADDRESS_LENGTH = 3
+		SPI_4BYTE_ADDRESS	= 13 # Params: - / Return: - / Set mode: SPI_ADDRESS_LENGTH = 4
+		SPI_3BYTE_CMDS		= 14 # Params: - / Return: - / Set mode: SPI_USE_3B_CMDS = 1
+		SPI_4BYTE_CMDS		= 15 # Params: - / Return: - / Set mode: SPI_USE_3B_CMDS = 0
+		# There is no RESET command. The only way to do it unplug teensy from USB
 	
 	def __init__(self, port, ver = False):
 		if port:
@@ -240,6 +241,7 @@ class SpiFlasher(WeeSerial):
 		sector = 0
 		while sector < self.Config.SEC_PER_BLOCK:
 			real_sector = (block * self.Config.SEC_PER_BLOCK) + sector
+			# At first erase block
 			if sector == 0:
 				self.__eraseBlock(block)
 			
@@ -338,7 +340,7 @@ class SpiFlasher(WeeSerial):
 		start = time.time()
 		
 		for b in range(block, block+count):
-			res = self.__eraseBlock(block)
+			res = self.__eraseBlock(b)
 			if res == False:
 				self.error(STR_SPW_ERROR_ERASE)
 				return False
@@ -398,7 +400,7 @@ class SpiFlasher(WeeSerial):
 		
 		for b in range(block, block + count):
 			
-			offset = self.Config.BLOCK_SIZE * (block - b)
+			offset = self.Config.BLOCK_SIZE * (b - block)
 			
 			res = self.__writeBlock(data[offset:offset + self.Config.BLOCK_SIZE], b, verify)
 			if res == False:

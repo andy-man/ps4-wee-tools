@@ -22,6 +22,10 @@ If you want to run python script directly you need these libs
 
 Teensy Loader Application - can be found **[here](https://www.pjrc.com/teensy/loader.html)**
 
+**Documentation**
+
+Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
+
 ## Features
 
 **NOR tool**
@@ -35,6 +39,7 @@ Teensy Loader Application - can be found **[here](https://www.pjrc.com/teensy/lo
 * Memory clock editing (GDDR5)
 * SAMU boot flag edit
 * Downgrade by slot switch (FW revert)
+* Legitimate CoreOS Patch
 * Additional tools
   * Extract NOR's partitions
   * Build dump from extracted files
@@ -54,24 +59,27 @@ Teensy Loader Application - can be found **[here](https://www.pjrc.com/teensy/lo
 
 **Common**
 * File browser
+* Batch file rename (extract dump info to filename)
 * Terminal (UART) with highlighting
 * SPIway flasher
+* Syscon r/w tool by Abkarino
+* Syscon reader by DarkNESmonk
 * Multy files compare
 * Pack / Unpack 2BLS files
-* Syscon reader
 
 Don't use if you don't understant what is it for!
 
 ## Credits
 
-* Judges
-* Abkarino
-* zecoxao
-* Al-Azif
-* fail0verflow
-* DarkNESmonk
-* BwE
-* pearlxcore
+[Abkarino](https://github.com/AbkarinoMHM), 
+[zecoxao](https://github.com/zecoxao), 
+[Al-Azif](https://github.com/Al-Azif), 
+[Judges](https://github.com/hjudges), 
+[pearlxcore](https://github.com/pearlxcore), 
+[fail0verflow](https://github.com/fail0verflow), 
+[MSX-Celulares](https://github.com/MSXCelulares), 
+DarkNESmonk, 
+BwE
 
 And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
@@ -84,13 +92,27 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Links
 
-* [Twitter](https://twitter.com/AndyManDev)
+* [X/Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
 
+### v0.9.0
+* Syscon Flasher
+* Legitimate CoreOS Patch
+* Terminal: title shows rx/tx bytes, show hidden bytes (switch), log to file
+* Syscon tool: Added FW md5 check, patchable status bugfix
+* Batch rename (extract dump info to filename)
+* Code optimization
+* Some bugfixes
+
+### v0.8.9
+* SPIway bug fix
+* Mobo detecting update
+* Quick slot switch (jump to spiway)
+
 ### v0.8.8
 * SPIway flasher
-* Flags toggler update
+* Flags toggler update (uart second offset)
 * Minor bug fixes
 
 ### v0.8.7

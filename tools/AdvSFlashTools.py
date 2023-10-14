@@ -17,7 +17,7 @@ def screenAdvSFlashTools(file):
 	print(TITLE+UI.getTab(STR_ADDITIONAL))
 	
 	with open(file, 'rb') as f:
-		sn = SFlash.getNorData(f, 'SN').decode('utf-8','ignore')
+		sn = SFlash.getNorData(f, 'SN', True)
 	
 	folder = os.path.dirname(file) + os.sep + sn
 	
@@ -194,14 +194,22 @@ def screenEmcCFW(file):
 	with open(file, 'rb') as f:
 		data = f.read()
 		sku = SFlash.getNorData(f, 'SKU')
-		print(' SKU '+sku.decode('utf-8','ignore'))
+		slot = 'A' if SFlash.getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'B'
+		
+		print(' SKU: %s / Active slot: %s'%(sku.decode('utf-8','ignore'), slot))
 		
 		if sku[4:6] != b'11' and sku[4:6] != b'10':
 			print(STR_EMC_CFW_WARN)
 			input(STR_BACK)
 			return
 		
-		emc_part = SFlash.getNorPartition(f, 's0_emc_ipl_a')
+		b = False
+		if slot == 'B':
+			b = input(' Use slot B (active)? [y] ')
+			UI.clearInput()
+		
+		emc_part_name = 's0_emc_ipl_' + ('b' if b.lower() == 'y' else 'a')
+		emc_part = SFlash.getNorPartition(f, emc_part_name)
 	
 	folder = os.path.dirname(file)
 	filename = os.path.splitext(os.path.basename(file))[0]
@@ -269,7 +277,7 @@ def screenEmcCFW(file):
 		print('\n'+UI.warning(STR_SIZES_MISMATCH))
 	
 	out_file = os.path.join(folder,filename+'_emc_cfw.bin')
-	Utils.savePatchData(out_file, data, [{'o':fw_offset + SFlash.NOR_PARTITIONS['s0_emc_ipl_a']['o'],'d':encrypted_fw}])
+	Utils.savePatchData(out_file, data, [{'o':fw_offset + SFlash.NOR_PARTITIONS[emc_part_name]['o'],'d':encrypted_fw}])
 	print('\n'+UI.highlight(STR_SAVED_TO.format(out_file)))
 	
 	input(STR_BACK)
@@ -321,7 +329,7 @@ def screenExtractNorDump(file):
 	
 	with open(file, 'rb') as f:
 		
-		sn = SFlash.getNorData(f, 'SN').decode('utf-8','ignore')
+		sn = SFlash.getNorData(f, 'SN', True)
 		folder = os.path.dirname(file) + os.sep + sn + os.sep
 		
 		if not os.path.exists(folder):

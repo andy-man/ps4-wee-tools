@@ -4,10 +4,12 @@
 #==============================================================
 import sys
 import tools.Tools as Tools
-
+from lang._i18n_ import UI
 
 
 def main(args):
+	
+    UI.setTitle()
     
     args.pop(0)
     

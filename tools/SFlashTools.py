@@ -94,16 +94,75 @@ def screenSamuBoot(file):
 
 
 
+def screenLegitimatePatch(file, path = ''):
+	
+	os.system('cls')
+	print(TITLE+UI.getTab(STR_ABOUT_LEG_PATCH))
+	print(UI.warning(STR_INFO_LEG_PATCH))
+	print(UI.getTab(STR_LEG_PATCH))
+	
+	print(' '+UI.highlight('First dump')+':\n')
+	with open(file, 'rb') as f:
+		data = f.read()
+		f_sn = SFlash.getNorData(f, 'SN', True)
+		f_switch = SFlash.getNorData(f, 'CORE_SWCH')
+		UI.showTable({
+			'File': os.path.basename(file),
+			'SN': f_sn,
+			'Pattern': UI.highlight(Utils.hex(f_switch,':')),
+		})
+		print()
+	
+	if not path or not os.path.isfile(path):
+		c = input(' Select second dump [y]? or exit [ENTER] ')
+		if c.lower() == 'y':
+			path = Tools.screenFileSelect(file, False, True)
+			return screenLegitimatePatch(file, path)
+		else:
+			return
+	
+	print(' '+UI.highlight('Second dump')+':\n')
+	with open(path, 'rb') as f:
+		s_sn = SFlash.getNorData(f, 'SN', True)
+		s_switch = SFlash.getNorData(f, 'CORE_SWCH')
+		UI.showTable({
+			'File': os.path.basename(path),
+			'SN': s_sn,
+			'Pattern': UI.highlight(Utils.hex(s_switch,':')),
+		})
+		print()
+	
+	# Quick check
+	if f_sn != s_sn:
+		print(' '+UI.warning(STR_CANT_USE+': ')+STR_DIFF_SN)
+		input(STR_BACK)
+		return
+		
+	if f_switch == s_switch:
+		print(' '+UI.warning(STR_CANT_USE+': ')+STR_SSP_EQUAL)
+		input(STR_BACK)
+		return
+	
+	ofile = Utils.getFilePathWoExt(file)+'_legit_patch.bin'
+	Utils.savePatchData(ofile, data, [{'o':SFlash.NOR_AREAS['CORE_SWCH']['o'], 'd':s_switch}])
+	
+	print(STR_PATCH_SAVED.format(ofile))
+	
+	c = input('\n'+UI.highlight(STR_FLASH_PATCHED))
+	if c.lower() == 'y':
+		return Tools.screenNorFlasher(ofile if ofile else file, '', 'write', 1)
+	
+	input(STR_BACK)
+
+
+
 def screenDowngrade(file):
 	os.system('cls')
 	print(TITLE + UI.getTab(STR_COREOS_SWITCH))
-	
 	print(UI.warning(STR_DOWNGRADE))
 	
 	with open(file, 'r+b') as f:
-		
 		print('\n'+STR_CURRENT+SFlash.getSlotSwitchInfo(f))
-		
 		print(UI.getTab(STR_SWITCH_PATTERNS),end='')
 		
 		for i in range(1, len(SFlash.SWITCH_TYPES)):
@@ -117,37 +176,34 @@ def screenDowngrade(file):
 		
 		UI.showStatus()
 		
-		try:
-			choice = int(input(STR_CHOICE))
-		except:
-			return
+		try: num = int(input(STR_CHOICE))
+		except: num = -1
 		
-		if choice == 0:
+		if num == 0:
 			return
-		elif choice < 0 or choice > len(SFlash.SWITCH_BLOBS):
+		elif num < 0 or num > len(SFlash.SWITCH_BLOBS):
 			UI.setStatus(STR_ERROR_CHOICE)
 		else:
-			pattern = SFlash.SWITCH_BLOBS[choice-1]
+			pattern = SFlash.SWITCH_BLOBS[num-1]
 			ofile = ''
-			
 			c = input('\n'+UI.highlight(STR_CONFIRM_SEPARATE))
 			
 			if c == 'y':
-				ofile = os.path.splitext(file)[0]+'_slot_switch_'+str(choice)+'.bin'
+				ofile = os.path.splitext(file)[0]+'_slot_switch_'+str(num)+'.bin'
 				f.seek(0,0)
 				patch = [
 					{'o':SFlash.NOR_AREAS['CORE_SWCH']['o'],	'd':bytes(pattern['v'])},
 					{'o':SFlash.NOR_AREAS['UART']['o'],			'd':b'\x01'},
 				]
-				Utils.savePatchData(ofile, f.read(), patch);
+				Utils.savePatchData(ofile, f.read(), patch)
 				UI.setStatus(STR_PATCH_SAVED.format(ofile))
 			else:
 				SFlash.setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
-				UI.setStatus(STR_DOWNGRADE_UPD + SFlash.SWITCH_TYPES[pattern['t']] + ' [' + str(choice)+']')
+				UI.setStatus(STR_DOWNGRADE_UPD + SFlash.SWITCH_TYPES[pattern['t']] + ' [' + str(num)+']')
 			
 			c = input('\n'+UI.highlight(STR_FLASH_PATCHED))
 			if c == 'y':
-				Tools.screenNorFlasher(ofile if ofile else file, '', 'write', 1)
+				return Tools.screenNorFlasher(ofile if ofile else file, '', 'write', 1)
 	
 	screenDowngrade(file)
 
@@ -165,8 +221,8 @@ def screenFlagsToggler(file):
 		
 		patches = [
 			{'k':'UART',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON], 'b':True},
-			{'k':'MEMTEST',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON]},
-			{'k':'RNG_KEY',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON]},
+			{'k':'MEMTEST',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON], 'b':True},
+			{'k':'RNG_KEY',		'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON], 'b':True},
 			{'k':'BTNSWAP',		'v':[b'\x00',b'\x01'],			'd':['O - select','X - select']},
 			{'k':'SLOW_HDD',	'v':[b'\xFF',b'\xFE'],			'd':[STR_OFF,STR_ON]},
 			{'k':'MEM_BGM',		'v':[b'\xFE',b'\xFF'],			'd':['Large','Normal']},
@@ -260,6 +316,8 @@ def screenSFlashTools(file):
 	elif choice == '4':
 		screenDowngrade(file)
 	elif choice == '5':
+		screenLegitimatePatch(file)
+	elif choice == '6':
 		AdvSFlashTools.screenAdvSFlashTools(file)
 	
 	elif choice == 's':
