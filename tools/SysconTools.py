@@ -21,7 +21,7 @@ def toggleDebug(file):
 
 
 
-def printSnvsEntries(base,entries):
+def printSnvsEntries(base,entries,start=''):
 	
 	for i,v in enumerate(entries):
 		color = Clr.fg.d_grey
@@ -35,7 +35,9 @@ def printSnvsEntries(base,entries):
 			color = Clr.fg.orange
 		elif v[1] in Syscon.SC_TYPES_PRE2:
 			color = Clr.fg.red
-		print(' {:5X} | '.format(base + (i * Syscon.NvsEntry.getEntrySize())) + color + Utils.hex(v)+Clr.reset)
+		
+		num = '%03d'%(start + i) if start != '' else ''
+		print(' {:5X} | '.format(base + (i * Syscon.NvsEntry.getEntrySize())) + color + Utils.hex(v)+Clr.reset + ' | '+num)
 
 
 
@@ -51,21 +53,15 @@ def screenViewSNVS(file, block = '', flat = False):
 	active = SNVS.active_entry.getLink()
 	block = active if block == '' else block
 	
-	if not flat:
+	if flat:
+		entries = SNVS.getFlatDataEntries(block)
+		base = SNVS.getFlatDataOffset(block, True)
+	else:
 		entries = SNVS.getDataBlockEntries(block)
 		base = SNVS.getDataBlockOffset(block, True)
-	else:
-		flat = SNVS.getDataBlockFlat(block)
-		entries = []
-		for i in range(0,len(flat),Syscon.NvsEntry.getEntrySize()):
-			entry = flat[i:i+Syscon.NvsEntry.getEntrySize()]
-			if entry == b'\xFF'*Syscon.NvsEntry.getEntrySize():
-				break
-			entries.append(entry)
-		base = SNVS.getDataBlockOffset(block, True) - SNVS.cfg.getDataFlatLength()
 	
 	print((' Flat' if flat else '')+STR_SYSCON_BLOCK.format(block, blocks_count, len(entries), count, active))
-	printSnvsEntries(base, entries)
+	printSnvsEntries(base, entries, 1)
 	
 	UI.showStatus()
 	
@@ -73,7 +69,8 @@ def screenViewSNVS(file, block = '', flat = False):
 		c = input(UI.DIVIDER+STR_SC_BLOCK_SELECT.format(blocks_count))
 		
 		if c == 'f':
-			return screenViewSNVS(file, block, True)
+			flat = False if flat else True
+			return screenViewSNVS(file, block, flat)
 		
 		num = int(c)
 		if num >= 0 and num <= blocks_count:
@@ -147,7 +144,7 @@ def screenAutoPatchSNVS(file):
 		snvs_data = SNVS.getRebuilded([entries[i] for i in range(len(entries)) if i < index or i >= index+4])
 	elif c == 2:
 		ofile = out_file+'_patch_B.bin'
-		snvs_data = SNVS.getRebuilded(entries[:index],[b'\xFF'])
+		snvs_data = SNVS.getRebuilded(entries[:index])# clean flatdata [b'\xFF']
 	elif c == 3:
 		ofile = out_file+'_patch_C.bin'
 		snvs_data = SNVS.getRebuilded(entries[:prev_index + 4])
@@ -162,7 +159,7 @@ def screenAutoPatchSNVS(file):
 
 
 
-def screenManualPatchSNVS(file):
+def screenManualPatchSNVS(file, flat = False):
 	os.system('cls')
 	print(TITLE+UI.getTab(STR_ABOUT_MPATCH))
 	
@@ -172,26 +169,37 @@ def screenManualPatchSNVS(file):
 	
 	with open(file, 'r+b') as f:
 		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
-		entries = SNVS.getLastDataEntries()
+		entries = SNVS.getLastFlatEntries() if flat else SNVS.getLastDataEntries()
 		
 		block = SNVS.active_entry.getLink()
 		records_count = 16 if len(entries) > 16 else len(entries)
-		print(STR_LAST_SC_ENTRIES.format(records_count, len(entries), block))
+		records = entries[-records_count:]
+		
+		offset = SNVS.getLastFlatDataOffset(True) if flat else SNVS.getLastDataBlockOffset(True)
+		last_offset = offset + Syscon.NvsEntry.getEntrySize() * len(entries)
+		
+		print((' FlatData:' if flat else ' Entries:')+STR_LAST_SC_ENTRIES.format(records_count, len(entries), block))
 		print()
 		
-		last_offset = SNVS.getLastDataBlockOffset(True) + Syscon.NvsEntry.getEntrySize() * len(entries)
-		printSnvsEntries(last_offset - Syscon.NvsEntry.getEntrySize() * records_count, entries[-records_count:])
+		printSnvsEntries(last_offset - Syscon.NvsEntry.getEntrySize() * records_count, records, len(entries)+ 1 - records_count)
 		
 		UI.showStatus()
 		
-		print(UI.DIVIDER+'\n 0:'+STR_GO_BACK)
+		print(UI.DIVIDER+'\n f: Toggle between Entries/Flatdata'+'\n 0:'+STR_GO_BACK)
 		
+		c = input(STR_MPATCH_INPUT)
+		if c.lower() == 'f':
+			flat = False if flat else True
 		try:
-			num = int(input(STR_MPATCH_INPUT))
+			num = int(c)
 		except:
-			return screenManualPatchSNVS(file)
+			return screenManualPatchSNVS(file, flat)
 		
-		if num > 0 and num < len(entries):
+		if num == 0:
+			UI.setStatus(STR_PATCH_CANCELED)
+			return
+		
+		if num > 0 and (num < len(entries) or (flat and num == len(entries))):
 			length = num * Syscon.NvsEntry.getEntrySize()
 			Utils.setData(f, last_offset - length, b'\xFF'*length)
 			UI.setStatus(STR_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(last_offset - length, last_offset))
@@ -204,11 +212,8 @@ def screenManualPatchSNVS(file):
 				UI.setStatus(STR_REBUILD_REQUIRED)
 		elif num > len(entries):
 			UI.setStatus(STR_TOO_MUCH.format(num,len(entries)))
-		elif num == 0:
-			UI.setStatus(STR_PATCH_CANCELED)
-			return
 	
-	screenManualPatchSNVS(file)
+	screenManualPatchSNVS(file, flat)
 
 
 

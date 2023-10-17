@@ -326,8 +326,18 @@ class NVStorage:
 	def getLastDataEntries(self):
 		return self.getDataBlockEntries(self.active_entry.getLink())
 	
+	def getLastFlatEntries(self):
+		return self.getFlatDataEntries(self.active_entry.getLink())
+	
+	def getLastFlatDataOffset(self, real = False):
+		return self.getFlatDataOffset(self.active_entry.getLink(), real)
+	
 	def getLastDataBlockOffset(self, real = False):
 		return self.getDataBlockOffset(self.active_entry.getLink(), real)
+	
+	def getFlatDataOffset(self, index = 0, real = False):
+		offset = self.cfg.getDataLength() * index
+		return self.cfg.getOffset() + self.cfg.getHeaderSize() + offset if real else offset
 	
 	def getDataBlockOffset(self, index = 0, real = False):
 		offset = self.cfg.getDataLength() * index
@@ -345,14 +355,35 @@ class NVStorage:
 		block = self.getDataBlock(index)
 		return block[self.cfg.getDataFlatLength():]
 	
+	def getFlatDataEntries(self, index = 0):
+		
+		flatdata = self.getDataBlockFlat(index)
+		entry_size = NvsEntry.getEntrySize()
+		entries = []
+		
+		for i in range(0, len(flatdata), entry_size):
+			entry = flatdata[i:i+entry_size]
+			entries.append(entry)
+		
+		empty = 0
+		for i in range(len(entries)-1, -1, -1):
+			if entries[i] != b'\xFF'*entry_size:
+				entries = entries[0:i+1]
+				break
+			empty += 1
+		
+		if empty == len(entries): entries = []
+		
+		return entries
+	
 	def getDataBlockEntries(self, index = 0):
 		
 		data = self.getDataBlockRecords(index)
-		step = NvsEntry.getEntrySize()
-		entries = list()
+		entry_size = NvsEntry.getEntrySize()
+		entries = []
 		
-		for i in range(0, len(data), step):
-			entry = data[i:i+step]
+		for i in range(0, len(data), entry_size):
+			entry = data[i:i+entry_size]
 			if NvsEntry.checkMagic(entry) != 0:
 				entries.append(entry)
 		

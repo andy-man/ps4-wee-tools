@@ -5,7 +5,7 @@
 import sys, os
 import utils.utils as Utils
 
-APP_VERSION = '0.9.0'
+APP_VERSION = '0.9.1'
 
 # Colors stuff
 
