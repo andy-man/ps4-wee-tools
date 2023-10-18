@@ -98,10 +98,11 @@ MENU_PATCHES = [
 	'Method A - last 08-0B will be deleted (4 records)',
 	'Method B - last 08-0B and below will be cleaned ({} records)',
 	'Method C - clean everything below previous 08-0B ({} records)',
+	'Method D - clean everything below last 08-0B ({} records)',
 ]
 
 MENU_SC_STATUSES = [
-	'Not patchable',
+	'Overwritten CoreOs slot',
 	'Patchable',
 	'Already patched or stuck on update',
 	'Probably patchable',

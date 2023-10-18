@@ -815,3 +815,24 @@ def launchTool(path):
 		return screenUnpack2BLS(path)
 	else:
 		UI.setStatus(STR_UNK_FILE_TYPE + ' {}'.format(path))
+
+
+
+def quickLegitimatePatch(files):
+	if len(files) != 2:
+		return False
+	
+	try:
+		if os.stat(files[0]).st_size == SFlash.DUMP_SIZE and os.stat(files[1]).st_size == SFlash.DUMP_SIZE:
+			first = files[0] if os.stat(files[0]).st_mtime < os.stat(files[1]).st_mtime else files[1]
+			second = files[1] if os.stat(files[0]).st_mtime < os.stat(files[1]).st_mtime else files[0]
+			
+			with open(first,'rb') as f: f_info = SFlash.getInfoForLegitSwitch(f)
+			with open(second,'rb') as f: s_info = SFlash.getInfoForLegitSwitch(f)
+			
+			if f_info['sn'] == s_info['sn'] and f_info['switch'] != s_info['switch'] and f_info['fw'] == s_info['fw']:
+				SFlashTools.screenLegitimatePatch(first, second)
+	except:
+		return False
+	
+	return False

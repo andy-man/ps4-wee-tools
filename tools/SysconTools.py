@@ -95,6 +95,7 @@ def screenAutoPatchSNVS(file):
 	entries = SNVS.getAllDataEntries()
 	status = Syscon.isSysconPatchable(entries)
 	
+	upd_entry_size = len(Syscon.SC_TYPES_UPD)
 	inds = Syscon.getEntriesByType(Syscon.SC_TYPES_UPD, entries)
 	index = inds[-1] if len(inds) >= 1 else -1
 	prev_index = inds[-2] if len(inds) >= 2 else -1
@@ -113,17 +114,21 @@ def screenAutoPatchSNVS(file):
 	UI.showTable(info, 20)
 	print()
 	
-	if status == 0 or index < 0 or prev_index < 0:
+	if index < 0 or prev_index < 0:
 		print(UI.warning(STR_UNPATCHABLE))
 		input(STR_BACK)
 		return
 	
-	recommend = ['-','A','C','B']
-	print(UI.warning(STR_RECOMMEND.format(recommend[status]))+'\n')
+	recommend = ['D','A','C','B']
+	print(UI.warning(STR_RECOMMEND.format(recommend[status])))
+	if status == 0:
+		print(UI.highlight(' Warning: CoreOS is overwritten - very small chance of success'))
+	print()
 	
 	options = MENU_PATCHES
 	options[1] = options[1].format(len(entries) - index)
-	options[2] = options[2].format(len(entries) - prev_index + 4)
+	options[2] = options[2].format(len(entries) - prev_index + upd_entry_size)
+	options[3] = options[3].format(len(entries) - index + upd_entry_size)
 	
 	UI.showMenu(options,1)
 	UI.showStatus()
@@ -147,8 +152,11 @@ def screenAutoPatchSNVS(file):
 		snvs_data = SNVS.getRebuilded(entries[:index])# clean flatdata [b'\xFF']
 	elif c == 3:
 		ofile = out_file+'_patch_C.bin'
-		snvs_data = SNVS.getRebuilded(entries[:prev_index + 4])
-	
+		snvs_data = SNVS.getRebuilded(entries[:prev_index + upd_entry_size])
+	elif c == 4:
+		ofile = out_file+'_patch_D.bin'
+		snvs_data = SNVS.getRebuilded(entries[:index + upd_entry_size])
+		
 	if ofile and snvs_data:
 		Utils.savePatchData(ofile, data, [{'o':Syscon.SC_AREAS['SNVS']['o'], 'd':snvs_data}])
 		UI.setStatus(STR_SAVED_TO.format(ofile))

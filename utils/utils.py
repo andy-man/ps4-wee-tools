@@ -2,7 +2,7 @@
 # Common utils
 # part of ps4 wee tools project
 #==========================================================
-import hashlib, os, math, random
+import hashlib, os, math, random, datetime
 from lang._i18n_ import *
 
 # Common consts
@@ -82,6 +82,13 @@ def getFileMD5(file):
     with f:
         res = f.read()
         return hashlib.md5(res).hexdigest()
+
+
+
+def getFileTime(path):
+	ts = os.stat(path).st_mtime
+	date = datetime.datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+	return {'ts':ts, 'date':date}
 
 
 

@@ -430,6 +430,16 @@ def getMobo(board):
 	return {'name':prefix + suffix + '-' + rev, 'type':'Retail' if board[1] == 2 else 'Non-Retail'}
 
 
+def getInfoForLegitSwitch(f):
+	data = {
+		'sn':getNorData(f, 'SN', True),
+		'fw':getNorFW(f)['c'],
+		'slot':getNorData(f, 'ACT_SLOT'),
+		'switch':getNorData(f, 'CORE_SWCH'),
+	}
+	return data
+
+
 
 def getSFlashInfo(file = '-'):
 	with open(file, 'rb') as f:

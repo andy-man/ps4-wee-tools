@@ -2,7 +2,7 @@
 # PS4 Nor Tools
 # part of ps4 wee tools project
 #==============================================================
-import os
+import os, time
 from lang._i18n_ import *
 import utils.utils as Utils
 import utils.sflash as SFlash
@@ -104,12 +104,13 @@ def screenLegitimatePatch(file, path = ''):
 	print(' '+UI.highlight('First dump')+':\n')
 	with open(file, 'rb') as f:
 		data = f.read()
-		f_sn = SFlash.getNorData(f, 'SN', True)
-		f_switch = SFlash.getNorData(f, 'CORE_SWCH')
+		f_info = SFlash.getInfoForLegitSwitch(f)
 		UI.showTable({
 			'File': os.path.basename(file),
-			'SN': f_sn,
-			'Pattern': UI.highlight(Utils.hex(f_switch,':')),
+			'Date': Utils.getFileTime(file)['date'],
+			'Slot': 'A' if f_info['slot'] == b'\x00' else 'B',
+			'SN': f_info['sn'],
+			'Pattern': UI.highlight(Utils.hex(f_info['switch'],':')),
 		})
 		print()
 	
@@ -123,28 +124,29 @@ def screenLegitimatePatch(file, path = ''):
 	
 	print(' '+UI.highlight('Second dump')+':\n')
 	with open(path, 'rb') as f:
-		s_sn = SFlash.getNorData(f, 'SN', True)
-		s_switch = SFlash.getNorData(f, 'CORE_SWCH')
+		s_info = SFlash.getInfoForLegitSwitch(f)
 		UI.showTable({
 			'File': os.path.basename(path),
-			'SN': s_sn,
-			'Pattern': UI.highlight(Utils.hex(s_switch,':')),
+			'Date': Utils.getFileTime(path)['date'],
+			'Slot': 'A' if s_info['slot'] == b'\x00' else 'B',
+			'SN': s_info['sn'],
+			'Pattern': UI.highlight(Utils.hex(s_info['switch'],':')),
 		})
 		print()
 	
 	# Quick check
-	if f_sn != s_sn:
+	if f_info['sn'] != s_info['sn']:
 		print(' '+UI.warning(STR_CANT_USE+': ')+STR_DIFF_SN)
 		input(STR_BACK)
 		return
 		
-	if f_switch == s_switch:
+	if f_info['switch'] == s_info['switch']:
 		print(' '+UI.warning(STR_CANT_USE+': ')+STR_SSP_EQUAL)
 		input(STR_BACK)
 		return
 	
 	ofile = Utils.getFilePathWoExt(file)+'_legit_patch.bin'
-	Utils.savePatchData(ofile, data, [{'o':SFlash.NOR_AREAS['CORE_SWCH']['o'], 'd':s_switch}])
+	Utils.savePatchData(ofile, data, [{'o':SFlash.NOR_AREAS['CORE_SWCH']['o'], 'd':s_info['switch']}])
 	
 	print(STR_PATCH_SAVED.format(ofile))
 	

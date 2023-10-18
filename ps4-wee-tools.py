@@ -2,7 +2,7 @@
 # PS4 Wee Tools
 # app entry point
 #==============================================================
-import sys
+import os, sys
 import tools.Tools as Tools
 from lang._i18n_ import UI
 
@@ -13,7 +13,12 @@ def main(args):
     
     args.pop(0)
     
-    if len(args) >= 2:
+    if len(args) == 2:
+    	# Quick Legitimate patch (check)
+    	if os.path.isfile(args[0]) and os.path.isfile(args[1]):
+    		if not Tools.quickLegitimatePatch(args):
+    			Tools.screenCompareFiles(args)
+    elif len(args) >= 2:
     	Tools.screenCompareFiles(args)
     elif len(args) == 1:
     	if args[0].replace('-', '', 2) in ['help','h','?']:
