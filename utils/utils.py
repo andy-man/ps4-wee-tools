@@ -10,8 +10,6 @@ from lang._i18n_ import *
 INFO_FILE_SFLASH	= '_sflash0_.txt'
 INFO_FILE_2BLS		= '_2bls_.txt'
 
-
-
 def getEmcCmd(str):
 	sum = 0
 	for i in range(len(str)):

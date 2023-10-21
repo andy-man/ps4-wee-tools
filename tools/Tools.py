@@ -202,6 +202,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 	
 	info = flasher.connect()
 	ver_maj, ver_min = info['VER']
+	
 	UI.showTable({
 		'Version':'%d.%02d'%(ver_maj, ver_min),
 		'Memory':'%d bytes'%info['RAM'],
@@ -209,7 +210,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 	})
 	print()
 	
-	if info['VER'] != flasher.VERSION:
+	if info['VER'] != flasher.VERSION or info['DEBUG'] != True:
 		flasher.close()
 		input(STR_BACK)
 		return
@@ -273,6 +274,10 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
 	
 	elif act == 'erase':
+		#safe erase all
+		if mode == 0:
+			block = 4
+			print(' Safe erase starting at block #%03d'%(block))
 		flasher.eraseChip(block, count)
 		print()
 	
@@ -748,7 +753,7 @@ def chooseBNC(mode = 0, block_size = 0, syscon = False):
 	if mode == 1:
 		if syscon:
 			areas = [
-				{'n':'Syscon BOOT0',		'o':0,								'l':Syscon.BLOCK_SIZE},
+				{'n':'Syscon BOOT0',		'o':0,								'l':Syscon.BLOCK_SIZE * 4},
 				{'n':'Syscon Firmware',		'o':Syscon.SC_AREAS['FW']['o'],		'l':Syscon.SC_AREAS['FW']['l']},
 				{'n':'Syscon SNVS/NVS',		'o':Syscon.SC_AREAS['SNVS']['o'],	'l':Syscon.SC_AREAS['SNVS']['l']+Syscon.SC_AREAS['NVS']['l']},
 			]

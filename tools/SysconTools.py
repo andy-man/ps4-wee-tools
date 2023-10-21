@@ -300,11 +300,12 @@ def screenBootModes(file):
 
 
 def rebuildSyscon(file):
+	
 	with open(file, 'rb') as f:
 		data = f.read()
 		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 	
-	ofile = Utils.getFilePathWoExt(file,True) + '_rebuild.bin'
+	ofile = Utils.getFilePathWoExt(file, True) + '_rebuild.bin'
 	
 	with open(ofile, 'wb') as f:
 		 f.write(data)
@@ -315,17 +316,39 @@ def rebuildSyscon(file):
 
 
 def cleanSyscon(file):
+	
+	c = input(UI.highlight(' Destroy all previous FW (08-0B) records? [y] '))
+	full = True if c.lower() == 'y' else False
+	
 	with open(file, 'rb') as f:
 		data = f.read()
 		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 	
-	entries = SNVS.getAllDataEntries()
 	clean = []
-	for i in range(len(entries)):
-		if entries[i][1] <= 0x0B:
-			clean.append(entries[i])
+	entries = SNVS.getAllDataEntries()
 	
-	ofile = Utils.getFilePathWoExt(file,True) + '_clean.bin'
+	if full:
+		# Full clean - only last FW records will be saved
+		for i in range(len(entries)):
+			if entries[i][1] in Syscon.SC_TYPES_BOOT + Syscon.SC_TYPES_MODES:
+				clean.append(entries[i])
+		
+		inds = Syscon.getEntriesByType(Syscon.SC_TYPES_UPD, entries)
+		if len(inds) >= 2: # add previous FW records
+			items = entries[inds[-2]:inds[-2]+len(Syscon.SC_TYPES_UPD)]
+			print(items)
+			clean += items
+		if len(inds) >= 1: # add current FW records
+			items = entries[inds[-1]:inds[-1]+len(Syscon.SC_TYPES_UPD)]
+			print(items)
+			clean += items
+	else:
+		# Regular clean preserves all FW records
+		for i in range(len(entries)):
+			if entries[i][1] in Syscon.SC_TYPES_BOOT + Syscon.SC_TYPES_MODES + Syscon.SC_TYPES_UPD:
+				clean.append(entries[i])
+	
+	ofile = Utils.getFilePathWoExt(file,True) + '_clean'+('_full' if full else '')+'.bin'
 	
 	with open(ofile, 'wb') as f:
 		 f.write(data)

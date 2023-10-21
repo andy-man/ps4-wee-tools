@@ -269,7 +269,12 @@ class SysconFlasher(WeeSerial):
 		self.__clean()
 		
 		for b in range(block, block+count):
+			"""
+			res = True
+			time.sleep(1)
+			"""
 			res = self.__eraseBlock(b)
+			
 			if res == False:
 				self.error(STR_SPW_ERROR_ERASE)
 				return False

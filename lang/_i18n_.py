@@ -3,9 +3,8 @@
 # part of ps4 wee tools project
 #==========================================================
 import sys, os
-import utils.utils as Utils
 
-APP_VERSION = '0.9.1'
+APP_VERSION = '0.9.3'
 
 # Colors stuff
 
@@ -116,7 +115,7 @@ class UI:
 	@classmethod
 	def showTableEx(cls, data, cols = 2, width = False):
 		width = width if width else cls.LINE_WIDTH // cols
-		rows = Utils.ceil(len(data),cols)
+		rows = (len(data) // cols) + (1 if len(data) % cols else 0)
 		lines = [''] * rows
 		for i in range(len(data)):
 			lines[i % rows] += data[i].ljust(width, ' ')

@@ -323,7 +323,8 @@ STR_INFO_LEG_PATCH = ''\
 ' 2) Update the console to the SAME version via safe mode\n'\
 ' 3) Read second dump (both slots have equal FW)\n'\
 '\n'\
-' Now you can patch first dump with data from second one'
+' Now you can patch first dump with data from second one\n'\
+' You can drag&drop 2 dumps on wee-tools shortcut to speed up'
 
 STR_ABOUT_SCF = 'About Syscon Flasher'
 STR_INFO_SCF = ''\

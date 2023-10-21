@@ -2,9 +2,7 @@
 
 # PS4 Wee Tools
 
-PS4 wee tools help to work with PS4 nor and syscon dumps.
-
-It is free open source alternative for BwE's commercial apps.
+PS4 wee tools is free open source app, that helps to work with PS4 sflash(NOR) / syscon dumps.
 
 Written in Python to keep it simple.
 
@@ -89,12 +87,23 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * **[Boosty](https://boosty.to/andy_man/donate)**
 * **[YandexMoney](https://yoomoney.ru/to/410011555252085)**
 * **Bitcoin**: 39VaMnFqCQo751mvDc3M7ADVty71q2tWDm 
+* **TronLink**: TSYe254HXFapEwAAbZFkTHGewezZmnCKnU
 
 ## Links
 
 * [X/Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.9.3
+* SCFlasher: Safe syscon erase
+* NOR: quick legitimate patch (drag&drop 2 dumps on run.bat)
+* SC: "full" clean
+* SC: autopatch now works with any* syscon
+* SC: Method B bugfix
+* SC: manual patch now works with flatdata
+* SC: shows line counter
+* utils bugfix
 
 ### v0.9.0
 * Syscon Flasher
