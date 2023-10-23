@@ -59,8 +59,9 @@ MENU_ADDTIONAL = [
 	'Build dump from extracted files',
 	'View / Recover EAP key',
 	'Get HDD keys = decrypt EAP key = create [keys.bin]',
-	'Base validation and entropy stats',
 	'Create EMC cfw (only for Fat 1xxx/11xx)',
+	'Base validation and entropy stats',
+	'Recovery corrupted partition',
 ]
 
 MENU_EXTRA_FLASHER = {
@@ -148,6 +149,10 @@ STR_SC_READER			= 'Syscon reader'
 STR_SPIWAY				= 'SPIway by Judges & Abkarino'
 STR_SCF					= 'Syscon Flasher by Abkarino'
 STR_LEG_PATCH			= 'Legitimate CoreOS Patch'
+STR_PART_RECOVERY		= 'Partition recovery'
+STR_PART_ANALYZE		= 'Partition analyzing'
+STR_PART_LIST			= 'Partitions list'
+STR_PARTS_INFO			= 'Partitions info'
 
 STR_EQUAL				= 'Equal'
 STR_NOT_EQUAL			= 'Not equal'
@@ -199,6 +204,7 @@ STR_SET_TO				= ' {} was set to [{}]'
 STR_ABORT				= ' Action was aborted'
 STR_FILENAME			= ' Filename: '
 
+STR_ACT_SLOT			= ' Active slot: %s [0x%02X]'
 STR_NIY					= ' Function is not implemented yet'
 STR_CLEAN_FLAGS			= ' Clean all system flags'
 STR_UNK_FILE_TYPE		= ' Unknown file type'
@@ -237,7 +243,8 @@ STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
 STR_SNVS_ENTRY_INFO		= 'Block {} #{:03d} Offset 0x{:04X}'
 STR_DUPLICATES			= ' {} duplicate(s) found {}'
-
+STR_SC_WARN_OVERWITTEN	= ' Warning: CoreOS is overwritten - very small chance of success'
+STR_SC_TOGGLE_FLATDATA	= ' Toggle between Entries/Flatdata'
 STR_FW_VERSION			= ' FW version {} / Active slot {}'
 
 STR_INCORRECT_SIZE		= ' {} - incorrect dump size!'
@@ -254,8 +261,11 @@ STR_FILES_MISMATCH		= ' Files mismatch'
 STR_SIZES_MISMATCH		= ' Sizes mismatch!'
 
 STR_CHOOSE_AREA			= ' Choose area: '
+STR_INPUT_SEL_DUMP		= ' Select second dump [y]? or exit [ENTER] '
+STR_INPUT_DESTROY_PREV	= ' Destroy all previous FW (08-0B) records? [y] '
 STR_INPUT_BLOCK			= ' Input start block [count]: '
 STR_INPUT_SAVE_IM		= ' Save all intermediate files? [y] '
+STR_INPUT_USE_SLOTB		= ' Use slot B (active)? [y] '
 STR_USE_NEWBLOBS		= ' Use new key blobs? [y] '
 STR_CONFIRM_SEPARATE	= ' Save as separate file? [y] '
 STR_CONFIRM				= ' Input [y] to continue: '
@@ -309,10 +319,27 @@ STR_SCF_ERR_CMD_LEN		= 'Incorrect command length'
 STR_SCF_ERR_CMD_EXEC	= 'Error while executing command'
 STR_SCF_ERR_UNKNOWN		= 'Received unknown error!'
 STR_SCF_ERR_UNK_STATUS	= 'Unknown status code!'
+STR_SCF_SAFE_ERASE		= ' Safe erase starting at block #%03d'
 
 STR_CANT_USE			= 'Can\'t use this'
 STR_DIFF_SN				= 'Serial numbers are different!'
 STR_SSP_EQUAL			= 'Slot switch patterns are equal!'
+STR_LP_FIRST_DUMP		= 'First dump'
+STR_LP_SECOND_DUMP		= 'Second dump'
+
+STR_SELECT_MOST_FILE	= ' Select most relevant file: '
+STR_NO_FW_FILES			= ' Files are not found! Download files to fws folder:\n [%s]'
+
+
+STR_ABOUT_PART_RECOVERY = 'Partition analyzing and recovery'
+STR_INFO_PART_A_R = ''\
+' Compares every byte of your current partition with valid files\n'\
+' and shows percentage of simularity.\n'\
+' Most equal files will be at top of the list.\n'\
+' Keep in mind that Southbridge FW consists of emc + eap\n'\
+'\n'\
+' Put valid emc/eap/torus files to /fws/ folder\n'\
+' You can download it from this repo:\n '
 
 STR_ABOUT_LEG_PATCH = 'About Legitimate CoreOS Patch'
 STR_INFO_LEG_PATCH = ''\

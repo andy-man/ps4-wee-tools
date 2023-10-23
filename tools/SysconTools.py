@@ -104,11 +104,11 @@ def screenAutoPatchSNVS(file):
 	prev_fw = Syscon.getRecordPos(prev_index, SNVS)
 	
 	info = {
-		'General': 'Active[%d] OWC[%d]'%(SNVS.active_entry.getLink(), SNVS.getOWC()),
-		'08-0B (prev)': STR_NOT_FOUND if prev_index < 0 else STR_SNVS_ENTRY_INFO.format(prev_fw['block'], prev_fw['num'], prev_fw['offset']),
-		'08-0B (last)': STR_NOT_FOUND if index < 0 else STR_SNVS_ENTRY_INFO.format(last_fw['block'], last_fw['num'], last_fw['offset']),
-		'Order of blocks':SNVS.getDataBlocksOrder(),
-		'Status':MENU_SC_STATUSES[status],
+		'General'			: 'Active[%d] OWC[%d]'%(SNVS.active_entry.getLink(), SNVS.getOWC()),
+		'08-0B (prev)'		: STR_NOT_FOUND if prev_index < 0 else STR_SNVS_ENTRY_INFO.format(prev_fw['block'], prev_fw['num'], prev_fw['offset']),
+		'08-0B (last)'		: STR_NOT_FOUND if index < 0 else STR_SNVS_ENTRY_INFO.format(last_fw['block'], last_fw['num'], last_fw['offset']),
+		'Order of blocks'	: SNVS.getDataBlocksOrder(),
+		'Status'			: MENU_SC_STATUSES[status],
 	}
 	
 	UI.showTable(info, 20)
@@ -122,7 +122,7 @@ def screenAutoPatchSNVS(file):
 	recommend = ['D','A','C','B']
 	print(UI.warning(STR_RECOMMEND.format(recommend[status])))
 	if status == 0:
-		print(UI.highlight(' Warning: CoreOS is overwritten - very small chance of success'))
+		print(UI.highlight(STR_SC_WARN_OVERWITTEN))
 	print()
 	
 	options = MENU_PATCHES
@@ -193,7 +193,9 @@ def screenManualPatchSNVS(file, flat = False):
 		
 		UI.showStatus()
 		
-		print(UI.DIVIDER+'\n f: Toggle between Entries/Flatdata'+'\n 0:'+STR_GO_BACK)
+		print(UI.DIVIDER)
+		print(' f:'+STR_SC_TOGGLE_FLATDATA)
+		print(' 0:'+STR_GO_BACK)
 		
 		c = input(STR_MPATCH_INPUT)
 		if c.lower() == 'f':
@@ -317,7 +319,7 @@ def rebuildSyscon(file):
 
 def cleanSyscon(file):
 	
-	c = input(UI.highlight(' Destroy all previous FW (08-0B) records? [y] '))
+	c = input(UI.highlight(STR_INPUT_DESTROY_PREV))
 	full = True if c.lower() == 'y' else False
 	
 	with open(file, 'rb') as f:

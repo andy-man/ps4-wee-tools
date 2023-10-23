@@ -4,7 +4,7 @@
 #==========================================================
 import sys, os
 
-APP_VERSION = '0.9.3'
+APP_VERSION = '0.9.4'
 
 # Colors stuff
 
@@ -174,6 +174,7 @@ STR_INFO_HDD_EAP	= STR_INFO_HDD_EAP + UI.link('https://www.psdevwiki.com/ps4/Mou
 STR_INFO_EMC_CFW	= STR_INFO_EMC_CFW + UI.link('https://www.psdevwiki.com/ps4/Southbridge')
 STR_INFO_SPIWAY		= STR_INFO_SPIWAY + UI.link('https://www.psdevwiki.com/ps4/SPIway')
 STR_INFO_SCF		= STR_INFO_SCF + UI.link('https://github.com/AbkarinoMHM/PS4SysconTools')
+STR_INFO_PART_A_R	= STR_INFO_PART_A_R + UI.link('https://github.com/andy-man/ps4-ic-fw')
 
 STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH.format(STR_080B, STR_0C0F, STR_2023, STR_080B)
 

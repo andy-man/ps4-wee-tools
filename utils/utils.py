@@ -9,6 +9,7 @@ from lang._i18n_ import *
 
 INFO_FILE_SFLASH	= '_sflash0_.txt'
 INFO_FILE_2BLS		= '_2bls_.txt'
+ROOT_PATH			= os.path.dirname(os.path.dirname(__file__))
 
 def getEmcCmd(str):
 	sum = 0
@@ -80,6 +81,50 @@ def getFileMD5(file):
     with f:
         res = f.read()
         return hashlib.md5(res).hexdigest()
+
+
+
+def getFilesList(path, ext = ''):
+	flist = []
+	for root, dirs, files in os.walk(path):
+		for name in files:
+			if ext:
+				if name.lower().endswith(ext):
+					flist.append(os.path.join(root, name))
+			else:
+				flist.append(os.path.join(root, name))
+	
+	return flist
+
+
+
+def percent(part, whole):
+	return 100 * float(part)/float(whole) if whole else 0
+
+
+
+def compareData(d1, d2, step = 1):
+	min = len(d1) if len(d1) < len(d2) else len(d2)
+	ok = 0
+	for i in range(0, min, step):
+		if d1[i:i+step] == d2[i:i+step]:
+			ok += 1
+	return percent(ok, min // step)
+
+
+
+def compareDataWithFiles(data, file_list, buf = 1, show_progress = False):
+	
+	items = []
+	for i in range(len(file_list)):
+		if show_progress:
+			print('\r'+STR_PROGRESS.format(int(percent(i,len(file_list)))),end='')
+		with open(file_list[i], 'rb') as f:
+			items.append({'path':file_list[i], 'eq':compareData(data, f.read(), buf)})
+	
+	items.sort(key=lambda k: k['eq'], reverse=True)
+	
+	return items
 
 
 

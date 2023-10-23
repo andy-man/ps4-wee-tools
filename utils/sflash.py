@@ -157,15 +157,25 @@ MAGICS = {
 # MBR parser
 
 class Partition(ctypes.Structure):
-    _pack_ = 1
-    _fields_ = [
-        ("start_lba",	ctypes.c_uint32),
-        ("n_sectors",	ctypes.c_uint32),
-        ("type",		ctypes.c_uint8),		# part_id?
-        ("flag",		ctypes.c_uint8),
-        ("unknown",		ctypes.c_uint16),
-        ("padding",		ctypes.c_uint64)
-    ]
+	_pack_ = 1
+	_fields_ = [
+		("start_lba",	ctypes.c_uint32),
+		("n_sectors",	ctypes.c_uint32),
+		("type",		ctypes.c_uint8),		# part_id?
+		("flag",		ctypes.c_uint8),
+		("unknown",		ctypes.c_uint16),
+		("padding",		ctypes.c_uint64)
+	]
+	
+	def getName(self):
+		code = self.type
+		return PARTITIONS_TYPES[code] if code in PARTITIONS_TYPES else 'UNK_'+str(code)
+	
+	def getOffset(self):
+		return self.start_lba * BLOCK_SIZE
+	
+	def getSize(self):
+		return self.n_sectors * BLOCK_SIZE
 
 class MBR_v1(ctypes.Structure):
     _pack_ = 1
@@ -322,6 +332,7 @@ def checkNorPartMagic(f, name):
 def getPartitionsInfo(f):
 	# f - file in rb/r+b mode
 	f.seek(MBR_SIZE)
+	# active slot at 0x1000
 	active = f.read(1)
 	
 	base = MBR_SIZE*2 if active == 0x00 else MBR_SIZE*3
@@ -332,17 +343,17 @@ def getPartitionsInfo(f):
 	partitions = []
 	
 	for i in range(len(mbr.partitions)):
-		
 		p = mbr.partitions[i]
-		
+		if p.getSize() == 0:
+			continue
 		partitions.append({
-			'name'		: getPartitionName(p.type),
-			'offset'	: p.start_lba * BLOCK_SIZE,
-			'size'		: p.n_sectors * BLOCK_SIZE,
+			'name'		: p.getName(),
+			'offset'	: p.getOffset() + base,
+			'size'		: p.getSize(),
 			'type'		: p.type,
 		})
 	
-	return {'active':active, 'base':base, 'partitions':partitions}
+	return {'slot':active, 'base':base, 'parts':partitions}
 
 
 

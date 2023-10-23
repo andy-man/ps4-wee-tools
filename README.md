@@ -14,7 +14,7 @@ If you want to run python script directly you need these libs
 
 (It can be easily installed with help of pip)
 
-`pip install crypto` since v0.7
+`pip install pycryptodome` since v0.7
 
 `pip install pyserial` since v0.8.5
 
@@ -28,7 +28,7 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
 
 **NOR tool**
 * PS4 Nor dump info
-  * MD5, SKU, Region, SN / Mobo SN, Southbridge
+  * MD5, SKU, Region, SN / Mobo SN, Southbridge, Board ID
   * Torus (WiFi), MAC, HDD, FW (current, minimal), FW2 ver probability
 * Flags toggle:
   * boot mode, safe boot, update mode, arcade mode, kiosk mode (idu)
@@ -43,8 +43,9 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
   * Build dump from extracted files
   * View / Recover HDD EAP keys
   * Get HDD EAP keys [keys.bin]
-  * Base validation and entropy stats
   * EMC CFW for Aeolia
+  * Base validation and entropy stats
+  * Recovery corrupted partition
 
 **Syscon tool**
 * Syscon check
@@ -94,6 +95,11 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [X/Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.9.4
+* Partition analyze and recovery
+* Flags: active slot
+* Code optimization
 
 ### v0.9.3
 * SCFlasher: Safe syscon erase

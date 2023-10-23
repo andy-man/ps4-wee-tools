@@ -101,36 +101,36 @@ def screenLegitimatePatch(file, path = ''):
 	print(UI.warning(STR_INFO_LEG_PATCH))
 	print(UI.getTab(STR_LEG_PATCH))
 	
-	print(' '+UI.highlight('First dump')+':\n')
+	print(' '+UI.highlight(STR_LP_FIRST_DUMP)+':\n')
 	with open(file, 'rb') as f:
 		data = f.read()
 		f_info = SFlash.getInfoForLegitSwitch(f)
 		UI.showTable({
-			'File': os.path.basename(file),
-			'Date': Utils.getFileTime(file)['date'],
-			'Slot': 'A' if f_info['slot'] == b'\x00' else 'B',
-			'SN': f_info['sn'],
-			'Pattern': UI.highlight(Utils.hex(f_info['switch'],':')),
+			'File'		: os.path.basename(file),
+			'Date'		: Utils.getFileTime(file)['date'],
+			'Slot'		: 'A' if f_info['slot'] == b'\x00' else 'B',
+			'SN'		: f_info['sn'],
+			'Pattern'	: UI.highlight(Utils.hex(f_info['switch'],':')),
 		})
 		print()
 	
 	if not path or not os.path.isfile(path):
-		c = input(' Select second dump [y]? or exit [ENTER] ')
+		c = input(STR_INPUT_SEL_DUMP)
 		if c.lower() == 'y':
 			path = Tools.screenFileSelect(file, False, True)
 			return screenLegitimatePatch(file, path)
 		else:
 			return
 	
-	print(' '+UI.highlight('Second dump')+':\n')
+	print(' '+UI.highlight(STR_LP_SECOND_DUMP)+':\n')
 	with open(path, 'rb') as f:
 		s_info = SFlash.getInfoForLegitSwitch(f)
 		UI.showTable({
-			'File': os.path.basename(path),
-			'Date': Utils.getFileTime(path)['date'],
-			'Slot': 'A' if s_info['slot'] == b'\x00' else 'B',
-			'SN': s_info['sn'],
-			'Pattern': UI.highlight(Utils.hex(s_info['switch'],':')),
+			'File'		: os.path.basename(path),
+			'Date'		: Utils.getFileTime(path)['date'],
+			'Slot'		: 'A' if s_info['slot'] == b'\x00' else 'B',
+			'SN'		: s_info['sn'],
+			'Pattern'	: UI.highlight(Utils.hex(s_info['switch'],':')),
 		})
 		print()
 	
@@ -235,6 +235,7 @@ def screenFlagsToggler(file):
 			{'k':'IDU',			'v':[b'\x00',b'\x01'],			'd':[STR_OFF,STR_ON]},
 			{'k':'BOOT_MODE',	'v':[b'\xFE',b'\xFB',b'\xFF'],	'd':['Development','Assist','Release']},
 			{'k':'MANU',		'v':[b'\x00'*32,b'\xFF'*32],	'd':[STR_OFF,STR_ON]},
+			{'k':'ACT_SLOT',	'v':[b'\x00',b'\x80'],			'd':['A','B']},
 		]
 		
 		for i in range(len(patches)):
@@ -286,6 +287,29 @@ def toggleFlag(file, patch):
 			SFlash.setNorDataB(f, patch['k'], patch['v'][i])
 	
 	UI.setStatus(STR_SET_TO.format(SFlash.getNorAreaName(patch['k']),patch['d'][i]))
+
+
+
+def screenPartitionsInfo(file):
+	os.system('cls')
+	print(TITLE+UI.getTab(STR_PARTS_INFO))
+	
+	with open(file,'rb') as f:
+		data = SFlash.getPartitionsInfo(f)
+		slot = 'A' if data['slot'] == b'\x00' else 'B'
+		print(STR_ACT_SLOT%(slot, data['slot'][0]))
+		print()
+		for i in range(len(data['parts'])):
+			p = data['parts'][i]
+			print(UI.highlight(' #%d %s'%(i+1, p['name'])))
+			UI.showTable({
+				'Offset':'%8d [0x%x]'%(p['offset'],p['offset']),
+				'Size':'%8d [0x%x]'%(p['size'],p['size']),
+				'Type':'%8d [0x%x]'%(p['type'],p['type']),
+			})
+			print()
+	
+	choice = input(STR_CHOICE)
 
 
 

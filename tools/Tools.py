@@ -42,8 +42,8 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	ping = flasher.ping()
 	ver_maj, ver_min = ping['VER']
 	UI.showTable({
-		'Version':'%d.%02d'%(ver_maj, ver_min),
-		'Memory':'%d bytes'%ping['RAM'],
+		'Version'	: '%d.%02d'%(ver_maj, ver_min),
+		'Memory'	: '%d bytes'%ping['RAM'],
 	})
 	print()
 	
@@ -56,8 +56,8 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	
 	if flasher.Config.IC_ID == 0:
 		UI.showTable({
-			'Device ID': '0x%02X'%flasher.Config.VENDOR_ID,
-			'Vendor ID': '0x%04X'%flasher.Config.DEVICE_ID,
+			'Device ID'	: '0x%02X'%flasher.Config.VENDOR_ID,
+			'Vendor ID'	: '0x%04X'%flasher.Config.DEVICE_ID,
 		})
 		input(STR_BACK)
 		return
@@ -70,9 +70,9 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	if act != 'read' and path and os.path.isfile(path):
 		print(UI.highlight(STR_FILE_INFO)+':\n')
 		UI.showTable({
-			'File':		os.path.basename(path),
-			'MD5':		Utils.getFileMD5(path),
-			'Size':		'%d MB'%(os.stat(path).st_size // (1024**2)),
+			'File'	: os.path.basename(path),
+			'MD5'	: Utils.getFileMD5(path),
+			'Size'	: '%d MB'%(os.stat(path).st_size // (1024**2)),
 		})
 		print(end=('\n' if act else ''))
 	
@@ -131,9 +131,9 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	if act == 'read' and path and os.path.isfile(path):
 		print('\n'+UI.highlight(STR_FILE_INFO)+':\n')
 		UI.showTable({
-			'File': os.path.basename(path),
-			'MD5': Utils.getFileMD5(path),
-			'Size': '%d MB'%(os.stat(path).st_size // 1024**2),
+			'File'	: os.path.basename(path),
+			'MD5'	: Utils.getFileMD5(path),
+			'Size'	: '%d MB'%(os.stat(path).st_size // 1024**2),
 		})
 	
 	# Action done
@@ -204,9 +204,9 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 	ver_maj, ver_min = info['VER']
 	
 	UI.showTable({
-		'Version':'%d.%02d'%(ver_maj, ver_min),
-		'Memory':'%d bytes'%info['RAM'],
-		'Debug Mode':info['DEBUG'],
+		'Version'		: '%d.%02d'%(ver_maj, ver_min),
+		'Memory'		: '%d bytes'%info['RAM'],
+		'Debug Mode'	: info['DEBUG'],
 	})
 	print()
 	
@@ -225,9 +225,9 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 	if act != 'read' and path and os.path.isfile(path):
 		print(UI.highlight(STR_FILE_INFO)+':\n')
 		UI.showTable({
-			'File':		os.path.basename(path),
-			'MD5':		Utils.getFileMD5(path),
-			'Size':		'%d KB'%(os.stat(path).st_size // 1024),
+			'File'	: os.path.basename(path),
+			'MD5'	: Utils.getFileMD5(path),
+			'Size'	: '%d KB'%(os.stat(path).st_size // 1024),
 		})
 		print(end=('\n' if act else ''))
 	
@@ -277,7 +277,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		#safe erase all
 		if mode == 0:
 			block = 4
-			print(' Safe erase starting at block #%03d'%(block))
+			print(STR_SCF_SAFE_ERASE%(block))
 		flasher.eraseChip(block, count)
 		print()
 	
@@ -290,9 +290,9 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 	if act == 'read' and path and os.path.isfile(path):
 		print('\n'+UI.highlight(STR_FILE_INFO)+':\n')
 		UI.showTable({
-			'File': os.path.basename(path),
-			'MD5': Utils.getFileMD5(path),
-			'Size': '%d KB'%(os.stat(path).st_size // 1024),
+			'File'	: os.path.basename(path),
+			'MD5'	: Utils.getFileMD5(path),
+			'Size'	: '%d KB'%(os.stat(path).st_size // 1024),
 		})
 	
 	# Action done
@@ -380,7 +380,10 @@ def screenSysconReader(port = '', file = ''):
 			equal = False
 		p_md5 = md5
 		
-		UI.showTable({'Elapsed time':STR_SECONDS.format(sec), 'File MD5':md5})
+		UI.showTable({
+			'Elapsed time'	: STR_SECONDS.format(sec),
+			'File MD5'		: md5
+		})
 		
 		print('\n'+UI.highlight(STR_SAVED_TO.format(ofile)))
 		print(UI.DIVIDER)
@@ -644,8 +647,8 @@ def screenCompareFiles(list):
 	
 	print(UI.DIVIDER)
 	UI.showTable({
-		'Result':STR_OK if len(hashes) == 1 else STR_FAIL,
-		'Hashes count':len(hashes),
+		'Result'		: STR_OK if len(hashes) == 1 else STR_FAIL,
+		'Hashes count'	: len(hashes),
 	})
 	input(STR_BACK)
 	

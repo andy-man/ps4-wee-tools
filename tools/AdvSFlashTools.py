@@ -38,12 +38,99 @@ def screenAdvSFlashTools(file):
 	elif choice == '4':
 		screenHddKey(file)
 	elif choice == '5':
-		screenValidate(file)
-	elif choice == '6':
 		screenEmcCFW(file)
+	elif choice == '6':
+		screenValidate(file)
+	elif choice == '7':
+		screenPartitionRecovery(file)
 	
 	screenAdvSFlashTools(file)
 
+
+
+def screenPartitionRecovery(file, partition = ''):
+	os.system('cls')
+	print(TITLE + UI.getTab(STR_ABOUT_PART_RECOVERY))
+	print(UI.warning(STR_INFO_PART_A_R))
+	
+	part_list = ['s0_emc_ipl_a', 's0_emc_ipl_b', 's0_eap_kbl', 's0_wifi']
+	
+	if partition in part_list:
+		
+		with open(file, 'rb') as f:
+			fw = SFlash.getNorFW(f)
+			slot = 'A' if SFlash.getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'B'
+			data = SFlash.getNorPartition(f, partition)
+		
+		print(UI.getTab(STR_PART_ANALYZE))
+		print(' '+UI.highlight(partition)+'\n')
+		print(UI.green(' FW: %s Slot: %s'%(fw['c'], slot))+'\n')
+		
+		fw_folder = os.path.join(Utils.ROOT_PATH, 'fws')
+		sub_folder = ''
+		
+		if partition.count('emc_ipl'):
+			sub_folder = 'emc'
+		elif partition.count('eap_kbl'):
+			sub_folder = 'eap'
+		elif partition.count('wifi'):
+			sub_folder = 'torus'
+		
+		if sub_folder:
+			file_list = Utils.getFilesList(os.path.join(fw_folder, sub_folder),'2bls')
+		
+		if len(file_list):
+			
+			items = Utils.compareDataWithFiles(data, file_list, 1, True)
+			
+			UI.clearInput()
+			print('\n'+UI.warning(STR_SELECT_MOST_FILE)+'\n')
+			items_count = len(items) if len(items) < 10 else 10
+			for k in range(items_count):
+				path = items[k]['path']
+				rel_path = (os.path.sep).join(path.split(os.path.sep)[-3:])
+				percent = int(items[k]['eq'] * 100) / 100
+				print(' %d: %s | %.2f%%'%(k, rel_path, percent))
+		else:
+			print(UI.warning(STR_NO_FW_FILES%fw_folder))
+			input(STR_BACK)
+			return screenPartitionRecovery(file)
+		
+		try: n = int(input(STR_CHOICE))
+		except: n = -1
+		
+		if n >= 0 and n < items_count:
+			
+			out_file = Utils.getFilePathWoExt(file, True)+'_patch_'+partition+'.bin'
+			data = Utils.getFileContents(file)
+			pdata = Utils.getFileContents(items[n]['path'])
+			
+			Utils.savePatchData(out_file, data, [{'o':SFlash.NOR_PARTITIONS[partition]['o'], 'd':pdata}])
+			
+			UI.setStatus(STR_SAVED_TO.format(out_file))
+		else:
+			UI.setStatus(STR_ERROR_INPUT)
+		
+		return screenPartitionRecovery(file)
+	
+	print(UI.getTab(STR_PART_LIST))
+	
+	UI.showMenu(part_list,1)
+	print(UI.DIVIDER)
+	print(' 0:'+STR_GO_BACK)
+	UI.showStatus()
+	
+	try: n = int(input(STR_CHOICE))
+	except: n = -1
+	
+	if n == 0:
+		return
+	if n > 0 and n <= len(part_list):
+		return screenPartitionRecovery(file, part_list[n-1])
+	else:
+		UI.setStatus(STR_ERROR_INPUT)
+	
+	screenPartitionRecovery(file, partition)
 
 
 def screenValidate(file):
@@ -196,7 +283,7 @@ def screenEmcCFW(file):
 		sku = SFlash.getNorData(f, 'SKU')
 		slot = 'A' if SFlash.getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'B'
 		
-		print(' SKU: %s / Active slot: %s'%(sku.decode('utf-8','ignore'), slot))
+		print(' SKU: %s / Slot: %s'%(sku.decode('utf-8','ignore'), slot))
 		
 		if sku[4:6] != b'11' and sku[4:6] != b'10':
 			print(STR_EMC_CFW_WARN)
@@ -205,7 +292,7 @@ def screenEmcCFW(file):
 		
 		b = False
 		if slot == 'B':
-			b = input(' Use slot B (active)? [y] ')
+			b = input(STR_INPUT_USE_SLOTB)
 			UI.clearInput()
 		
 		emc_part_name = 's0_emc_ipl_' + ('b' if b.lower() == 'y' else 'a')
