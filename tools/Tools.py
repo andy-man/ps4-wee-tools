@@ -390,7 +390,7 @@ def screenSysconReader(port = '', file = ''):
 	
 	if equal:
 		print(UI.green(STR_FILES_MATCH))
-		c = input(UI.highlight(STR_OPEN_IN_SCTOOL))
+		c = input(UI.highlight(STR_OPEN_IN_SCR+STR_Y_OR_CANCEL)).lower()
 		if c == 'y':
 			SysconTools.screenSysconTools(ofile)
 		else:
@@ -469,7 +469,10 @@ def screenSerialMonitor(port = '', emc_mode = False):
 
 def screenChoosePort():
 	os.system('cls')
-	print(TITLE + UI.getTab(STR_PORTS_LIST))
+	print(TITLE + UI.getTab(STR_WARNING))
+	print(UI.warning(STR_INFO_FLASH_TOOLS))
+	
+	print(UI.getTab(STR_PORTS_LIST))
 	
 	ports = WeeSerial.getPortList()
 	

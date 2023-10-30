@@ -55,8 +55,8 @@ MENU_FILE_SELECTION = {
 }
 
 MENU_ADDTIONAL = [
-	'Extract sFlash\'s partitions',
-	'Build dump from extracted files',
+	'Extract partitions from sFlash0',
+	'Build sFlash0 from extracted files',
 	'View / Recover EAP key',
 	'Get HDD keys = decrypt EAP key = create [keys.bin]',
 	'Create EMC cfw (only for Fat 1xxx/11xx)',
@@ -82,6 +82,8 @@ MENU_NOR_ACTIONS = [
 	'SAMU boot flag',
 	'CoreOS slot switching (FW revert)',
 	'Legitimate CoreOS Patch',
+	'Patch Southbridge',
+	'Patch Torus (WiFi+BT)',
 	'Additional tools',
 ]
 
@@ -153,6 +155,8 @@ STR_PART_RECOVERY		= 'Partition recovery'
 STR_PART_ANALYZE		= 'Partition analyzing'
 STR_PART_LIST			= 'Partitions list'
 STR_PARTS_INFO			= 'Partitions info'
+STR_WIFI_PATCHER		= 'WiFi patcher'
+STR_SB_PATCHER			= 'Southbridge patcher'
 
 STR_EQUAL				= 'Equal'
 STR_NOT_EQUAL			= 'Not equal'
@@ -260,20 +264,23 @@ STR_FILES_MATCH			= ' Files are equal'
 STR_FILES_MISMATCH		= ' Files mismatch'
 STR_SIZES_MISMATCH		= ' Sizes mismatch!'
 
+STR_SELECT_MODEL		= ' Select model:'
+STR_SHOW_DETAILS		= ' Show details?'
+STR_Y_OR_CANCEL			= ' [y - yes, * - cancel] '
 STR_CHOOSE_AREA			= ' Choose area: '
-STR_INPUT_SEL_DUMP		= ' Select second dump [y]? or exit [ENTER] '
-STR_INPUT_DESTROY_PREV	= ' Destroy all previous FW (08-0B) records? [y] '
+STR_INPUT_SEL_DUMP		= ' Select second dump?'
+STR_INPUT_DESTROY_PREV	= ' Destroy all previous FW (08-0B) records?'
 STR_INPUT_BLOCK			= ' Input start block [count]: '
-STR_INPUT_SAVE_IM		= ' Save all intermediate files? [y] '
-STR_INPUT_USE_SLOTB		= ' Use slot B (active)? [y] '
-STR_USE_NEWBLOBS		= ' Use new key blobs? [y] '
-STR_CONFIRM_SEPARATE	= ' Save as separate file? [y] '
+STR_INPUT_SAVE_IM		= ' Save all intermediate files?'
+STR_INPUT_USE_SLOTB		= ' Use slot B (active)?'
+STR_USE_NEWBLOBS		= ' Use new key blobs?'
+STR_CONFIRM_SEPARATE	= ' Save as separate file?'
 STR_CONFIRM				= ' Input [y] to continue: '
 STR_CURRENT				= ' Current: '
 STR_GO_BACK				= ' Go back'
 STR_SC_BM_SELECT		= ' Select boot mode variant [1-{}] '
-STR_OPEN_IN_SCTOOL		= ' Open file in syscon tool? [y] '
-STR_FLASH_PATCHED		= ' Flash patched to console (SPIway)? [y] '
+STR_OPEN_IN_SCR			= ' Open file in syscon tool?'
+STR_FLASH_PATCHED		= ' Flash patched to console (SPIway)?'
 
 STR_READING_DUMP_N		= ' Reading dump {}'
 STR_CHIP_NOT_RESPOND	= ' Chip doesn\'t respond, check wiring and push reset button'
@@ -327,17 +334,39 @@ STR_SSP_EQUAL			= 'Slot switch patterns are equal!'
 STR_LP_FIRST_DUMP		= 'First dump'
 STR_LP_SECOND_DUMP		= 'Second dump'
 
+STR_USE_EXPERT_M		= ' Choose another model or use expert mode!'
+STR_ERR_NO_FW_FOUND		= ' Error: Can not find %s for FW %s in DB'
+STR_EXPERT_MODE			= ' Expert mode?'
+STR_SELECT_FW_VER		= ' Select fw version'
+STR_MODEL				= ' Model'
+STR_FW_VER				= ' FW: %s / Slot: %s'
 STR_SELECT_MOST_FILE	= ' Select most relevant file: '
 STR_NO_FW_FILES			= ' Files are not found! Download files to fws folder:\n [%s]'
 
+STR_ABOUT_TORUS_PATCH = 'About WiFi patcher'
+STR_INFO_TORUS_PATCH = ''\
+' Will be useful in case of:\n'\
+' - corrupted Torus (WiFi+BT) FW\n'\
+' - switching to another IC module'\
+
+STR_ABOUT_SB_PATCH = 'About Southbridge patcher'
+STR_INFO_SB_PATCH = ''\
+' Will be useful in case of:\n'\
+' - corrupted Southbridge FW or "EMC VERSION DOWN" errors\n'\
+' - switching to another IC module (CXD90046 => CXD90036)\n'\
+' - replacement of APU bundles (21xx => 22xx, 71xx => 72xx)'
+
+STR_INFO_FLASH_TOOLS = ''\
+' Flash tools (spiway & syscon flasher) are experimental! Be careful.'\
 
 STR_ABOUT_PART_RECOVERY = 'Partition analyzing and recovery'
 STR_INFO_PART_A_R = ''\
 ' Compares every byte of your current partition with valid files\n'\
 ' and shows percentage of simularity.\n'\
 ' Most equal files will be at top of the list.\n'\
-' Keep in mind that Southbridge FW consists of emc + eap\n'\
-'\n'\
+' Keep in mind that Southbridge FW consists of emc + eap'
+
+STR_INFO_FW_LINK = ''\
 ' Put valid emc/eap/torus files to /fws/ folder\n'\
 ' You can download it from this repo:\n '
 

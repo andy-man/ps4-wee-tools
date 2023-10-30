@@ -319,7 +319,7 @@ def rebuildSyscon(file):
 
 def cleanSyscon(file):
 	
-	c = input(UI.highlight(STR_INPUT_DESTROY_PREV))
+	c = input(UI.highlight(STR_INPUT_DESTROY_PREV+STR_Y_OR_CANCEL))
 	full = True if c.lower() == 'y' else False
 	
 	with open(file, 'rb') as f:

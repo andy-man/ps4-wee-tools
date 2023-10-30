@@ -38,6 +38,8 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
 * SAMU boot flag edit
 * Downgrade by slot switch (FW revert)
 * Legitimate CoreOS Patch
+* Southbridge patcher
+* Torus (WiFi+BT) patcher
 * Additional tools
   * Extract NOR's partitions
   * Build dump from extracted files
@@ -49,6 +51,7 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
 
 **Syscon tool**
 * Syscon check
+* Debug flag toggle
 * Patchable status check
 * SNVS blocks viewer (records and flatdata)
 * Manual SNVS patch
@@ -95,6 +98,12 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [X/Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.9.5
+* Quick/Expert mode for partition recovery
+* Southbridge patcher
+* Torus (WiFi+BT) patcher
+* Util lib update
 
 ### v0.9.4
 * Partition analyze and recovery

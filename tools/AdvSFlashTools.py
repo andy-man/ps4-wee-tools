@@ -12,46 +12,12 @@ import tools.Tools as Tools
 
 
 
-def screenAdvSFlashTools(file):
-	os.system('cls')
-	print(TITLE+UI.getTab(STR_ADDITIONAL))
-	
-	with open(file, 'rb') as f:
-		sn = SFlash.getNorData(f, 'SN', True)
-	
-	folder = os.path.dirname(file) + os.sep + sn
-	
-	UI.showMenu(MENU_ADDTIONAL,1)
-	
-	UI.showStatus()
-	
-	choice = input(STR_CHOICE)
-	
-	if choice == '':
-		return
-	elif choice == '1':
-		screenExtractNorDump(file)
-	elif choice == '2':
-		screenBuildNorDump(folder)
-	elif choice == '3':
-		screenEapKeyRecovery(file)
-	elif choice == '4':
-		screenHddKey(file)
-	elif choice == '5':
-		screenEmcCFW(file)
-	elif choice == '6':
-		screenValidate(file)
-	elif choice == '7':
-		screenPartitionRecovery(file)
-	
-	screenAdvSFlashTools(file)
-
-
-
 def screenPartitionRecovery(file, partition = ''):
 	os.system('cls')
 	print(TITLE + UI.getTab(STR_ABOUT_PART_RECOVERY))
 	print(UI.warning(STR_INFO_PART_A_R))
+	print()
+	print(UI.warning(STR_INFO_FW_LINK))
 	
 	part_list = ['s0_emc_ipl_a', 's0_emc_ipl_b', 's0_eap_kbl', 's0_wifi']
 	
@@ -64,7 +30,7 @@ def screenPartitionRecovery(file, partition = ''):
 		
 		print(UI.getTab(STR_PART_ANALYZE))
 		print(' '+UI.highlight(partition)+'\n')
-		print(UI.green(' FW: %s Slot: %s'%(fw['c'], slot))+'\n')
+		print(UI.green(STR_FW_VER%(fw['c'], slot))+'\n')
 		
 		fw_folder = os.path.join(Utils.ROOT_PATH, 'fws')
 		sub_folder = ''
@@ -79,25 +45,34 @@ def screenPartitionRecovery(file, partition = ''):
 		if sub_folder:
 			file_list = Utils.getFilesList(os.path.join(fw_folder, sub_folder),'2bls')
 		
+		expert_mode = False
 		if len(file_list):
 			
 			items = Utils.compareDataWithFiles(data, file_list, 1, True)
+			items_count = len(items) if len(items) < 10 else 10
 			
 			UI.clearInput()
-			print('\n'+UI.warning(STR_SELECT_MOST_FILE)+'\n')
-			items_count = len(items) if len(items) < 10 else 10
-			for k in range(items_count):
-				path = items[k]['path']
-				rel_path = (os.path.sep).join(path.split(os.path.sep)[-3:])
-				percent = int(items[k]['eq'] * 100) / 100
-				print(' %d: %s | %.2f%%'%(k, rel_path, percent))
+			expert_mode = input('\n'+UI.highlight(STR_EXPERT_MODE+STR_Y_OR_CANCEL)).lower()
+			
+			if expert_mode == 'y':
+				UI.clearInput()
+				print(UI.warning(STR_SELECT_MOST_FILE)+'\n')
+				
+				for k in range(items_count):
+					path = items[k]['path']
+					rel_path = (os.path.sep).join(path.split(os.path.sep)[-3:])
+					percent = int(items[k]['eq'] * 100) / 100
+					print(' %d: %s | %.2f%%'%(k, rel_path, percent))
 		else:
 			print(UI.warning(STR_NO_FW_FILES%fw_folder))
 			input(STR_BACK)
 			return screenPartitionRecovery(file)
 		
-		try: n = int(input(STR_CHOICE))
-		except: n = -1
+		if expert_mode != 'y':
+			n = 0
+		else:
+			try: n = int(input(STR_CHOICE))
+			except: n = -1
 		
 		if n >= 0 and n < items_count:
 			
@@ -131,6 +106,7 @@ def screenPartitionRecovery(file, partition = ''):
 		UI.setStatus(STR_ERROR_INPUT)
 	
 	screenPartitionRecovery(file, partition)
+
 
 
 def screenValidate(file):
@@ -292,10 +268,10 @@ def screenEmcCFW(file):
 		
 		b = False
 		if slot == 'B':
-			b = input(STR_INPUT_USE_SLOTB)
+			b = input(STR_INPUT_USE_SLOTB+STR_Y_OR_CANCEL).lower()
 			UI.clearInput()
 		
-		emc_part_name = 's0_emc_ipl_' + ('b' if b.lower() == 'y' else 'a')
+		emc_part_name = 's0_emc_ipl_' + ('b' if b == 'y' else 'a')
 		emc_part = SFlash.getNorPartition(f, emc_part_name)
 	
 	folder = os.path.dirname(file)
@@ -321,7 +297,7 @@ def screenEmcCFW(file):
 		input(STR_BACK)
 		return
 	
-	save_all = True if input(STR_INPUT_SAVE_IM) == 'y' else False
+	save_all = True if input(STR_INPUT_SAVE_IM+STR_Y_OR_CANCEL).lower() == 'y' else False
 	UI.clearInput()
 	
 	# Decrypting current emc fw
@@ -376,7 +352,7 @@ def screenHddKey(file):
 	print(TITLE+UI.getTab(STR_ABOUT_EAP))
 	print(UI.warning(STR_INFO_HDD_EAP))
 	
-	mode = input('\n'+STR_USE_NEWBLOBS)
+	mode = input('\n'+STR_USE_NEWBLOBS+STR_Y_OR_CANCEL).lower()
 	UI.clearInput(2)
 	
 	print(UI.getTab(STR_HDD_KEY))
@@ -511,3 +487,37 @@ def screenBuildNorDump(folder):
 	input(STR_BACK)
 
 
+
+def screenAdvSFlashTools(file):
+	os.system('cls')
+	print(TITLE+UI.getTab(STR_ADDITIONAL))
+	
+	with open(file, 'rb') as f:
+		sn = SFlash.getNorData(f, 'SN', True)
+	
+	folder = os.path.dirname(file) + os.sep + sn
+	
+	UI.showMenu(MENU_ADDTIONAL,1)
+	
+	UI.showStatus()
+	
+	choice = input(STR_CHOICE)
+	
+	if choice == '':
+		return
+	elif choice == '1':
+		screenExtractNorDump(file)
+	elif choice == '2':
+		screenBuildNorDump(folder)
+	elif choice == '3':
+		screenEapKeyRecovery(file)
+	elif choice == '4':
+		screenHddKey(file)
+	elif choice == '5':
+		screenEmcCFW(file)
+	elif choice == '6':
+		screenValidate(file)
+	elif choice == '7':
+		screenPartitionRecovery(file)
+	
+	screenAdvSFlashTools(file)

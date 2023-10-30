@@ -142,11 +142,11 @@ SOUTHBRIDGES = [
 	{'code':[0x2A, 0x2B], 'name':'Belize 2 A0',	'ic':'CXD90046'},
 ]
 
-TORUS_VERS = {
-	0x03: 'Version 1',
-	0x22: 'Version 2',
-	0x30: 'Version 3',
-}
+TORUS_VERS = [
+	{'code':0x03, 'name':'Version 1'},
+	{'code':0x22, 'name':'Version 2'},
+	{'code':0x30, 'name':'Version 3'},
+]
 
 MAGICS = {
 	"s0_header"			: {"o": 0x00,	"v":b'SONY COMPUTER ENTERTAINMENT INC.'},
@@ -281,6 +281,19 @@ def getNorFW(f, active_slot = ''):
 
 
 
+def isFwInList(fw, fw_list):
+	fw_cur = int(fw.replace('.',''))
+	fw_min = int(fw_list[0].replace('.',''))
+	fw_max = int(fw_list[-1].replace('.',''))
+	return fw_cur >= fw_min and fw_cur <= fw_max
+
+
+
+def getFwFilename(item):
+	return item['fw'][0].replace('.','').rjust(4, '0')+'-'+item['fw'][-1].replace('.','').rjust(4, '0') + '_' + item['md5'] + '.2bls'
+
+
+
 def getPartitionName(code):
 	return PARTITIONS_TYPES[code] if code in PARTITIONS_TYPES else 'Unk_'+str(code)
 
@@ -313,6 +326,23 @@ def getDataByPartition(name):
 		return Data.TORUS_FW_MD5
 	
 	return False
+
+
+
+def getDataByPartitionAndType(name, type, fw = False):
+	data = getDataByPartition(name)
+	items = []
+	if not data:
+		return items
+	for key in data:
+		if data[key]['t'] == type:
+			item = data[key]
+			item['md5'] = key
+			if fw and isFwInList(fw, item['fw']):
+				return item
+			items.append(item)
+	
+	return {} if fw else items
 
 
 
@@ -357,16 +387,21 @@ def getPartitionsInfo(f):
 
 
 
-def getTorusVersion(f):
+def getTorusInfo(f):
 	torus_md5 = getNorPartitionMD5(f, 's0_wifi')
 	torus = Data.TORUS_FW_MD5[torus_md5]['t'] if torus_md5 in Data.TORUS_FW_MD5 else 0
 	
-	return TORUS_VERS[torus] if torus in TORUS_VERS else ''
+	for k in range(len(TORUS_VERS)):
+		if torus == TORUS_VERS[k]['code']:
+			return TORUS_VERS[k]
+	
+	return {'code':torus, 'name':STR_UNKNOWN}
 
 
 
 def getSouthBridge(f):
 	
+	slot = getActiveSlot(f)
 	md5_emc_a = getNorPartitionMD5(f, 's0_emc_ipl_a')
 	md5_emc_b = getNorPartitionMD5(f, 's0_emc_ipl_b')
 	md5_eap = getNorPartitionMD5(f, 's0_eap_kbl')
@@ -375,11 +410,22 @@ def getSouthBridge(f):
 	emc_b = Data.EMC_IPL_MD5[md5_emc_b]['t'] if md5_emc_b in Data.EMC_IPL_MD5 else 0
 	eap = Data.EAP_KBL_MD5[md5_eap]['t'] if md5_eap in Data.EAP_KBL_MD5 else 0
 	
+	# check EAP first
 	for k in range(len(SOUTHBRIDGES)):
 		code = SOUTHBRIDGES[k]['code']
-		if code[0] in [emc_a, emc_b] or code[1] == eap:
-			return SOUTHBRIDGES[k]
+		if code[1] == eap: return SOUTHBRIDGES[k]
 	
+	# check emc (active slot)
+	for k in range(len(SOUTHBRIDGES)):
+		code = SOUTHBRIDGES[k]['code']
+		if code[0] == (emc_a if slot == 'a' else emc_b): return SOUTHBRIDGES[k]
+	
+	# check emc (inactive slot) last chance
+	for k in range(len(SOUTHBRIDGES)):
+		code = SOUTHBRIDGES[k]['code']
+		if code[0] == (emc_b if slot == 'a' else emc_a): return SOUTHBRIDGES[k]
+	
+	# unknown SB
 	return {'code':[emc_a if emc_a else emc_b, eap], 'name':STR_UNKNOWN, 'ic':'XX'}
 
 # NOR Areas data utils
@@ -451,16 +497,19 @@ def getInfoForLegitSwitch(f):
 	return data
 
 
+def getActiveSlot(f):
+	return 'a' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'b'
+
 
 def getSFlashInfo(file = '-'):
 	with open(file, 'rb') as f:
 		
-		active_slot = 'a' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'b'
+		active_slot = getActiveSlot(f)
 		
 		sku = getNorData(f, 'SKU', True)
 		fw = getNorFW(f, active_slot)
 		SB = getSouthBridge(f)
-		torus = getTorusVersion(f)
+		torus = getTorusInfo(f)
 		
 		samu = getNorData(f, 'SAMUBOOT')[0]
 		region = getConsoleRegion(f)
@@ -479,7 +528,7 @@ def getSFlashInfo(file = '-'):
 			'Region'		: '[{}] {} / {}'.format(region[0], region[1], mobo['type']),
 			'SN / Mobo SN'	: getNorData(f, 'SN', True)+' / '+getNorData(f, 'MB_SN', True),
 			'Southbridge'	: '%s [%s] [%02X:%02X]'%(SB['name'], SB['ic'], SB['code'][0], SB['code'][1]),
-			'Torus (WiFi)'	: torus if len(torus) else STR_UNKNOWN,
+			'Torus (WiFi)'	: '%s [0x%02X]'%(torus['name'],torus['code']),
 			'MAC'			: Utils.hex(getNorData(f, 'MAC'),':'),
 			'HDD'			: hdd,
 			'FW (active)'	: fw['c'] + ' ['+active_slot.upper()+']' + (' [min '+fw['min']+']' if fw['min'] else ''),
