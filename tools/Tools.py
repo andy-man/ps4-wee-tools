@@ -27,7 +27,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	flasher = SpiFlasher(port)
 	flasher.reset()
 	
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_SPIWAY))
 	print(UI.warning(STR_INFO_SPIWAY))
 	print(UI.getTab(STR_SPIWAY))
@@ -106,7 +106,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 				flasher.writeChip(data, False, block, count)
 				print()
 		else:
-			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	
 	elif act == 'verify':
 		if path and os.path.isfile(path):
@@ -116,7 +116,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 				vdata = flasher.readChip(block, count)
 				print('\n'+STR_VERIFY+': '+(STR_OK if data == vdata else STR_FAIL)+'\n')
 		else:
-			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	
 	elif act == 'erase':
 		flasher.eraseChip(block, count)
@@ -171,7 +171,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 		if path and os.path.isfile(path):
 			return SFlashTools.screenSFlashTools(path)
 		else:
-			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	elif choice == 'm':
 	    return screenMainMenu()
 	
@@ -188,7 +188,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 	flasher = SysconFlasher(port)
 	#flasher.reset()
 	
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_SCF))
 	print(UI.warning(STR_INFO_SCF))
 	print(UI.getTab(STR_SCF))
@@ -261,7 +261,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 				flasher.writeChip(data, block, count)
 				print()
 		else:
-			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	
 	elif act == 'verify':
 		if path and os.path.isfile(path):
@@ -271,7 +271,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 				vdata = flasher.readChip(block, count)
 				print('\n'+STR_VERIFY+': '+(STR_OK if data == vdata else STR_FAIL)+'\n')
 		else:
-			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	
 	elif act == 'erase':
 		#safe erase all
@@ -329,7 +329,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		if path and os.path.isfile(path):
 			return SysconTools.screenSysconTools(path)
 		else:
-			UI.setStatus(STR_FILE_NOT_EXISTS.format(path))
+			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	elif choice == 'm':
 	    return screenMainMenu()
 	
@@ -344,7 +344,7 @@ def screenSysconReader(port = '', file = ''):
 		UI.setStatus(STR_NO_PORTS)
 		return
 	
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_SC_GLITCH))
 	print(UI.warning(STR_INFO_SC_GLITCH))
 	print(UI.getTab(STR_SC_READER))
@@ -370,7 +370,7 @@ def screenSysconReader(port = '', file = ''):
 	print()
 	
 	for n in range(COUNT):
-		print(UI.warning(STR_READING_DUMP_N.format(n+1)))
+		print(UI.warning(STR_READING_DUMP_N%(n+1)))
 		ofile = file + '{:02}.bin'.format(n+1)
 		
 		sec = sysconReader(serial.sp, ofile)
@@ -381,11 +381,11 @@ def screenSysconReader(port = '', file = ''):
 		p_md5 = md5
 		
 		UI.showTable({
-			'Elapsed time'	: STR_SECONDS.format(sec),
+			'Elapsed time'	: STR_SECONDS%sec,
 			'File MD5'		: md5
 		})
 		
-		print('\n'+UI.highlight(STR_SAVED_TO.format(ofile)))
+		print('\n'+UI.highlight(STR_SAVED_TO%ofile))
 		print(UI.DIVIDER)
 	
 	if equal:
@@ -412,7 +412,7 @@ def screenSerialMonitor(port = '', emc_mode = False):
 	
 	serial = WeeSerial(port)
 	
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(serial.getPortInfo()))
 	UI.showTableEx(UI.getMenu(MENU_SERIAL_MONITOR), 2)
 	
@@ -433,27 +433,27 @@ def screenSerialMonitor(port = '', emc_mode = False):
 		elif Utils.checkCtrl(txt[0],'L'):
 			UI.clearInput()
 			serial.LOG = False if serial.LOG else datetime.datetime.now().strftime('uart_%Y-%m-%d_%H-%M-%S.txt')
-			print('\n' + UI.highlight('UART log: {}'.format(serial.LOG if serial.LOG else STR_OFF)) + '\n')
+			print('\n ' + UI.highlight('UART log: {}'.format(serial.LOG if serial.LOG else STR_OFF)) + '\n')
 			continue
 		elif Utils.checkCtrl(txt[0],'R'):
 			serial.sp.close()
-			os.system('cls')
+			UI.clearScreen()
 			time.sleep(0.1) # port open/close need some delay
 			return screenSerialMonitor(port)
 		elif Utils.checkCtrl(txt[0],'Q'):
 			serial.sp.close()
 			UI.clearInput()
-			print('\n' + UI.highlight(STR_STOP_MONITORING))
+			print('\n ' + UI.highlight(STR_STOP_MONITORING) + '\n')
 			break
 		elif Utils.checkCtrl(txt[0],'E'):
-			UI.clearInput()
+			UI.clearInput(2)
 			emc_mode = False if emc_mode else True
-			print('\n' + UI.highlight(STR_EMC_CMD_MODE.format(STR_ON if emc_mode else STR_OFF)))
+			print('\n ' + UI.highlight(STR_EMC_CMD_MODE%(STR_ON if emc_mode else STR_OFF)) + '\n')
 			continue
 		elif Utils.checkCtrl(txt[0],'B'):
 			UI.clearInput()
 			serial.SHOWCODES = False if serial.SHOWCODES else True
-			print('\n' + UI.highlight(STR_SHOW_BYTECODES.format(STR_ON if serial.SHOWCODES else STR_OFF)))
+			print('\n ' + UI.highlight(STR_SHOW_BYTECODES%(STR_ON if serial.SHOWCODES else STR_OFF)) + '\n')
 			continue
 		elif emc_mode:
 			txt = Utils.getEmcCmd(txt)
@@ -468,7 +468,7 @@ def screenSerialMonitor(port = '', emc_mode = False):
 
 
 def screenChoosePort():
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_WARNING))
 	print(UI.warning(STR_INFO_FLASH_TOOLS))
 	
@@ -507,7 +507,7 @@ def screenChoosePort():
 
 
 def screenMainMenu():
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_MAIN_MENU))
 	
 	UI.showMenu(MENU_TOOL_SELECTION,1)
@@ -536,7 +536,7 @@ def screenMainMenu():
 
 
 def screenFileSelect(path = False, all = False, ret = False):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_FILE_LIST+' '+('[all]' if all else '[bin, pup]')))
 	
 	path = path if path and os.path.exists(path) else os.getcwd()
@@ -628,7 +628,7 @@ def screenFileSelect(path = False, all = False, ret = False):
 
 
 def screenCompareFiles(list):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_COMPARE))
 	
 	if len(list) == 0:
@@ -660,7 +660,7 @@ def screenCompareFiles(list):
 
 
 def screenUnpack2BLS(path):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_UNPACK_2BLS))
 	
 	with open(path,'rb') as f:
@@ -696,14 +696,14 @@ def screenUnpack2BLS(path):
 	with open(os.path.join(folder, Utils.INFO_FILE_2BLS),'w') as txt:
 		txt.write(txt_info)
 	
-	print('\n'+STR_SAVED_TO.format(folder))
+	print('\n'+STR_SAVED_TO%folder)
 	
 	input(STR_BACK)
 
 
 
 def screenBuild2BLS(path):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_2BLS_BUILDER))
 	
 	name = os.path.basename(path).replace('_2bls','')+ '.2bls'
@@ -734,14 +734,14 @@ def screenBuild2BLS(path):
 		UI.showTable(entry)
 	
 	
-	print('\n'+STR_SAVED_TO.format(file))
+	print('\n'+STR_SAVED_TO%file)
 	
 	input(STR_BACK)
 
 
 
 def screenHelp():
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_HELP))
 	print(STR_APP_HELP)
 	
@@ -847,3 +847,5 @@ def quickLegitimatePatch(files):
 		return False
 	
 	return False
+
+

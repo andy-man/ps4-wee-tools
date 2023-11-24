@@ -99,9 +99,9 @@ MENU_SC_ACTIONS = [
 
 MENU_PATCHES = [
 	'Method A - last 08-0B will be deleted (4 records)',
-	'Method B - last 08-0B and below will be cleaned ({} records)',
-	'Method C - clean everything below previous 08-0B ({} records)',
-	'Method D - clean everything below last 08-0B ({} records)',
+	'Method B - last 08-0B and below will be cleaned (%d records)',
+	'Method C - clean everything below previous 08-0B (%d records)',
+	'Method D - clean everything below last 08-0B (%d records)',
 ]
 
 MENU_SC_STATUSES = [
@@ -118,7 +118,7 @@ MENU_SPW_ACTS = {
 	'erase':	'Erasing',
 }
 
-STR_SECONDS				= '{:0.0f} seconds'
+STR_SECONDS				= '%0.0f seconds'
 STR_PORTS_LIST			= 'Serial ports'
 STR_MAIN_MENU			= 'Main menu'
 STR_FILE_LIST			= 'Files list'
@@ -176,8 +176,8 @@ STR_BAD_SIZE			= 'bad size'
 STR_OK					= 'OK'
 STR_FAIL				= 'Fail'
 STR_CANCEL				= 'Cancel'
-STR_IS_PART_VALID		= '[{}] {} FW {}'
-STR_SNVS_ENTRIES		= '{} records found at 0x{:5X}'
+STR_IS_PART_VALID		= '[%s] %s FW %s'
+STR_SNVS_ENTRIES		= '%d records found at 0x%05X'
 STR_SERIAL_MONITOR		= 'Terminal'
 
 STR_NO_PORTS			= ' No one serial port was found'
@@ -194,17 +194,17 @@ STR_EXPERIMENTAL		= ' * - experimental functions'
 STR_PERFORMED			= ' Performed action: '
 
 STR_EMPTY_FILE_LIST		= ' File list is empty'
-STR_NO_FOLDER			= ' Folder {} doesn\'t exists'
-STR_EXTRACTING			= ' Extracting sflash0 to {} folder'
+STR_NO_FOLDER			= ' Folder %s doesn\'t exists'
+STR_EXTRACTING			= ' Extracting sflash0 to %s folder'
 STR_FILES_CHECK			= ' Checking files'
-STR_BUILDING			= ' Building file {}'
+STR_BUILDING			= ' Building file %s'
 
 STR_DONE				= ' All done'
-STR_PROGRESS			= ' Progress {:2d}% '
-STR_PROGRESS_KB			= ' Progress: {}KB / {}KB'
+STR_PROGRESS			= ' Progress %02d%% '
+STR_PROGRESS_KB			= ' Progress: %dKB / %dKB'
 STR_WAIT				= ' Please wait...'
 STR_WAITING				= ' Waiting...'
-STR_SET_TO				= ' {} was set to [{}]'
+STR_SET_TO				= ' %s was set to [%s]'
 STR_ABORT				= ' Action was aborted'
 STR_FILENAME			= ' Filename: '
 
@@ -220,42 +220,41 @@ STR_DIFF_SLOT_VALUES	= ' Values in slots are different!'
 STR_SYSFLAGS_CLEAN		= ' Sys flags were cleared. Tip: turn on UART'
 STR_SAMU_UPD			= ' SAMU flag was set to '
 STR_DOWNGRADE_UPD		= ' Downgrade was set to: '
-STR_LAST_SC_ENTRIES		= ' Showing [{}/{}] entries of active block [{}]'
-STR_MEMCLOCK_SET		= ' GDDR5 frequency was set to {:d}MHz [0x{:02X}]'
+STR_LAST_SC_ENTRIES		= ' Showing [%d/%d] entries of active block [%d]'
+STR_MEMCLOCK_SET		= ' GDDR5 frequency was set to %dMHz [0x%02X]'
 
-STR_RECOMMEND			= ' Recommended method [{}]'
+STR_RECOMMEND			= ' Recommended method [%s]'
 STR_PATCH_CANCELED		= ' Patch was canceled'
-STR_PATCH_SUCCESS		= ' Successfully removed {} entries'
-STR_PATCH_SAVED			= ' Patch was saved to {}'
-STR_PATCH_INDEXES		= ' Last 08-0B - {} | Previous 08-0B - {}\n'
-STR_SC_BLOCK_SELECT		= ' Select data block [0-{}] or show flat [f] '
+STR_PATCH_SUCCESS		= ' Successfully removed %d entries'
+STR_PATCH_SAVED			= ' Patch was saved to %s'
+
+STR_SC_BLOCK_SELECT		= ' Select data block [0-%d] or show flat [f] '
 STR_MPATCH_INPUT		= ' How many records to clean (from end): '
 STR_CHOICE				= ' Make choice: '
 STR_BACK				= ' Press [ENTER] to go back'
 STR_MEMCLOCK_INPUT		= ' Setup frequency [400 - 2000] / [0 set default (0xFF)] MHz '
 STR_SAMU_INPUT			= ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
-STR_TOO_MUCH			= ' {} is too much, maximum value is {}'
-STR_SC_BLOCK_CLEANED	= ' Block [{}] was entirely cleaned'
+STR_TOO_MUCH			= ' %d is too much, maximum value is %d'
+STR_SC_BLOCK_CLEANED	= ' Block [%d] was entirely cleaned'
 STR_REBUILD_REQUIRED	= ' You need rebuild SNVS at first to perform this action'
 STR_SC_NO_BM			= ' Boot modes records were not found!'
 STR_SC_ACTIVE_BM		= ' It\'s already active boot mode!'
 
 STR_UNPATCHABLE			= ' Can\'t patch!'
-STR_SYSCON_BLOCK		= ' Block [{}/{}] has [{}/{}] entries | Active block is [{}]\n'
+STR_SYSCON_BLOCK		= ' Block [%d/%d] has [%d/%d] entries | Active block is [%d]\n'
 STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
-STR_SNVS_ENTRY_INFO		= 'Block {} #{:03d} Offset 0x{:04X}'
-STR_DUPLICATES			= ' {} duplicate(s) found {}'
+STR_DUPLICATES			= ' %d duplicate(s) found [%s]'
 STR_SC_WARN_OVERWITTEN	= ' Warning: CoreOS is overwritten - very small chance of success'
 STR_SC_TOGGLE_FLATDATA	= ' Toggle between Entries/Flatdata'
-STR_FW_VERSION			= ' FW version {} / Active slot {}'
+STR_SC_BOOT_ENTRY		= ' % 2d: Block %d (#%03d) at 0x%04X'
+STR_SNVS_ENTRY_INFO		= 'Block %d #%03d Offset 0x%04X'
 
-STR_INCORRECT_SIZE		= ' {} - incorrect dump size!'
-STR_FILE_NOT_EXISTS		= ' File {} doesn\'t exist!'
+STR_INCORRECT_SIZE		= ' %s has incorrect dump size!'
+STR_FILE_NOT_EXISTS		= ' File %s doesn\'t exist!'
 STR_ERROR_FILE_REQ		= ' You need to select file first'
-STR_SAVED_TO			= ' Saved to {}'
-STR_SAVING_TO			= ' Saving to {}'
+STR_SAVED_TO			= ' Saved to %s'
 STR_ERROR_INPUT			= ' Incorrect input'
 STR_ERROR_DEF_VAL		= ' Setting default values'
 STR_ERROR_CHOICE		= ' Invalid choice'
@@ -278,16 +277,16 @@ STR_CONFIRM_SEPARATE	= ' Save as separate file?'
 STR_CONFIRM				= ' Input [y] to continue: '
 STR_CURRENT				= ' Current: '
 STR_GO_BACK				= ' Go back'
-STR_SC_BM_SELECT		= ' Select boot mode variant [1-{}] '
+STR_SC_BM_SELECT		= ' Select boot mode variant [1-%d] '
 STR_OPEN_IN_SCR			= ' Open file in syscon tool?'
 STR_FLASH_PATCHED		= ' Flash patched to console (SPIway)?'
 
-STR_READING_DUMP_N		= ' Reading dump {}'
+STR_READING_DUMP_N		= ' Reading dump %d'
 STR_CHIP_NOT_RESPOND	= ' Chip doesn\'t respond, check wiring and push reset button'
 STR_HOW_MUCH_DUMPS		= ' How much dumps to read? [max 10] '
 
-STR_EMC_CMD_MODE		= 'Turning EMC cmd mode: [{}]'
-STR_SHOW_BYTECODES		= 'Show byte codes < 0x20: [{}]'
+STR_EMC_CMD_MODE		= 'Turning EMC cmd mode: [%s]'
+STR_SHOW_BYTECODES		= 'Show byte codes < 0x20: [%s]'
 STR_MONITOR_STATUS		= 'RX/TX: %d/%d (bytes) Elapsed: %d (sec)'
 
 STR_CHIP_CONFIG			= ' Chip config'
@@ -441,9 +440,9 @@ STR_ABOUT_MPATCH = 'Manual patch instructions'
 STR_INFO_SC_MPATCH = ''\
 ' Every record has 16 bytes length. First byte is always "A5"\n'\
 ' The second byte is record "type" usualy in range [0x00-0x30]\n'\
-' Firmware update takes 4 records with types {}\n'\
+' Firmware update takes 4 records with types %s\n'\
 ' To cancel last fw update we need to clean these 4 records (fill 0xFF)\n'\
-' If there are {},{} types after {} patch is impossible\n'\
+' If there are %s,%s types after %s patch is impossible\n'\
 ' backup slot is already erased, you\'ll got checkUpdVersion error'
 
 STR_ABOUT_EAP = 'About EAP keys'

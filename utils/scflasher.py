@@ -79,48 +79,6 @@ class SysconFlasher(WeeSerial):
 		
 		return True
 	
-	def __write(self, s):
-		try:
-			if isinstance(s, int):
-				s = s.to_bytes(1,'big')
-			elif isinstance(s,tuple) or isinstance(s,list):
-				s = bytes(s)
-			
-			self.BUFFER += s
-			
-			while len(self.BUFFER) > self.BUFFER_SIZE:
-				self.sp.write(self.BUFFER[:self.BUFFER_SIZE])
-				self.BUFFER = self.BUFFER[self.BUFFER_SIZE:]
-		
-		except Exception as e:
-			self.error(str(e))
-	
-	def __flush(self):
-		try:
-			if len(self.BUFFER):
-				self.sp.write(self.BUFFER)
-				self.sp.flush()
-				self.BUFFER = b''
-			
-		except Exception as e:
-			self.error(str(e))
-	
-	def __read(self, size):
-		self.__flush()
-		try:
-			data = self.sp.read(size)
-			return data
-			
-		except Exception as e:
-			self.error(str(e))
-			return b''
-	
-	def __clean(self):
-		if not self.sp.is_open:
-			return False
-		self.sp.flushInput()
-		self.sp.flushOutput()
-	
 	# Main stuff
 	
 	def __getCmdData(self, cmd, block, count = ''):
@@ -280,7 +238,7 @@ class SysconFlasher(WeeSerial):
 				return False
 			progress = (b - block + 1) * kb_pb
 			percent = 100 if progress == total else progress // (total / 100)
-			elapsed = UI.cyan(STR_SECONDS.format(time.time() - start))
+			elapsed = UI.cyan(STR_SECONDS%(time.time() - start))
 			
 			self.printf(STR_SPW_PROGRESS%(b, progress, total, percent, elapsed), True)
 		
@@ -306,7 +264,7 @@ class SysconFlasher(WeeSerial):
 			
 			progress = (b - block + 1) * kb_pb
 			percent = 100 if progress == total else progress // (total / 100)
-			elapsed = UI.cyan(STR_SECONDS.format(time.time() - start))
+			elapsed = UI.cyan(STR_SECONDS%(time.time() - start))
 			
 			self.printf(STR_SPW_PROGRESS%(b, progress, total, percent, elapsed), True)
 		
@@ -349,7 +307,7 @@ class SysconFlasher(WeeSerial):
 			"""
 			progress = (b - block + 1) * kb_pb
 			percent = 100 if progress == total else progress // (total / 100)
-			elapsed = UI.cyan(STR_SECONDS.format(time.time() - start))
+			elapsed = UI.cyan(STR_SECONDS%(time.time() - start))
 			
 			self.printf(STR_SPW_PROGRESS%(b, progress, total, percent, elapsed), True)
 			
@@ -403,7 +361,7 @@ def sysconReader(sp, file):
 			
 			f.write(data)
 			
-			print(UI.highlight(STR_PROGRESS_KB.format(os.stat(file).st_size // 2**10, Syscon.DUMP_SIZE // 2**10))+'\r',end='')
+			print(UI.highlight(STR_PROGRESS_KB%(os.stat(file).st_size // 2**10, Syscon.DUMP_SIZE // 2**10))+'\r',end='')
 			sys.stdout.flush()
 			
 			if counter >= Syscon.DUMP_SIZE:

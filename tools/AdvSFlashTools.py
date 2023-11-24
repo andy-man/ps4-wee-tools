@@ -13,7 +13,7 @@ import tools.Tools as Tools
 
 
 def screenPartitionRecovery(file, partition = ''):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_ABOUT_PART_RECOVERY))
 	print(UI.warning(STR_INFO_PART_A_R))
 	print()
@@ -82,7 +82,7 @@ def screenPartitionRecovery(file, partition = ''):
 			
 			Utils.savePatchData(out_file, data, [{'o':SFlash.NOR_PARTITIONS[partition]['o'], 'd':pdata}])
 			
-			UI.setStatus(STR_SAVED_TO.format(out_file))
+			UI.setStatus(STR_SAVED_TO%out_file)
 		else:
 			UI.setStatus(STR_ERROR_INPUT)
 		
@@ -110,48 +110,54 @@ def screenPartitionRecovery(file, partition = ''):
 
 
 def screenValidate(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_NOR_VALIDATOR))
 	
 	with open(file,'rb') as f:
+		data = f.read()
 		
+		model = SFlash.getModel(f)
+		sku = SFlash.getNorData(f, 'SKU', True)
 		fw = SFlash.getNorFW(f)['c']
-		slot = 'A' if SFlash.getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'B'
+		slot = SFlash.getActiveSlot(f)
 		
-		magics = {
-			'header'	: STR_OK if SFlash.checkNorPartMagic(f, 's0_header') else STR_DIFF,
-			'MBR1'		: STR_OK if SFlash.checkNorPartMagic(f, 's0_MBR1') else STR_DIFF,
-			'MBR2'		: STR_OK if SFlash.checkNorPartMagic(f, 's0_MBR2') else STR_DIFF,
-		}
+		magics = {}
+		for k in SFlash.MAGICS:
+			magics[k] = STR_OK if SFlash.checkMagic(data, k) else STR_DIFF
 		
-		parts_info = {
-			'emc_ipl_a'	: SFlash.getNorPartitionMD5(f, 's0_emc_ipl_a'),
-			'emc_ipl_b'	: SFlash.getNorPartitionMD5(f, 's0_emc_ipl_b'),
-			'eap_kbl'	: SFlash.getNorPartitionMD5(f, 's0_eap_kbl'),
-			'wifi'		: SFlash.getNorPartitionMD5(f, 's0_wifi')
-		}
+		parts_info = {}
+		for key in ['s0_emc_ipl_a', 's0_emc_ipl_b', 's0_eap_kbl', 's0_wifi']:
+			md5 = SFlash.getNorPartitionMD5(f, key)
+			data = SFlash.getDataByPartition(key)
+			if md5 in data:
+				if fw in data[md5]['fw']:
+					parts_info[key] = STR_IS_PART_VALID%(md5, STR_OK, STR_OK)
+				else:
+					parts_info[key] = STR_IS_PART_VALID%(md5, STR_OK, data[md5]['fw'][0] if len(data[md5]['fw']) == 1 else (data[md5]['fw'][0]+' <-> '+data[md5]['fw'][-1]))
+			else:
+				parts_info[key] = STR_IS_PART_VALID%(md5, STR_FAIL, STR_FAIL)
+		
+		nvs_info = {}
+		if model in [11, 10]:
+			for k in ['NVS1', 'NVS2']:
+				d1 = SFlash.getNorData(f, k)
+				d2 = SFlash.getNorDataB(f, k)
+				nvs_info[SFlash.NOR_AREAS[k]['n']] = UI.green(STR_EQUAL) if d1 == d2 else STR_DIFF
 	
-	print(STR_FW_VERSION.format(fw,slot)+'\n')
+	print(' %s / FW: %s [%s]\n'%(sku, fw, slot.upper()))
 	
 	print(UI.highlight(STR_MAGICS_CHECK)+'\n')
 	UI.showTable(magics,10)
 	print()
 	
 	print(UI.highlight(STR_PARTITIONS_CHECK)+'\n')
-	
-	for key in parts_info:
-		md5 = parts_info[key]
-		data = SFlash.getDataByPartition(key)
-		if md5 in data:
-			if fw in data[md5]['fw']:
-				parts_info[key] = STR_IS_PART_VALID.format(md5, STR_OK, STR_OK)
-			else:
-				parts_info[key] = STR_IS_PART_VALID.format(md5, STR_OK, data[md5]['fw'][0] if len(data[md5]['fw']) == 1 else (data[md5]['fw'][0]+' <-> '+data[md5]['fw'][-1]))
-		else:
-			parts_info[key] = STR_IS_PART_VALID.format(md5, STR_FAIL, STR_FAIL)
-	
-	UI.showTable(parts_info,10)
+	UI.showTable(parts_info,14)
 	print()
+	
+	if len(nvs_info):
+		print(UI.highlight(' Checking NVS areas with backup')+'\n')
+		UI.showTable(nvs_info,10)
+		print()
 	
 	print(UI.highlight(STR_ENTROPY)+'\n')
 	#stats = {'ent':0,'ff':0,'00':0}
@@ -160,10 +166,10 @@ def screenValidate(file):
 	
 	info = {
 		
-		'Entropy'	: '{:.5f}'.format(stats['ent']),
-		'0xFF'		: '{:.2f}%'.format(stats['ff']*100),
-		'0x00'		: '{:.2f}%'.format(stats['00']*100),
-		'Other'		: '{:.2f}%'.format((1 - stats['ff'] - stats['00'])*100),
+		'Entropy'	: '%.5f'%(stats['ent']),
+		'0xFF'		: '%.2f%%'%(stats['ff']*100),
+		'0x00'		: '%.2f%%'%(stats['00']*100),
+		'Other'		: '%.2f%%'%((1 - stats['ff'] - stats['00'])*100),
 	}
 	
 	UI.showTable(info,10)
@@ -173,7 +179,7 @@ def screenValidate(file):
 
 
 def screenEapKeyRecovery(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_EAPKEYS))
 	
 	print(UI.warning(STR_INFO_EAPKEYS + '\n' + STR_IMMEDIATLY))
@@ -248,7 +254,7 @@ def screenEapKeyRecovery(file):
 
 
 def screenEmcCFW(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_EMC_CFW))
 	print(UI.warning(STR_INFO_EMC_CFW))
 	
@@ -256,12 +262,13 @@ def screenEmcCFW(file):
 	
 	with open(file, 'rb') as f:
 		data = f.read()
-		sku = SFlash.getNorData(f, 'SKU')
-		slot = 'A' if SFlash.getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'B'
+		sku = SFlash.getNorData(f, 'SKU', True)
+		model = SFlash.getModel(f)
+		slot = SFlash.getActiveSlot(f).upper()
 		
-		print(' SKU: %s / Slot: %s'%(sku.decode('utf-8','ignore'), slot))
+		print(' SKU: %s / Slot: %s'%(sku, slot))
 		
-		if sku[4:6] != b'11' and sku[4:6] != b'10':
+		if not model in [11, 10]:
 			print(STR_EMC_CFW_WARN)
 			input(STR_BACK)
 			return
@@ -308,7 +315,7 @@ def screenEmcCFW(file):
 	if save_all:
 		out_file = os.path.join(folder,'emc_fw_orig.bin')
 		Utils.savePatchData(out_file, decrypted_fw)
-		print('\n'+UI.green(STR_SAVED_TO.format(out_file)))
+		print('\n'+UI.green(STR_SAVED_TO%out_file))
 	
 	# Patching (2 patches)
 	print('\n'+UI.highlight(STR_PATCHING)+' [God Mode]\n')
@@ -324,7 +331,7 @@ def screenEmcCFW(file):
 	if save_all:
 		out_file = os.path.join(folder,'emc_cfw.bin')
 		Utils.savePatchData(out_file, patched_fw)
-		print('\n'+UI.green(STR_SAVED_TO.format(out_file)))
+		print('\n'+UI.green(STR_SAVED_TO%out_file))
 	
 	# Encrypt and save patched data
 	print('\n'+UI.highlight(STR_ENCRYPTING)+'\n')
@@ -334,21 +341,21 @@ def screenEmcCFW(file):
 	if save_all:
 		out_file = os.path.join(folder,'emc_cfw_enc.bin')
 		Utils.savePatchData(out_file, encrypted_fw)
-		print('\n'+UI.green(STR_SAVED_TO.format(out_file)))
+		print('\n'+UI.green(STR_SAVED_TO%out_file))
 	
 	if fw_size != len(encrypted_fw):
 		print('\n'+UI.warning(STR_SIZES_MISMATCH))
 	
 	out_file = os.path.join(folder,filename+'_emc_cfw.bin')
 	Utils.savePatchData(out_file, data, [{'o':fw_offset + SFlash.NOR_PARTITIONS[emc_part_name]['o'],'d':encrypted_fw}])
-	print('\n'+UI.highlight(STR_SAVED_TO.format(out_file)))
+	print('\n'+UI.highlight(STR_SAVED_TO%out_file))
 	
 	input(STR_BACK)
 
 
 
 def screenHddKey(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_EAP))
 	print(UI.warning(STR_INFO_HDD_EAP))
 	
@@ -380,14 +387,14 @@ def screenHddKey(file):
 		k.write(keys['data'])
 		k.write(keys['tweak'])
 	
-	print(UI.highlight(STR_SAVED_TO.format(out)))
+	print(UI.highlight(STR_SAVED_TO%out))
 	
 	input(STR_BACK)
 
 
 
 def screenExtractNorDump(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_NOR_EXTRACT))
 	
 	with open(file, 'rb') as f:
@@ -401,17 +408,17 @@ def screenExtractNorDump(file):
 		info = ''
 		data = SFlash.getSFlashInfo(file)
 		for key in data:
-			info += '{} : {}\n'.format(key.ljust(12,' '),data[key])
+			info += '%s : %s\n'%(key.ljust(12,' '),data[key])
 		info += '\n'
 		
-		print(STR_EXTRACTING.format(sn)+'\n')
+		print(STR_EXTRACTING%sn+'\n')
 		
 		i = 0
 		for k in SFlash.NOR_PARTITIONS:
 			p = SFlash.NOR_PARTITIONS[k]
 			i += 1
-			print(' {:2d}: {:16s} > {}'.format(i, k, p['n']))
-			info += '{:2d}: {:16s} > {}\n'.format(i, k, p['n'])
+			print(' %2d: %16s > %s'%(i, k, p['n']))
+			info += '%2d: %16s > %s\n'%(i, k, p['n'])
 			
 			with open(folder + p['n'], 'wb') as out:
 				out.write(SFlash.getNorPartition(f, k))
@@ -419,7 +426,7 @@ def screenExtractNorDump(file):
 		with open(folder + Utils.INFO_FILE_SFLASH, 'w') as txt:
 			txt.write(info)
 		
-		print('\n'+STR_SAVED_TO.format(folder))
+		print('\n'+STR_SAVED_TO%folder)
 	
 	print('\n'+STR_DONE)
 	
@@ -428,11 +435,11 @@ def screenExtractNorDump(file):
 
 
 def screenBuildNorDump(folder):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_NOR_BUILD))
 	
 	if not os.path.exists(folder):
-		print(STR_NO_FOLDER.format(folder)+'\n\n'+STR_ABORT)
+		print(STR_NO_FOLDER%folder+'\n\n'+STR_ABORT)
 		input(STR_BACK)
 		return
 	
@@ -454,7 +461,7 @@ def screenBuildNorDump(folder):
 		else:
 			found += 1
 		
-		print(' {:2d}: {:20s} - {}'.format(i, p['n'], status))
+		print(' %2d: %20s - %s'%(i, p['n'], status))
 	
 	print()
 	
@@ -469,7 +476,7 @@ def screenBuildNorDump(folder):
 		
 		fname = os.path.join(folder, 'sflash0.bin')
 		
-		print(STR_BUILDING.format(fname))
+		print(STR_BUILDING%fname)
 		
 		out = open(fname,"wb")
 		
@@ -489,7 +496,7 @@ def screenBuildNorDump(folder):
 
 
 def screenAdvSFlashTools(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ADDITIONAL))
 	
 	with open(file, 'rb') as f:

@@ -4,7 +4,7 @@
 #==========================================================
 import sys, os
 
-APP_VERSION = '0.9.5'
+APP_VERSION = '0.9.7'
 
 # Colors stuff
 
@@ -59,6 +59,9 @@ class UI:
 	DIVIDER			= Clr.fg.yellow + '_'*LINE_WIDTH + Clr.reset + '\n'
 	DIVIDER_DASH	= Clr.fg.yellow + '-'*LINE_WIDTH + Clr.reset + '\n'
 	DIVIDER_BOLD	= '='*LINE_WIDTH + '\n'
+	
+	def clearScreen():
+		os.system('cls' if sys.platform[:3] == 'win' else 'clear')
 	
 	# Colors
 	
@@ -176,7 +179,7 @@ STR_INFO_SPIWAY		= STR_INFO_SPIWAY + UI.link('https://www.psdevwiki.com/ps4/SPIw
 STR_INFO_SCF		= STR_INFO_SCF + UI.link('https://github.com/AbkarinoMHM/PS4SysconTools')
 STR_INFO_FW_LINK	= STR_INFO_FW_LINK + UI.link('https://github.com/andy-man/ps4-ic-fw')
 
-STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH.format(STR_080B, STR_0C0F, STR_2023, STR_080B)
+STR_INFO_SC_MPATCH	= STR_INFO_SC_MPATCH%(STR_080B, STR_0C0F, STR_2023, STR_080B)
 
 # Colorize strings
 

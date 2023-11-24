@@ -100,41 +100,6 @@ class SpiFlasher(WeeSerial):
 		if ver != False:
 			self.VERSION = ver
 	
-	# Private methods
-	
-	def __write(self, s):
-		try:
-			if isinstance(s, int):
-				s = s.to_bytes(1,'big')
-			elif isinstance(s,tuple) or isinstance(s,list):
-				s = bytes(s)
-			
-			self.BUFFER += s
-			
-			while len(self.BUFFER) > self.BUFFER_SIZE:
-				self.sp.write(self.BUFFER[:self.BUFFER_SIZE])
-				self.BUFFER = self.BUFFER[self.BUFFER_SIZE:]
-		except Exception as e:
-			self.error(str(e))
-	
-	def __flush(self):
-		try:
-			if len(self.BUFFER):
-				self.sp.write(self.BUFFER)
-				self.sp.flush()
-				self.BUFFER = b''
-		except Exception as e:
-			self.error(str(e))
-	
-	def __read(self, size):
-		self.__flush()
-		try:
-			data = self.sp.read(size)
-			return data
-		except Exception as e:
-			self.error(str(e))
-			return b''
-	
 	# Main stuff
 	
 	def __setConfig(self, ven_id = False, dev_id = False):
@@ -346,7 +311,7 @@ class SpiFlasher(WeeSerial):
 				return False
 			progress = (b - block + 1) * kb_pb
 			percent = 100 if progress == total else progress // (total / 100)
-			elapsed = UI.cyan(STR_SECONDS.format(time.time() - start))
+			elapsed = UI.cyan(STR_SECONDS%(time.time() - start))
 			
 			self.printf(STR_SPW_PROGRESS%(b, progress, total, percent, elapsed), True)
 		
@@ -370,7 +335,7 @@ class SpiFlasher(WeeSerial):
 			
 			progress = (b - block + 1) * kb_pb
 			percent = 100 if progress == total else progress // (total / 100)
-			elapsed = UI.cyan(STR_SECONDS.format(time.time() - start))
+			elapsed = UI.cyan(STR_SECONDS%(time.time() - start))
 			
 			self.printf(STR_SPW_PROGRESS%(b, progress, total, percent, elapsed), True)
 		
@@ -411,7 +376,7 @@ class SpiFlasher(WeeSerial):
 			"""
 			progress = (b - block + 1) * kb_pb
 			percent = 100 if progress == total else progress // (total / 100)
-			elapsed = UI.cyan(STR_SECONDS.format(time.time() - start))
+			elapsed = UI.cyan(STR_SECONDS%(time.time() - start))
 			
 			self.printf(STR_SPW_PROGRESS%(b, progress, total, percent, elapsed), True)
 			

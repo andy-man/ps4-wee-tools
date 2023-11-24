@@ -14,7 +14,7 @@ import tools.AdvSFlashTools as AdvSFlashTools
 
 
 def screenSBpatcher(file, model = '', emc_ver = '', eap_ver = ''):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_ABOUT_SB_PATCH))
 	print(UI.warning(STR_INFO_SB_PATCH))
 	print()
@@ -143,11 +143,13 @@ def screenSBpatcher(file, model = '', emc_ver = '', eap_ver = ''):
 				{'o':SFlash.NOR_PARTITIONS['s0_emc_ipl_'+active_slot.lower()]['o'], 'd':Utils.getFileContents(emc_file)},
 				{'o':SFlash.NOR_PARTITIONS['s0_eap_kbl']['o'], 'd':Utils.getFileContents(eap_file)},
 			])
-			UI.setStatus(STR_SAVED_TO.format(out_file))
+			UI.setStatus(STR_SAVED_TO%out_file)
 		else:
-			if not os.path.exists(emc_file): nf.append(os.path.basename(emc_file))
-			if not os.path.exists(eap_file): nf.append(os.path.basename(eap_file))
-			UI.setStatus(' %s - %s'%(', '.join(nf),STR_NOT_FOUND))
+			status = ' '+Utils.ROOT_PATH+'\n'
+			if not os.path.exists(emc_file): status += ' '+emc_file[len(Utils.ROOT_PATH):]+'\n'
+			if not os.path.exists(eap_file): status += ' '+eap_file[len(Utils.ROOT_PATH):]+'\n'
+			status += ' ' + STR_NOT_FOUND
+			UI.setStatus(status)
 	
 	UI.showStatus()
 	input(STR_BACK)
@@ -155,7 +157,7 @@ def screenSBpatcher(file, model = '', emc_ver = '', eap_ver = ''):
 
 
 def screenWFpatcher(file, model = '', ver = ''):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_ABOUT_TORUS_PATCH))
 	print(UI.warning(STR_INFO_TORUS_PATCH))
 	print()
@@ -223,7 +225,7 @@ def screenWFpatcher(file, model = '', ver = ''):
 		if os.path.exists(fw_file):
 			out_file = Utils.getFilePathWoExt(file, True)+'_patch_torus_'+'%02X'%model['code']+'.bin'
 			Utils.savePatchData(out_file, Utils.getFileContents(file), [{'o':SFlash.NOR_PARTITIONS['s0_wifi']['o'], 'd':Utils.getFileContents(fw_file)}])
-			UI.setStatus(STR_SAVED_TO.format(out_file))
+			UI.setStatus(STR_SAVED_TO%out_file)
 		else:
 			UI.setStatus(' %s - %s'%(ver['file'],STR_NOT_FOUND))
 	else:
@@ -255,7 +257,7 @@ def screenWFpatcher(file, model = '', ver = ''):
 
 
 def screenSysFlags(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_SYSFLAGS))
 	
 	with open(file, 'r+b') as f:
@@ -279,7 +281,7 @@ def screenSysFlags(file):
 
 
 def screenMemClock(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_WARNING))
 	
 	print(UI.warning(STR_OVERCLOCKING))
@@ -290,7 +292,7 @@ def screenMemClock(file):
 		
 		clocks = SFlash.getMemClock(f)
 		
-		print(STR_CURRENT+('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*clocks))
+		print(STR_CURRENT+('0x%02X %dMHz | 0x%02X %dMHz')%(clocks[0],clocks[1],clocks[2],clocks[3]))
 		if clocks[0] != clocks[2]:
 			print(STR_DIFF_SLOT_VALUES)
 		
@@ -308,18 +310,18 @@ def screenMemClock(file):
 		SFlash.setNorData(f, 'MEMCLK',  raw.to_bytes(1, 'big'))
 		SFlash.setNorDataB(f, 'MEMCLK', raw.to_bytes(1, 'big'))
 		
-		UI.setStatus(STR_MEMCLOCK_SET.format(frq,raw))
+		UI.setStatus(STR_MEMCLOCK_SET%(frq,raw))
 
 
 
 def screenSamuBoot(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_SAMU_BOOT))
 	
 	with open(file, 'r+b') as f:
 		
 		cur = SFlash.getNorData(f, 'SAMUBOOT')[0]
-		print(STR_CURRENT+('{:d} [0x{:02X}]').format(cur,cur))
+		print(STR_CURRENT+('%d [0x%02X]')%(cur,cur))
 		
 		try:
 		    frq = int(input(STR_SAMU_INPUT))
@@ -332,13 +334,13 @@ def screenSamuBoot(file):
 		SFlash.setNorData(f, 'SAMUBOOT',  frq.to_bytes(1, 'big'))
 		SFlash.setNorDataB(f, 'SAMUBOOT', frq.to_bytes(1, 'big'))
 	
-	UI.setStatus(STR_SAMU_UPD+('{:d} [0x{:02X}]').format(frq,frq))
+	UI.setStatus(STR_SAMU_UPD+('%d [0x%02X]')%(frq,frq))
 
 
 
 def screenLegitimatePatch(file, path = ''):
 	
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_LEG_PATCH))
 	print(UI.warning(STR_INFO_LEG_PATCH))
 	print(UI.getTab(STR_LEG_PATCH))
@@ -394,7 +396,7 @@ def screenLegitimatePatch(file, path = ''):
 		{'o':SFlash.NOR_AREAS['UART']['o']+SFlash.BACKUP_OFFSET,	'd':b'\x01'},
 	])
 	
-	print(STR_PATCH_SAVED.format(ofile))
+	print(STR_PATCH_SAVED%ofile)
 	
 	c = input('\n'+UI.highlight(STR_FLASH_PATCHED+STR_Y_OR_CANCEL)).lower()
 	if c == 'y':
@@ -405,7 +407,7 @@ def screenLegitimatePatch(file, path = ''):
 
 
 def screenDowngrade(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE + UI.getTab(STR_COREOS_SWITCH))
 	print(UI.warning(STR_DOWNGRADE))
 	
@@ -445,7 +447,7 @@ def screenDowngrade(file):
 					{'o':SFlash.NOR_AREAS['UART']['o']+SFlash.BACKUP_OFFSET,	'd':b'\x01'},
 				]
 				Utils.savePatchData(ofile, f.read(), patch)
-				UI.setStatus(STR_PATCH_SAVED.format(ofile))
+				UI.setStatus(STR_PATCH_SAVED%ofile)
 			else:
 				SFlash.setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
 				UI.setStatus(STR_DOWNGRADE_UPD + SFlash.SWITCH_TYPES[pattern['t']] + ' [' + str(num)+']')
@@ -459,7 +461,7 @@ def screenDowngrade(file):
 
 
 def screenFlagsToggler(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_WARNING))
 	
 	print(UI.warning(STR_PATCHES))
@@ -483,6 +485,7 @@ def screenFlagsToggler(file):
 			{'k':'BOOT_MODE',	'v':[b'\xFE',b'\xFB',b'\xFF'],	'd':['Development','Assist','Release']},
 			{'k':'MANU',		'v':[b'\x00'*32,b'\xFF'*32],	'd':[STR_OFF,STR_ON]},
 			{'k':'ACT_SLOT',	'v':[b'\x00',b'\x80'],			'd':['A','B']},
+			{'k':'RESOLUTION',	'v':[b'\x00', b'\x01', b'\x02', b'\x03', b'\x04', b'\x05', b'\x13'],	'd':['Reset', '1080i', '720p', '1080p', '4K', '4K HDR', 'Auto']},
 		]
 		
 		for i in range(len(patches)):
@@ -492,7 +495,7 @@ def screenFlagsToggler(file):
 			for k in range(len(patches[i]['v'])):
 				if val == patches[i]['v'][k]:
 					str = patches[i]['d'][k]
-			print(' {:2d}: {:24s}: {}'.format(i+1, name, str))
+			print(' %2d: %-24s : %s'%(i+1, name, str))
 	
 	print(UI.DIVIDER)
 	
@@ -512,7 +515,10 @@ def screenFlagsToggler(file):
 	if num == 0:
 		return
 	elif num > 0 and num <= len(patches):
-		toggleFlag(file, patches[num-1])
+		patch = patches[num-1]
+		k = toggleFlag(file, patch)
+		if patch['k'] == 'RESOLUTION':
+			SFlash.setNorData(file, 'RES_RESET', b'\x01' if patch['v'][k] == b'\x00' else b'\x00')
 	
 	screenFlagsToggler(file)
 
@@ -533,12 +539,14 @@ def toggleFlag(file, patch):
 			# Set flag in backup area
 			SFlash.setNorDataB(f, patch['k'], patch['v'][i])
 	
-	UI.setStatus(STR_SET_TO.format(SFlash.getNorAreaName(patch['k']),patch['d'][i]))
+	UI.setStatus(STR_SET_TO%(SFlash.getNorAreaName(patch['k']),patch['d'][i]))
+	
+	return i
 
 
 
 def screenPartitionsInfo(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_PARTS_INFO))
 	
 	with open(file,'rb') as f:
@@ -561,7 +569,7 @@ def screenPartitionsInfo(file):
 
 
 def screenSFlashTools(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_NOR_INFO))
 	
 	info = SFlash.getSFlashInfo(file)

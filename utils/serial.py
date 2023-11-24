@@ -84,13 +84,6 @@ class WeeSerial:
 			return self.err
 		return '%s %d %d %s %d (%s)'%(self.sp.port, self.sp.baudrate, self.sp.bytesize, self.sp.parity, self.sp.stopbits, 'open' if self.sp.is_open else 'closed')
     
-	def testPatterns(self, path):
-		if os.path.isfile(path):
-			with open(path, 'r') as file:
-				lines = file.readlines()
-				for line in lines:
-					self.printline(line)
-	
 	def printline(self, line):
 		patterns = self.patterns
 		for k in patterns:
@@ -102,7 +95,7 @@ class WeeSerial:
 	def getLines(self, buf):
 		txt = ''
 		lines = []
-		prev_c = ''
+		prev_c = b''
 		
 		for c in buf:
 			if c in self.EOL:
@@ -183,3 +176,55 @@ class WeeSerial:
 		if not self.sp is None:
 			self.sp.close()
 	
+	# Private
+	
+	def __write(self, s):
+		try:
+			if isinstance(s, int):
+				s = s.to_bytes(1,'big')
+			elif isinstance(s,tuple) or isinstance(s,list):
+				s = bytes(s)
+			
+			self.BUFFER += s
+			
+			while len(self.BUFFER) > self.BUFFER_SIZE:
+				self.sp.write(self.BUFFER[:self.BUFFER_SIZE])
+				self.BUFFER = self.BUFFER[self.BUFFER_SIZE:]
+		
+		except Exception as e:
+			self.error(str(e))
+	
+	def __flush(self):
+		try:
+			if len(self.BUFFER):
+				self.sp.write(self.BUFFER)
+				self.sp.flush()
+				self.BUFFER = b''
+			
+		except Exception as e:
+			self.error(str(e))
+	
+	def __read(self, size):
+		self.__flush()
+		try:
+			data = self.sp.read(size)
+			return data
+			
+		except Exception as e:
+			self.error(str(e))
+			return b''
+	
+	def __clean(self):
+		if not self.sp.is_open:
+			return False
+		self.sp.flushInput()
+		self.sp.flushOutput()
+	
+	# Helpers
+	
+	def testPatterns(self, path):
+		if os.path.isfile(path):
+			with open(path, 'r') as file:
+				lines = file.readlines()
+				for line in lines:
+					self.printline(line)

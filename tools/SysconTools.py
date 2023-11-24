@@ -42,7 +42,7 @@ def printSnvsEntries(base,entries,start=''):
 
 
 def screenViewSNVS(file, block = '', flat = False):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_SVNS_ENTRIES))
 	
 	with open(file, 'rb') as f:
@@ -60,13 +60,13 @@ def screenViewSNVS(file, block = '', flat = False):
 		entries = SNVS.getDataBlockEntries(block)
 		base = SNVS.getDataBlockOffset(block, True)
 	
-	print((' Flat' if flat else '')+STR_SYSCON_BLOCK.format(block, blocks_count, len(entries), count, active))
+	print((' Flat' if flat else '')+STR_SYSCON_BLOCK%(block, blocks_count, len(entries), count, active))
 	printSnvsEntries(base, entries, 1)
 	
 	UI.showStatus()
 	
 	try:
-		c = input(UI.DIVIDER+STR_SC_BLOCK_SELECT.format(blocks_count))
+		c = input(UI.DIVIDER+STR_SC_BLOCK_SELECT%blocks_count)
 		
 		if c == 'f':
 			flat = False if flat else True
@@ -85,7 +85,7 @@ def screenViewSNVS(file, block = '', flat = False):
 
 
 def screenAutoPatchSNVS(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_APATCH_SVNS))
 	
 	with open(file, 'rb') as f:
@@ -105,8 +105,8 @@ def screenAutoPatchSNVS(file):
 	
 	info = {
 		'General'			: 'Active[%d] OWC[%d]'%(SNVS.active_entry.getLink(), SNVS.getOWC()),
-		'08-0B (prev)'		: STR_NOT_FOUND if prev_index < 0 else STR_SNVS_ENTRY_INFO.format(prev_fw['block'], prev_fw['num'], prev_fw['offset']),
-		'08-0B (last)'		: STR_NOT_FOUND if index < 0 else STR_SNVS_ENTRY_INFO.format(last_fw['block'], last_fw['num'], last_fw['offset']),
+		'08-0B (prev)'		: STR_NOT_FOUND if prev_index < 0 else STR_SNVS_ENTRY_INFO%(prev_fw['block'], prev_fw['num'], prev_fw['offset']),
+		'08-0B (last)'		: STR_NOT_FOUND if index < 0 else STR_SNVS_ENTRY_INFO%(last_fw['block'], last_fw['num'], last_fw['offset']),
 		'Order of blocks'	: SNVS.getDataBlocksOrder(),
 		'Status'			: MENU_SC_STATUSES[status],
 	}
@@ -120,15 +120,15 @@ def screenAutoPatchSNVS(file):
 		return
 	
 	recommend = ['D','A','C','B']
-	print(UI.warning(STR_RECOMMEND.format(recommend[status])))
+	print(UI.warning(STR_RECOMMEND%recommend[status]))
 	if status == 0:
 		print(UI.highlight(STR_SC_WARN_OVERWITTEN))
 	print()
 	
 	options = MENU_PATCHES
-	options[1] = options[1].format(len(entries) - index)
-	options[2] = options[2].format(len(entries) - prev_index + upd_entry_size)
-	options[3] = options[3].format(len(entries) - index + upd_entry_size)
+	options[1] = options[1]%(len(entries) - index)
+	options[2] = options[2]%(len(entries) - prev_index + upd_entry_size)
+	options[3] = options[3]%(len(entries) - index + upd_entry_size)
 	
 	UI.showMenu(options,1)
 	UI.showStatus()
@@ -159,7 +159,7 @@ def screenAutoPatchSNVS(file):
 		
 	if ofile and snvs_data:
 		Utils.savePatchData(ofile, data, [{'o':Syscon.SC_AREAS['SNVS']['o'], 'd':snvs_data}])
-		UI.setStatus(STR_SAVED_TO.format(ofile))
+		UI.setStatus(STR_SAVED_TO%ofile)
 	else:
 		UI.setStatus(STR_ERROR_CHOICE)
 	
@@ -168,7 +168,7 @@ def screenAutoPatchSNVS(file):
 
 
 def screenManualPatchSNVS(file, flat = False):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_MPATCH))
 	
 	print(STR_INFO_SC_MPATCH)
@@ -186,7 +186,7 @@ def screenManualPatchSNVS(file, flat = False):
 		offset = SNVS.getLastFlatDataOffset(True) if flat else SNVS.getLastDataBlockOffset(True)
 		last_offset = offset + Syscon.NvsEntry.getEntrySize() * len(entries)
 		
-		print((' FlatData:' if flat else ' Entries:')+STR_LAST_SC_ENTRIES.format(records_count, len(entries), block))
+		print((' FlatData:' if flat else ' Entries:')+STR_LAST_SC_ENTRIES%(records_count, len(entries), block))
 		print()
 		
 		printSnvsEntries(last_offset - Syscon.NvsEntry.getEntrySize() * records_count, records, len(entries)+ 1 - records_count)
@@ -212,23 +212,23 @@ def screenManualPatchSNVS(file, flat = False):
 		if num > 0 and (num < len(entries) or (flat and num == len(entries))):
 			length = num * Syscon.NvsEntry.getEntrySize()
 			Utils.setData(f, last_offset - length, b'\xFF'*length)
-			UI.setStatus(STR_PATCH_SUCCESS.format(num)+' [{:X} - {:X}]'.format(last_offset - length, last_offset))
+			UI.setStatus(STR_PATCH_SUCCESS%num+' [{:X} - {:X}]'.format(last_offset - length, last_offset))
 		elif num == len(entries):
 			if SNVS.getOWC() == 0:
 				Utils.setData(f, SNVS.getLastVolumeEntryOffset(True), b'\xFF'*Syscon.NvsEntry.getEntryHeadSize())
 				Utils.setData(f, SNVS.getLastDataBlockOffset(True) - SNVS.cfg.getDataFlatLength(), b'\xFF'*SNVS.cfg.getDataLength())
-				UI.setStatus(STR_SC_BLOCK_CLEANED.format(block))
+				UI.setStatus(STR_SC_BLOCK_CLEANED%block)
 			else:
 				UI.setStatus(STR_REBUILD_REQUIRED)
 		elif num > len(entries):
-			UI.setStatus(STR_TOO_MUCH.format(num,len(entries)))
+			UI.setStatus(STR_TOO_MUCH%(num,len(entries)))
 	
 	screenManualPatchSNVS(file, flat)
 
 
 
 def screenBootModes(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_SC_BOOTMODES))
 	print(UI.warning(STR_INFO_SC_BOOTMODES))
 	
@@ -264,16 +264,16 @@ def screenBootModes(file):
 			items.append(edata)
 		
 		item = Clr.fg.pink + edata[0] + Clr.reset + ' ... ' + Clr.fg.pink + edata[-1] + Clr.reset
-		print(color + ' % 2d: Block %d (#%03d) at 0x%04X '%(i+1, inf['block'], inf['num'], inf['offset']) + Clr.reset + item)
+		print(color + STR_SC_BOOT_ENTRY%(i+1, inf['block'], inf['num'], inf['offset']) + Clr.reset + ' ' + item)
 	
 	print()
 	
 	if len(duplicates):
-		print(STR_DUPLICATES.format(len(duplicates),duplicates))
+		print(STR_DUPLICATES%(len(duplicates),','.join(duplicates)))
 	
 	UI.showStatus()
 	
-	choice = input(UI.DIVIDER+STR_SC_BM_SELECT.format(len(modes)))
+	choice = input(UI.DIVIDER+STR_SC_BM_SELECT%(len(modes)))
 	
 	try:
 		c = int(choice)
@@ -293,7 +293,7 @@ def screenBootModes(file):
 				entries[sel + i] = temp
 			
 			Utils.savePatchData(ofile, data, [{'o':Syscon.SC_AREAS['SNVS']['o'], 'd':SNVS.getRebuilded(entries)}])
-			UI.setStatus(STR_SAVED_TO.format(ofile))
+			UI.setStatus(STR_SAVED_TO%ofile)
 	except:
 		return
 	
@@ -313,7 +313,7 @@ def rebuildSyscon(file):
 		 f.write(data)
 		 Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded())
 	
-	UI.setStatus(STR_SAVED_TO.format(ofile))
+	UI.setStatus(STR_SAVED_TO%ofile)
 
 
 
@@ -356,12 +356,12 @@ def cleanSyscon(file):
 		 f.write(data)
 		 Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded(clean))
 	
-	UI.setStatus(STR_SAVED_TO.format(ofile))
+	UI.setStatus(STR_SAVED_TO%ofile)
 
 
 
 def screenSysconTools(file):
-	os.system('cls')
+	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_SYSCON_INFO))
 	
 	info = getSysconInfo(file)
@@ -417,7 +417,7 @@ def getSysconInfo(file):
 		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 		records = SNVS.getAllDataEntries()
 		fw_info = Syscon.checkSysconFW(f)
-		snvs_info = 'Vol[{:d}] Data[{:d}] Counter[0x{:X}] OWC[{}]'.format(
+		snvs_info = 'Vol[%d] Data[%d] Counter[0x%X] OWC[%d]'%(
 			SNVS.active_volume,
 			SNVS.active_entry.getLink(),
 			SNVS.active_entry.getCounter(),
@@ -429,10 +429,10 @@ def getSysconInfo(file):
 			'MD5'			: Utils.getFileMD5(file),
 			'Magic'			: STR_OK if magic else STR_FAIL,
 			'Debug'			: debug,
-			'FW'			: 'v{:X}.{:02x}'.format(ver[0],ver[2]),
-			'FW MD5'		: '{} - {}'.format(fw_info['md5'], (STR_OK+' ['+fw_info['fw']+']') if fw_info['fw'] else STR_FAIL),
+			'FW'			: 'v%X.%02X'%(ver[0],ver[2]),
+			'FW MD5'		: '%s - %s'%(fw_info['md5'], (STR_OK+' ['+fw_info['fw']+']') if fw_info['fw'] else STR_FAIL),
 			'SNVS'			: snvs_info,
-			'Entries'		: STR_SNVS_ENTRIES.format(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
+			'Entries'		: STR_SNVS_ENTRIES%(len(SNVS.getLastDataEntries()), SNVS.getLastDataBlockOffset(True)),
 			'Status'		: MENU_SC_STATUSES[Syscon.isSysconPatchable(records)],
 		}
 	

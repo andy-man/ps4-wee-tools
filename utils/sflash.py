@@ -15,21 +15,19 @@ BACKUP_OFFSET = 0x3000
 MBR_SIZE = 0x1000
 BLOCK_SIZE = 0x200
 
-PS4_REGIONS = {
-	'00':'Japan',
-	'01':'US, Canada (North America)',
-	'15':'US, Canada (North America)',
-	'02':'Australia / New Zealand (Oceania)',
-	'03':'U.K. / Ireland',
-	'04':'Europe / Middle East / Africa',
-	'16':'Europe / Middle East / Africa',
-	'05':'Korea (South Korea)',
-	'06':'Southeast Asia / Hong Kong',
-	'07':'Taiwan',
-	'08':'Russia, Ukraine, India, Central Asia',
-	'09':'Mainland China',
-	'11':'Mexico, Central America, South America',
-	'14':'Mexico, Central America, South America',
+PS_REGIONS = {
+	'jp':{'n':'Japan',									'c':['00']},
+	'us':{'n':'US, Canada (North America)',				'c':['01','15']},
+	'au':{'n':'Australia / New Zealand (Oceania)',		'c':['02']},
+	'uk':{'n':'U.K. / Ireland',							'c':['03']},
+	'eu':{'n':'Europe / Middle East / Africa',			'c':['16','04']},
+	'kr':{'n':'Korea (South Korea)',					'c':['05']},
+	'sa':{'n':'Southeast Asia / Hong Kong',				'c':['06']},
+	'tw':{'n':'Taiwan',									'c':['07']},
+	'ru':{'n':'Russia, Ukraine, India, Central Asia',	'c':['08']},
+	'cn':{'n':'Mainland China',							'c':['09']},
+	'mx':{'n':'Mexico, Central America, South America',	'c':['11','14']},
+	'kr':{'n':'Singapore, Korea, Asia',					'c':['18']},
 }
 
 SWITCH_TYPES = [
@@ -91,47 +89,53 @@ NOR_PARTITIONS = {
 # 'KEY':{'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
 NOR_AREAS = {
 	
-	'ACT_SLOT':	{'o':0x001000,	'l':1,			't':'b',	'n':'Active slot'},			# 0x00 - A 0x80 - B
+	'ACT_SLOT'	: {'o':0x001000,	'l':1,			't':'b',	'n':'Active slot'},			# 0x00 - A 0x80 - B
 	
-	'BOARD_ID':	{'o':0x1C4000,	'l':8,			't':'b',	'n':'Board ID'},			# SAA-001, SAB-00, etc
-	'MAC':		{'o':0x1C4021,	'l':6,			't':'b',	'n':'MAC Address'},
-	'MB_SN':	{'o':0x1C8000,	'l':16,			't':'s',	'n':'Motherboard Serial'},
-	'SN':		{'o':0x1C8030,	'l':17,			't':'s',	'n':'Console Serial'},
-	'SKU':		{'o':0x1C8041,	'l':13,			't':'s',	'n':'SKU Version'},
-	'REGION':	{'o':0x1C8047,	'l':2,			't':'s',	'n':'Region code'},
+	'BOARD_ID'	: {'o':0x1C4000,	'l':8,			't':'b',	'n':'Board ID'},			# SAA-001, SAB-00, etc
+	'MAC'		: {'o':0x1C4021,	'l':6,			't':'b',	'n':'MAC Address'},
+	'MB_SN'		: {'o':0x1C8000,	'l':16,			't':'s',	'n':'Motherboard Serial'},
+	'SN'		: {'o':0x1C8030,	'l':17,			't':'s',	'n':'Console Serial'},
+	'SKU'		: {'o':0x1C8041,	'l':13,			't':'s',	'n':'SKU Version'},
+	'REGION'	: {'o':0x1C8047,	'l':2,			't':'s',	'n':'Region code'},
 	
-	'BOOT_MODE':{'o':0x1C9000,	'l':1,			't':'b',	'n':'Boot mode'},			# Development(FE), Assist(FB), Release(FF)
-	'MEM_BGM':	{'o':0x1C9003,	'l':1,			't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
-	'SLOW_HDD':	{'o':0x1C9005,	'l':1,			't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
-	'SAFE_BOOT':{'o':0x1C9020,	'l':1,			't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
-	'SMI':		{'o':0x1C9060,	'l':4,			't':'b',	'n':'SMI'},
-	'FW_MIN':	{'o':0x1C9062,	'l':2,			't':'b',	'n':'Minimal FW'},
-	'FW_VER':	{'o':0x1C906A,	'l':2,			't':'b',	'n':'FW in active slot'},
-	'SAMUBOOT':	{'o':0x1C9323,	'l':1,			't':'b',	'n':'SAMU enc'},	
-	'HDD':		{'o':0x1C9C00,	'l':60,			't':'s',	'n':'HDD'},
-	'HDD_TYPE':	{'o':0x1C9C3C,	'l':4,			't':'s',	'n':'HDD type'},
+	'NVS1'		: {'o':0x1C9000,	'l':0x610,		't':'b',	'n':'1C9000 <-> 1C9610'},
+	'NVS2'		: {'o':0x1CA000,	'l':0xFFF,		't':'b',	'n':'1CA000 <-> 1CAFFF'},
 	
-	'EAP_MGC':	{'o':0x1C91FC,	'l':4,			't':'b',	'n':b'\xE5\xE5\xE5\x01'},	# Eap key magic
-	'EAP_KEY':	{'o':0x1C9200,	'l':0x60,		't':'b',	'n':'Hdd eap key'},			# Length 0x40 / 0x60
-	'SYS_FLAGS':{'o':0x1C9310,	'l':64,			't':'b',	'n':'System flags'},		# Clean FF*64
-	'MEMTEST':	{'o':0x1C9310,	'l':1,			't':'b',	'n':'Memory test'},			# On(01), Off(00/FF)
-	'RNG_KEY':	{'o':0x1C9312,	'l':1,			't':'b',	'n':'RNG/Keystorage test'},	# On(01), Off(00/FF)
-	'UART':		{'o':0x1C931F,	'l':1,			't':'b',	'n':'UART'},				# On(01), Off(00)
-	'MEMCLK':	{'o':0x1C9320,	'l':1,			't':'b',	'n':'GDDR5 Memory clock'},
+	'BOOT_MODE'	: {'o':0x1C9000,	'l':1,			't':'b',	'n':'Boot mode'},			# Development(FE), Assist(FB), Release(FF)
+	'MEM_BGM'	: {'o':0x1C9003,	'l':1,			't':'b',	'n':'Memory budget mode'},	# Large(FE), Normal(FF)
+	'SLOW_HDD'	: {'o':0x1C9005,	'l':1,			't':'b',	'n':'HDD slow mode'},		# On(FE), Off(FF)
+	'SAFE_BOOT'	: {'o':0x1C9020,	'l':1,			't':'b',	'n':'Safe boot'},			# On(01), Off(00/FF)
+	'SMI'		: {'o':0x1C9060,	'l':4,			't':'b',	'n':'SMI'},
+	'FW_MIN'	: {'o':0x1C9062,	'l':2,			't':'b',	'n':'Minimal FW'},
+	'FW_VER'	: {'o':0x1C906A,	'l':2,			't':'b',	'n':'FW in active slot'},
+	'SAMUBOOT'	: {'o':0x1C9323,	'l':1,			't':'b',	'n':'SAMU enc'},	
+	'HDD'		: {'o':0x1C9C00,	'l':60,			't':'s',	'n':'HDD'},
+	'HDD_TYPE'	: {'o':0x1C9C3C,	'l':4,			't':'s',	'n':'HDD type'},
 	
-	'BTNSWAP':	{'o':0x1CA040,	'l':1,			't':'b',	'n':'Buttons swap'},		# X(01), O(00/FF)
-	'FW_C':		{'o':0x1CA5D8,	'l':1,			't':'b',	'n':'FW Counter'},
-	'FW_PC':	{'o':0x1CA5D9,	'l':1,			't':'b',	'n':'FW Patch Counter'},
-	'IDU':		{'o':0x1CA600,	'l':1,			't':'b',	'n':'IDU (Kiosk mode)'},	# On(01), Off(00/FF)
-	'UPD_MODE':	{'o':0x1CA601,	'l':1,			't':'b',	'n':'Update mode'},			# On(10), Off(00)
-	'UPD_VAR':	{'o':0x1CA602,	'l':1,			't':'b',	'n':'Update variant'},		# 0x30 hdd
-	'REG_REC':	{'o':0x1CA603,	'l':1,			't':'b',	'n':'Registry recovery'},	# On(01), Off(00)
-	'FW_V':		{'o':0x1CA606,	'l':2,			't':'s',	'n':'FW Version'},
-	'ARCADE':	{'o':0x1CA609,	'l':1,			't':'s',	'n':'Arcade mode'},			# On(01), Off(00/FF)
+	'EAP_MGC'	: {'o':0x1C91FC,	'l':4,			't':'b',	'n':b'\xE5\xE5\xE5\x01'},	# Eap key magic
 	
-	'MANU':		{'o':0x1CBC00,	'l':32,			't':'b',	'n':'MANU mode'},			# Enabled(0*32), Disabled(FF*32)
+	'EAP_KEY'	: {'o':0x1C9200,	'l':0x60,		't':'b',	'n':'Hdd eap key'},			# Length 0x40 / 0x60
+	'SYS_FLAGS'	: {'o':0x1C9310,	'l':64,			't':'b',	'n':'System flags'},		# Clean FF*64
+	'MEMTEST'	: {'o':0x1C9310,	'l':1,			't':'b',	'n':'Memory test'},			# On(01), Off(00/FF)
+	'RNG_KEY'	: {'o':0x1C9312,	'l':1,			't':'b',	'n':'RNG/Keystorage test'},	# On(01), Off(00/FF)
+	'UART'		: {'o':0x1C931F,	'l':1,			't':'b',	'n':'UART'},				# On(01), Off(00)
+	'MEMCLK'	: {'o':0x1C9320,	'l':1,			't':'b',	'n':'GDDR5 Memory clock'},
+	'RESOLUTION': {'o':0x1CD048,	'l':1,			't':'b',	'n':'Resolution'},			# Reset(00), 1080i(01), 720p(02), 1080p(03), 4K(04), 4K HDR(05), Auto(13)
+	'RES_RESET'	: {'o':0x1CD188,	'l':1,			't':'b',	'n':'Reset resolution'},	# On(01), Off(00)
 	
-	'CORE_SWCH':{'o':0x201000,	'l':16,			't':'b',	'n':'Slot switch hack'},
+	'BTNSWAP'	: {'o':0x1CA040,	'l':1,			't':'b',	'n':'Buttons swap'},		# X(01), O(00/FF)
+	'FW_C'		: {'o':0x1CA5D8,	'l':1,			't':'b',	'n':'FW Counter'},
+	'FW_PC'		: {'o':0x1CA5D9,	'l':1,			't':'b',	'n':'FW Patch Counter'},
+	'IDU'		: {'o':0x1CA600,	'l':1,			't':'b',	'n':'IDU (Kiosk mode)'},	# On(01), Off(00/FF)
+	'UPD_MODE'	: {'o':0x1CA601,	'l':1,			't':'b',	'n':'Update mode'},			# On(10), Off(00)
+	'UPD_VAR'	: {'o':0x1CA602,	'l':1,			't':'b',	'n':'Update variant'},		# 0x30 hdd
+	'REG_REC'	: {'o':0x1CA603,	'l':1,			't':'b',	'n':'Registry recovery'},	# On(01), Off(00)
+	'FW_V'		: {'o':0x1CA606,	'l':2,			't':'s',	'n':'FW Version'},
+	'ARCADE'	: {'o':0x1CA609,	'l':1,			't':'s',	'n':'Arcade mode'},			# On(01), Off(00/FF)
+	
+	'MANU'		: {'o':0x1CBC00,	'l':32,			't':'b',	'n':'MANU mode'},			# Enabled(0*32), Disabled(FF*32)
+	
+	'CORE_SWCH'	: {'o':0x201000,	'l':16,			't':'b',	'n':'Slot switch hack'},
 }
 
 SOUTHBRIDGES = [
@@ -149,10 +153,13 @@ TORUS_VERS = [
 ]
 
 MAGICS = {
-	"s0_header"			: {"o": 0x00,	"v":b'SONY COMPUTER ENTERTAINMENT INC.'},
-	"s0_MBR1"			: {"o": 0x00,	"v":b'Sony Computer Entertainment Inc.'},
-	"s0_MBR2"			: {"o": 0x00,	"v":b'Sony Computer Entertainment Inc.'},
+	"MBR"		: {"o": 0x00,		"v":b'SONY COMPUTER ENTERTAINMENT INC.'},
+	"MBR1"		: {"o": 0x2000,		"v":b'Sony Computer Entertainment Inc.'},
+	"MBR2"		: {"o": 0x3000,		"v":b'Sony Computer Entertainment Inc.'},
+	"EAP1"		: {"o": 0x1C91FC,	"v":b'\xE5\xE5\xE5\x01'},
 }
+
+
 
 # MBR parser
 
@@ -222,9 +229,11 @@ PARTITIONS_TYPES = {
 # Functions ===============================================
 
 def getConsoleRegion(file):
-	code = getNorData(file,'REGION', True)
-	desc = PS4_REGIONS[code] if code in PS4_REGIONS else STR_UNKNOWN
-	return [code, desc]
+	code = getNorData(file, 'REGION', True)
+	for k in PS_REGIONS:
+		if code in PS_REGIONS[k]['c']:
+			return [code, PS_REGIONS[k]['n']]
+	return [code, STR_UNKNOWN]
 
 
 
@@ -346,14 +355,13 @@ def getDataByPartitionAndType(name, type, fw = False):
 
 
 
-def checkNorPartMagic(f, name):
-	data = getNorPartition(f, name)
+def checkMagic(data, key):
 	if len(data) <= 0:
 		return False
-	if name in MAGICS:
-		offset = MAGICS[name]['o']
-		length = offset + len(MAGICS[name]['v'])
-		if data[offset:length] == MAGICS[name]['v']:
+	if key in MAGICS:
+		offset = MAGICS[key]['o']
+		length = offset + len(MAGICS[key]['v'])
+		if data[offset:length] == MAGICS[key]['v']:
 			return True
 	return False
 
@@ -464,6 +472,15 @@ def getNorDataB(file, key, decode = False):
 		return 'False' if decode else False
 	data = Utils.getData(file, NOR_AREAS[key]['o'] + BACKUP_OFFSET, NOR_AREAS[key]['l'])
 	return data.decode('utf-8','ignore').strip('\x00') if decode else data
+
+
+
+def getModel(f):
+	try:
+		model = int(getNorData(f, 'SKU', True)[4:6])
+	except:
+		model = 0
+	return model
 
 
 
