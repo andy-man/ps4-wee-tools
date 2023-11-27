@@ -98,7 +98,7 @@ NOR_AREAS = {
 	'SKU'		: {'o':0x1C8041,	'l':13,			't':'s',	'n':'SKU Version'},
 	'REGION'	: {'o':0x1C8047,	'l':2,			't':'s',	'n':'Region code'},
 	
-	'NVS1'		: {'o':0x1C9000,	'l':0x610,		't':'b',	'n':'1C9000 <-> 1C9610'},
+	'NVS1'		: {'o':0x1C9000,	'l':0x1610,		't':'b',	'n':'1C9000 <-> 1CA610'},
 	'NVS2'		: {'o':0x1CA000,	'l':0xFFF,		't':'b',	'n':'1CA000 <-> 1CAFFF'},
 	
 	'BOOT_MODE'	: {'o':0x1C9000,	'l':1,			't':'b',	'n':'Boot mode'},			# Development(FE), Assist(FB), Release(FF)
@@ -156,7 +156,6 @@ MAGICS = {
 	"MBR"		: {"o": 0x00,		"v":b'SONY COMPUTER ENTERTAINMENT INC.'},
 	"MBR1"		: {"o": 0x2000,		"v":b'Sony Computer Entertainment Inc.'},
 	"MBR2"		: {"o": 0x3000,		"v":b'Sony Computer Entertainment Inc.'},
-	"EAP1"		: {"o": 0x1C91FC,	"v":b'\xE5\xE5\xE5\x01'},
 }
 
 
@@ -504,6 +503,7 @@ def getMobo(board):
 	return {'name':prefix + suffix + '-' + rev, 'type':'Retail' if board[1] == 2 else 'Non-Retail'}
 
 
+
 def getInfoForLegitSwitch(f):
 	data = {
 		'sn':getNorData(f, 'SN', True),
@@ -514,8 +514,19 @@ def getInfoForLegitSwitch(f):
 	return data
 
 
+
 def getActiveSlot(f):
 	return 'a' if getNorData(f, 'ACT_SLOT')[0] == 0x00 else 'b'
+
+
+def checkNVS(data, key = 'NVS1'):
+	return STR_OK if not all(b == 0xFF or b == 0x00 for b in data) else STR_FAIL
+
+
+def getOffsetRange(k, backup = False):
+	extra = BACKUP_OFFSET if backup else 0
+	return '%X~%X'%(NOR_AREAS[k]['o'] + extra, NOR_AREAS[k]['o'] + NOR_AREAS[k]['l'] + extra)
+
 
 
 def getSFlashInfo(file = '-'):
@@ -542,7 +553,7 @@ def getSFlashInfo(file = '-'):
 			'FILE'			: os.path.basename(file),
 			'MD5'			: Utils.getFileMD5(file),
 			'SKU / Board ID': sku + ' [' + UI.highlight(Utils.hex(board, ':')) + '] ~' + mobo['name'],
-			'Region'		: '[{}] {} / {}'.format(region[0], region[1], mobo['type']),
+			'Region'		: '[%s] %s / [%s]'%(region[0], region[1], mobo['type']),
 			'SN / Mobo SN'	: getNorData(f, 'SN', True)+' / '+getNorData(f, 'MB_SN', True),
 			'Southbridge'	: '%s [%s] [%02X:%02X]'%(SB['name'], SB['ic'], SB['code'][0], SB['code'][1]),
 			'Torus (WiFi)'	: '%s [0x%02X]'%(torus['name'],torus['code']),
@@ -551,7 +562,7 @@ def getSFlashInfo(file = '-'):
 			'FW (active)'	: fw['c'] + ' ['+active_slot.upper()+']' + (' [min '+fw['min']+']' if fw['min'] else ''),
 			'FW (backup)'	: ' <-> '.join(fw['b']),
 			'GDDR5'			: ('0x{:02X} {:d}MHz | 0x{:02X} {:d}MHz').format(*getMemClock(f)),
-			'SAMU BOOT'		: ('{:d} [0x{:02X}]').format(samu,samu),
+			'SAMU BOOT'		: ('%d [0x%02X]')%(samu, samu),
 			'UART'			: (Lang.STR_ON if getNorData(f, 'UART')[0] == 1 else Lang.STR_OFF),
 			'Slot switch'	: getSlotSwitchInfo(f),
 		}

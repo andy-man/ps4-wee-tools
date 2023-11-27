@@ -3,6 +3,11 @@
 # part of ps4 wee tools project
 #==========================================================
 
+MENU_NVS_COPY = [
+	'Replace %s with backup (%s <= %s)',
+	'Replace backup with %s (%s => %s)',
+]
+
 MENU_EAP_KEYS = [
 	'Replace A with B (key_a <= key_b)',
 	'Replace B with A (key_a => key_b)',
@@ -57,6 +62,7 @@ MENU_FILE_SELECTION = {
 MENU_ADDTIONAL = [
 	'Extract partitions from sFlash0',
 	'Build sFlash0 from extracted files',
+	'View / Recover NVS areas (1C9, 1CA)',
 	'View / Recover EAP key',
 	'Get HDD keys = decrypt EAP key = create [keys.bin]',
 	'Create EMC cfw (only for Fat 1xxx/11xx)',
@@ -119,6 +125,7 @@ MENU_SPW_ACTS = {
 }
 
 STR_SECONDS				= '%0.0f seconds'
+STR_NVS_AREAS			= 'NVS areas'
 STR_PORTS_LIST			= 'Serial ports'
 STR_MAIN_MENU			= 'Main menu'
 STR_FILE_LIST			= 'Files list'
@@ -158,6 +165,7 @@ STR_PARTS_INFO			= 'Partitions info'
 STR_WIFI_PATCHER		= 'WiFi patcher'
 STR_SB_PATCHER			= 'Southbridge patcher'
 
+STR_BACKUP				= 'Backup'
 STR_EQUAL				= 'Equal'
 STR_NOT_EQUAL			= 'Not equal'
 STR_NO_INFO				= '- No info -'
@@ -185,6 +193,7 @@ STR_PORT_UNAVAILABLE	= ' Selected port is unavailable'
 STR_PORT_CLOSED			= ' Port is closed'
 STR_STOP_MONITORING		= ' Monitoring was stopped by user'
 
+STR_ACTION_NA			= ' No action is available %s'
 STR_EMC_CFW_WARN		= ' Currently EMC CFW is only for 10xx/11xx PS4 Fat'
 STR_EMC_NOT_FOUND		= ' EMC FW was not found'
 STR_DECRYPTING			= ' Decrypting'
@@ -208,6 +217,7 @@ STR_SET_TO				= ' %s was set to [%s]'
 STR_ABORT				= ' Action was aborted'
 STR_FILENAME			= ' Filename: '
 
+STR_VALIDATE_NVS_CHECK	= ' Checking NVS areas'
 STR_ACT_SLOT			= ' Active slot: %s [0x%02X]'
 STR_NIY					= ' Function is not implemented yet'
 STR_CLEAN_FLAGS			= ' Clean all system flags'
@@ -341,6 +351,12 @@ STR_MODEL				= ' Model'
 STR_FW_VER				= ' FW: %s / Slot: %s'
 STR_SELECT_MOST_FILE	= ' Select most relevant file: '
 STR_NO_FW_FILES			= ' Files are not found! Download files to fws folder:\n [%s]'
+
+STR_ABOUT_NVS = 'About NVS recovery'
+STR_INFO_NVS = ''\
+' Swaps corrupted block with backup data (not suitable for 10xx/11xx)\n'\
+' UART and other flags may be overwritten.\n'\
+' If you need to set some flags do it after NVS recovery!\n'\
 
 STR_ABOUT_TORUS_PATCH = 'About WiFi patcher'
 STR_INFO_TORUS_PATCH = ''\

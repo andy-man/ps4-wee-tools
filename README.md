@@ -43,6 +43,7 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
 * Additional tools
   * Extract NOR's partitions
   * Build dump from extracted files
+  * View / Recover NVS areas (1C9, 1CA)
   * View / Recover HDD EAP keys
   * Get HDD EAP keys [keys.bin]
   * EMC CFW for Aeolia
@@ -98,6 +99,17 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [X/Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v0.9.8
+* NVS areas recovery
+* More info for validation
+
+### v0.9.7
+* Lang optimization
+* Flag: resolution
+* UART bugfix
+* Assets update
+* Root path bugfix (for exe)
 
 ### v0.9.5
 * Quick/Expert mode for partition recovery

@@ -114,17 +114,24 @@ def screenValidate(file):
 	print(TITLE + UI.getTab(STR_NOR_VALIDATOR))
 	
 	with open(file,'rb') as f:
-		data = f.read()
 		
 		model = SFlash.getModel(f)
 		sku = SFlash.getNorData(f, 'SKU', True)
 		fw = SFlash.getNorFW(f)['c']
 		slot = SFlash.getActiveSlot(f)
 		
+		print(' %s / FW: %s [%s]\n'%(sku, fw, slot.upper()))
+		
+		# Magics
 		magics = {}
 		for k in SFlash.MAGICS:
-			magics[k] = STR_OK if SFlash.checkMagic(data, k) else STR_DIFF
+			magics[k] = STR_OK if SFlash.checkMagic(f.read(), k) else STR_DIFF
 		
+		print(UI.highlight(STR_MAGICS_CHECK)+'\n')
+		UI.showTable(magics,10)
+		print()
+		
+		# Partitions
 		parts_info = {}
 		for key in ['s0_emc_ipl_a', 's0_emc_ipl_b', 's0_eap_kbl', 's0_wifi']:
 			md5 = SFlash.getNorPartitionMD5(f, key)
@@ -137,27 +144,51 @@ def screenValidate(file):
 			else:
 				parts_info[key] = STR_IS_PART_VALID%(md5, STR_FAIL, STR_FAIL)
 		
-		nvs_info = {}
-		if model in [11, 10]:
-			for k in ['NVS1', 'NVS2']:
-				d1 = SFlash.getNorData(f, k)
-				d2 = SFlash.getNorDataB(f, k)
-				nvs_info[SFlash.NOR_AREAS[k]['n']] = UI.green(STR_EQUAL) if d1 == d2 else STR_DIFF
-	
-	print(' %s / FW: %s [%s]\n'%(sku, fw, slot.upper()))
-	
-	print(UI.highlight(STR_MAGICS_CHECK)+'\n')
-	UI.showTable(magics,10)
-	print()
-	
-	print(UI.highlight(STR_PARTITIONS_CHECK)+'\n')
-	UI.showTable(parts_info,14)
-	print()
-	
-	if len(nvs_info):
-		print(UI.highlight(' Checking NVS areas with backup')+'\n')
-		UI.showTable(nvs_info,10)
+		print(UI.highlight(STR_PARTITIONS_CHECK)+'\n')
+		UI.showTable(parts_info,14)
 		print()
+		
+		# EAP key
+		
+		magic = SFlash.getNorData(f, 'EAP_MGC')
+		eap_key = SFlash.getNorData(f, 'EAP_KEY')
+		
+		print(UI.highlight(' EAP key\n'))
+		print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.NOR_AREAS['EAP_MGC']['n'] else STR_DIFF ))
+		for i in range(0,len(eap_key),0x20):
+			print(' '+Utils.hex(eap_key[i:i+0x20],''))
+		
+		if model not in [11, 10]:
+			magic = SFlash.getNorDataB(f, 'EAP_MGC')
+			eap_key_b = SFlash.getNorDataB(f, 'EAP_KEY')
+			print()
+			print(UI.highlight(' EAP key ('+STR_BACKUP+')\n'))
+			print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.NOR_AREAS['EAP_MGC']['n'] else STR_DIFF ))
+			for i in range(0,len(eap_key_b),0x20):
+				print(' '+Utils.hex(eap_key_b[i:i+0x20],''))
+			
+			print(UI.highlight('\n EAP keys are ') + UI.green(STR_EQUAL) if eap_key == eap_key_b else STR_DIFF)
+		
+		print()
+		
+		# NVS
+		print(UI.highlight(STR_VALIDATE_NVS_CHECK)+'\n')
+		
+		for k in ['NVS1', 'NVS2']:
+			
+			nvs = SFlash.getNorData(f, k)
+			key = SFlash.getOffsetRange(k)
+			
+			print(' %s : %s [%s..%s]'%( key, SFlash.checkNVS(nvs, k), Utils.hex(nvs[0:10],''), Utils.hex(nvs[-10:],'') ) )
+			
+			if model not in [11, 10]:
+				nvs_b = SFlash.getNorDataB(f, k)
+				key_b = SFlash.getOffsetRange(k, True)
+				
+				print(' %s - %s'%(UI.dark(STR_BACKUP), UI.green(STR_EQUAL) if nvs == nvs_b else STR_DIFF))
+				print(' %s : %s [%s..%s]'%( key_b, SFlash.checkNVS(nvs_b, k), Utils.hex(nvs_b[0:10],''), Utils.hex(nvs_b[-10:],'') ) )
+			
+			print()
 	
 	print(UI.highlight(STR_ENTROPY)+'\n')
 	#stats = {'ent':0,'ff':0,'00':0}
@@ -175,6 +206,88 @@ def screenValidate(file):
 	UI.showTable(info,10)
 	
 	input(STR_BACK)
+
+
+
+def screenNvsRecovery(file):
+	UI.clearScreen()
+	print(TITLE+UI.getTab(STR_ABOUT_NVS))
+	
+	print(UI.warning(STR_INFO_NVS + '\n' + STR_IMMEDIATLY))
+	
+	print(UI.getTab(STR_NVS_AREAS))
+	print(UI.highlight(STR_FILENAME)+os.path.basename(file)+'\n')
+	
+	NVS_MENU = []
+	
+	with open(file,'r+b') as f:
+		
+		model = SFlash.getModel(f)
+		sku = SFlash.getNorData(f, 'SKU', True)
+		fw = SFlash.getNorFW(f)['c']
+		slot = SFlash.getActiveSlot(f)
+		
+		print(' %s / FW: %s [%s]\n'%(sku, fw, slot.upper()))
+		
+		for k in ['NVS1', 'NVS2']:
+			
+			print(' '+UI.highlight(k)+'\n')
+			
+			nvs = SFlash.getNorData(f, k)
+			key = SFlash.getOffsetRange(k)
+			
+			print(' %s : %s [%s..%s]'%( key, SFlash.checkNVS(nvs, k), Utils.hex(nvs[0:10],''), Utils.hex(nvs[-10:],'') ) )
+			
+			if model not in [11, 10]:
+				nvs_b = SFlash.getNorDataB(f, k)
+				key_b = SFlash.getOffsetRange(k, True)
+				
+				NVS_MENU.append(MENU_NVS_COPY[0]%(k, key,key_b))
+				NVS_MENU.append(MENU_NVS_COPY[1]%(k, key,key_b))
+				
+				print(' %s - %s'%(UI.dark(STR_BACKUP), UI.green(STR_EQUAL) if nvs == nvs_b else STR_DIFF))
+				print(' %s : %s [%s..%s]'%( key_b, SFlash.checkNVS(nvs_b, k), Utils.hex(nvs_b[0:10],''), Utils.hex(nvs_b[-10:],'') ) )
+			
+			print()
+		
+		UI.showStatus()
+		
+		print(UI.DIVIDER)
+		if model in [11, 10]:
+			print(UI.warning(STR_ACTION_NA%('(10xx/11xx)')))
+		else:
+			UI.showMenu(NVS_MENU,1)
+		
+		print(UI.DIVIDER)
+		UI.showMenu([STR_GO_BACK])
+		
+		choice = input(STR_CHOICE)
+		
+		try:
+			c = int(choice)
+			c = c if model not in [11, 10] or c == 0 else -1
+		except:
+			c = -1
+		
+		if c == 0:
+			return
+		elif c == 1:
+			data = SFlash.getNorDataB(f, 'NVS1')
+			SFlash.setNorData(f, 'NVS1', data)
+		elif c == 2:
+			data = SFlash.getNorData(f, 'NVS1')
+			SFlash.setNorDataB(f, 'NVS1', data)
+		elif c == 3:
+			data = SFlash.getNorDataB(f, 'NVS2')
+			SFlash.setNorData(f, 'NVS2', data)
+		elif c == 4:
+			data = SFlash.getNorData(f, 'NVS2')
+			SFlash.setNorDataB(f, 'NVS2', data)
+		
+		if c >= 1 and c <= len(NVS_MENU):
+			UI.setStatus(STR_PERFORMED+NVS_MENU[c-1])
+	
+	screenNvsRecovery(file)
 
 
 
@@ -517,14 +630,16 @@ def screenAdvSFlashTools(file):
 	elif choice == '2':
 		screenBuildNorDump(folder)
 	elif choice == '3':
-		screenEapKeyRecovery(file)
+		screenNvsRecovery(file)
 	elif choice == '4':
-		screenHddKey(file)
+		screenEapKeyRecovery(file)
 	elif choice == '5':
-		screenEmcCFW(file)
+		screenHddKey(file)
 	elif choice == '6':
-		screenValidate(file)
+		screenEmcCFW(file)
 	elif choice == '7':
+		screenValidate(file)
+	elif choice == '8':
 		screenPartitionRecovery(file)
 	
 	screenAdvSFlashTools(file)
