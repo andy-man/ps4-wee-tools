@@ -100,6 +100,9 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
+### v0.9.9
+* 11.02 support
+
 ### v0.9.8
 * NVS areas recovery
 * More info for validation
