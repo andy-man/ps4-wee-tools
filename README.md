@@ -70,7 +70,7 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
 * Multy files compare
 * Pack / Unpack 2BLS files
 
-Don't use if you don't understant what is it for!
+Don't use if you don't understand what is it for!
 
 ## Credits
 
