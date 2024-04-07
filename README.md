@@ -65,7 +65,7 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
 * Batch file rename (extract dump info to filename)
 * Terminal (UART) with highlighting
 * SPIway flasher
-* Syscon r/w tool by Abkarino
+* Syscon r/w tool by Abkarino & EgyCnq
 * Syscon reader by DarkNESmonk
 * Multy files compare
 * Pack / Unpack 2BLS files
