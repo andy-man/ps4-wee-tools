@@ -8,6 +8,8 @@ Written in Python to keep it simple.
 
 Was tested with Python 3.8
 
+There is also **[PS4 WeeTools PRO](https://ko-fi.com/andymandev)** with some extra functions _(only for donators/contributors)_
+
 **Dependencies**
 
 If you want to run python script directly you need these libs
@@ -88,6 +90,7 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Donate
 
+* **[Ko-fi/Paypal](https://ko-fi.com/andymandev)**
 * **[Patreon](https://patreon.com/andy_man)**
 * **[Boosty](https://boosty.to/andy_man/donate)**
 * **[YandexMoney](https://yoomoney.ru/to/410011555252085)**
@@ -101,6 +104,10 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 ## Changelog
 
 ### v0.9.9
+* VS bug fix
+* MBR magic check - fixed
+* Warning for manual patch
+* 11.50 support
 * 11.02 support
 
 ### v0.9.8

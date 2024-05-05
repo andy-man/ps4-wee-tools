@@ -297,12 +297,12 @@ def screenMemClock(file):
 			print(STR_DIFF_SLOT_VALUES)
 		
 		try:
-		    frq = int(input(STR_MEMCLOCK_INPUT))
+			frq = int(input(STR_MEMCLOCK_INPUT))
 		except:
-		    return
-		
+			return
+
 		if frq >= 400 and frq <= 2000:
-		    raw = SFlash.clockToRaw(frq)
+			raw = SFlash.clockToRaw(frq)
 		else:
 			frq = 0
 			raw = 255
@@ -324,12 +324,12 @@ def screenSamuBoot(file):
 		print(STR_CURRENT+('%d [0x%02X]')%(cur,cur))
 		
 		try:
-		    frq = int(input(STR_SAMU_INPUT))
+			frq = int(input(STR_SAMU_INPUT))
 		except:
-		    return
+			return
 		
 		if frq < 0 or frq > 255:
-		    frq = 255
+			frq = 255
 		
 		SFlash.setNorData(f, 'SAMUBOOT',  frq.to_bytes(1, 'big'))
 		SFlash.setNorDataB(f, 'SAMUBOOT', frq.to_bytes(1, 'big'))
@@ -589,11 +589,11 @@ def screenSFlashTools(file):
 	choice = input(STR_CHOICE)
 	
 	if choice == '1':
-	    screenFlagsToggler(file)
+		screenFlagsToggler(file)
 	elif choice == '2':
-	    screenMemClock(file)
+		screenMemClock(file)
 	elif choice == '3':
-	    screenSamuBoot(file)
+		screenSamuBoot(file)
 	elif choice == '4':
 		screenDowngrade(file)
 	elif choice == '5':
@@ -606,10 +606,10 @@ def screenSFlashTools(file):
 		AdvSFlashTools.screenAdvSFlashTools(file)
 	
 	elif choice == 's':
-	    return Tools.screenFileSelect(file)
+		return Tools.screenFileSelect(file)
 	elif choice == 'f':
 		return Tools.screenNorFlasher(file)
 	elif choice == 'm':
-	    return Tools.screenMainMenu()
-	
+		return Tools.screenMainMenu()
+		
 	screenSFlashTools(file)

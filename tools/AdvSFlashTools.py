@@ -115,6 +115,8 @@ def screenValidate(file):
 	
 	with open(file,'rb') as f:
 		
+		data = f.read()
+		
 		model = SFlash.getModel(f)
 		sku = SFlash.getNorData(f, 'SKU', True)
 		fw = SFlash.getNorFW(f)['c']
@@ -125,7 +127,7 @@ def screenValidate(file):
 		# Magics
 		magics = {}
 		for k in SFlash.MAGICS:
-			magics[k] = STR_OK if SFlash.checkMagic(f.read(), k) else STR_DIFF
+			magics[k] = STR_OK if SFlash.checkMagic(data, k) else STR_DIFF
 		
 		print(UI.highlight(STR_MAGICS_CHECK)+'\n')
 		UI.showTable(magics,10)

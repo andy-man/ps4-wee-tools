@@ -166,15 +166,15 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 		mode = int(choice) - 10
 		
 	elif choice == 's':
-	    path = screenFileSelect(path, False, True)
+		path = screenFileSelect(path, False, True)
 	elif choice == 'f':
 		if path and os.path.isfile(path):
 			return SFlashTools.screenSFlashTools(path)
 		else:
 			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	elif choice == 'm':
-	    return screenMainMenu()
-	
+		return screenMainMenu()
+		
 	screenNorFlasher(path, port, act, mode)
 
 
@@ -324,14 +324,14 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		act = 'erase'
 		mode = int(choice) - 10
 	elif choice == 's':
-	    path = screenFileSelect(path, False, True)
+		path = screenFileSelect(path, False, True)
 	elif choice == 'f':
 		if path and os.path.isfile(path):
 			return SysconTools.screenSysconTools(path)
 		else:
 			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	elif choice == 'm':
-	    return screenMainMenu()
+		return screenMainMenu()
 	
 	screenSysconFlasher(path, port, act, mode)
 

@@ -186,14 +186,14 @@ def hddEapKey(eap_key, smi, use_new_blob=False):
 		selected_key = eap_hdd_key_blob_key2
 		computed_signature = hmac_sha256(selected_key[0x10:0x20], eap_hdd_key_blob_enc)
 		if computed_signature != eap_hdd_key_blob_sig:
-			showTable(info)
+			UI.showTable(info)
 			return -1
 	
 	eap_hdd_key_blob = aes_decrypt_cbc(selected_key[0x00:0x10], eap_hdd_key_blob_iv, eap_hdd_key_blob_enc)
 	info['Key check'] = STR_OK
 	if not eap_hdd_key_blob.startswith(EAP_HDD_KEY_HEAD):
 		info['Key check'] = STR_FAIL
-		showTable(info)
+		UI.showTable(info)
 		return -1
 	
 	eap_hdd_key_blob = EAP_HDD_KEY_BLOB

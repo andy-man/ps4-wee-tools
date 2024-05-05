@@ -171,7 +171,7 @@ def screenManualPatchSNVS(file, flat = False):
 	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_MPATCH))
 	
-	print(STR_INFO_SC_MPATCH)
+	print(STR_INFO_SC_MPATCH + '\n\n' + UI.warning(STR_IMMEDIATLY))
 	
 	print(UI.getTab(STR_MPATCH_SVNS))
 	
@@ -310,8 +310,8 @@ def rebuildSyscon(file):
 	ofile = Utils.getFilePathWoExt(file, True) + '_rebuild.bin'
 	
 	with open(ofile, 'wb') as f:
-		 f.write(data)
-		 Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded())
+		f.write(data)
+		Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded())
 	
 	UI.setStatus(STR_SAVED_TO%ofile)
 
@@ -353,8 +353,8 @@ def cleanSyscon(file):
 	ofile = Utils.getFilePathWoExt(file,True) + '_clean'+('_full' if full else '')+'.bin'
 	
 	with open(ofile, 'wb') as f:
-		 f.write(data)
-		 Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded(clean))
+		f.write(data)
+		Syscon.setSysconData(f, 'SNVS', SNVS.getRebuilded(clean))
 	
 	UI.setStatus(STR_SAVED_TO%ofile)
 
@@ -395,12 +395,12 @@ def screenSysconTools(file):
 		cleanSyscon(file)
 	
 	elif choice == 's':
-	    return Tools.screenFileSelect(file)
+		return Tools.screenFileSelect(file)
 	elif choice == 'f':
 		return Tools.screenSysconFlasher(file)
 	elif choice == 'm':
-	    return Tools.screenMainMenu()
-	
+		return Tools.screenMainMenu()
+		
 	screenSysconTools(file)
 
 

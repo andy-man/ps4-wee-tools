@@ -1,6 +1,7 @@
 #==========================================================
 # TXT file to PY array
 # part of ps4 wee tools project
+# https://github.com/andy-man/ps4-wee-tools
 #==========================================================
 import os
 
