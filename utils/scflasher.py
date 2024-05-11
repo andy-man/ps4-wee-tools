@@ -13,7 +13,7 @@ from utils.serial import WeeSerial
 
 class SysconFlasher(WeeSerial):
 	
-	VERSION                 = [2, 1] # Syscon flasher HW version here
+	VERSION                 = [2, 0x02] # Syscon flasher HW version here
 	
 	BUFFER                  = b''
 	BUFFER_SIZE             = 0x8000

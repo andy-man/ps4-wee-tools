@@ -1,7 +1,14 @@
 #==========================================================
 # Default language [EN]
 # part of ps4 wee tools project
+# https://github.com/andy-man/ps4-wee-tools
 #==========================================================
+
+MENU_SC_REBUILD_MODES = [
+	'Normal mode (Choose FW, default values for rest / All (12) types)',
+	'Minimal setup (Choose first two types and FW / 3 types)',
+	'Expert mode (Adjust all (12) types)',
+]
 
 MENU_NVS_COPY = [
 	'Replace %s with backup (%s <= %s)',
@@ -47,6 +54,8 @@ MENU_TOOL_SELECTION = [
 	'sFlash r/w (SPIway by Judges)',
 	'Syscon r/w (SCTool by Abkarino & EgyCnq)',
 	'Syscon r/o (SCRead by DarkNESmonk)',
+	'Syscon w/o (For stock Renesas RL78)',
+	'Change app\'s language',
 	'Exit',
 ]
 
@@ -56,10 +65,34 @@ MENU_FILE_SELECTION = {
 	'b':'Build 2BLS/PUP',
 	'r':'Batch rename (extract dump info to filename)',
 	'c':'Compare files in current folder',
-	'm':'Go to [Main menu]',
+	'q':'Quit / Go back',
 }
 
-MENU_ADDTIONAL = [
+MENU_EXTRA_FLASHER = {
+	's':'Select file',
+	'f':'Launch Tool for this file',
+	'q':'Quit / Go back',
+}
+
+MENU_EXTRA = {
+	's':'Select another file',
+	'f':'Flash this file (full/parts) back to IC',
+	'r':'Rename file to canonical name',
+	'q':'Quit / Go back',
+}
+
+MENU_SFLASH_ACTIONS = [
+	'Flags (UART, RNG, Memtest, etc)',
+	'Memory clocking (GDDR5)',
+	'SAMU boot flag',
+	'Switch CoreOS slot (FW revert)',
+	'Legit CoreOS Patch',
+	'Patch Southbridge',
+	'Patch Torus (WiFi+BT)',
+	'Additional tools',
+]
+
+MENU_SFLASH_ADV_ACTIONS = [
 	'Extract partitions from sFlash0',
 	'Build sFlash0 from extracted files',
 	'View / Recover NVS areas (1C9, 1CA)',
@@ -67,40 +100,25 @@ MENU_ADDTIONAL = [
 	'Get HDD keys = decrypt EAP key = create [keys.bin]',
 	'Create EMC cfw (only for Fat 1xxx/11xx)',
 	'Base validation and entropy stats',
-	'Recovery corrupted partition',
-]
-
-MENU_EXTRA_FLASHER = {
-	's':'Select file',
-	'f':'Launch Tool for this file',
-	'm':'Open Main menu',
-}
-
-MENU_EXTRA = {
-	's':'Select another file',
-	'f':'Flash this file (full/parts) back to console',
-	'm':'Open Main menu',
-}
-
-MENU_NOR_ACTIONS = [
-	'Flags (UART, RNG, Memtest, etc)',
-	'Memory clocking (GDDR5)',
-	'SAMU boot flag',
-	'CoreOS slot switching (FW revert)',
-	'Legitimate CoreOS Patch',
-	'Patch Southbridge',
-	'Patch Torus (WiFi+BT)',
-	'Additional tools',
+	'Analyze and recover of corrupted partition',
 ]
 
 MENU_SC_ACTIONS = [
 	'Toggle Debug',
-	'SNVS block viewer',
 	'Auto SNVS patch',
+	'SNVS block viewer',
+	'NVS block viewer',
 	'Manual SNVS patch',
-	'Rebuild SNVS',
-	'Boot modes (Factory Service Mode / Normal)',
-	'Clean SNVS (sc factory reset)',
+	'Additional tools',
+]
+
+MENU_SC_ADV_ACTIONS = [
+	'Reset SNVS counters',
+	'Mode select (00-03)',
+	'Boot modes (04-07)',
+	'Rebuild Syscon\'s SNVS (Factory Reset)',
+	'Recover Syscon\'s FW',
+	'Convert for Renesas flasher (Motorolla S28)',
 ]
 
 MENU_PATCHES = [
@@ -108,6 +126,7 @@ MENU_PATCHES = [
 	'Method B - last 08-0B and below will be cleaned (%d records)',
 	'Method C - clean everything below previous 08-0B (%d records)',
 	'Method D - clean everything below last 08-0B (%d records)',
+	'Method E - clean previous 08-0B and below (%d records)',
 ]
 
 MENU_SC_STATUSES = [
@@ -124,39 +143,41 @@ MENU_SPW_ACTS = {
 	'erase':	'Erasing',
 }
 
+STR_LANGUAGE			= 'Language'
 STR_SECONDS				= '%0.0f seconds'
 STR_NVS_AREAS			= 'NVS areas'
 STR_PORTS_LIST			= 'Serial ports'
 STR_MAIN_MENU			= 'Main menu'
 STR_FILE_LIST			= 'Files list'
-STR_NOR_INFO			= 'NOR dump info'
+STR_SFLASH_INFO			= 'sFlash dump info'
 STR_ADDITIONAL			= 'Additional tools'
 STR_SYSCON_INFO			= 'Syscon dump info'
 STR_COMPARE				= 'Compare'
 STR_HELP				= 'Help'
 STR_ACTIONS				= 'Actions'
-STR_COREOS_SWITCH		= 'CoreOS switch'
+STR_COREOS_SWITCH		= 'CoreOS slot switch'
 STR_SWITCH_PATTERNS		= 'Switch patterns'
 STR_MEMCLOCK			= 'Memory clock'
 STR_SAMU_BOOT			= 'SAMU boot'
 STR_SYSFLAGS			= 'System flags'
-STR_SVNS_ENTRIES		= 'SNVS entries'
+STR_NVS_ENTRIES			= 'Syscon %s entries'
 STR_APATCH_SVNS			= 'SNVS auto patching'
 STR_MPATCH_SVNS			= 'SNVS manual patcher'
-STR_NOR_VALIDATOR		= 'NOR validator'
-STR_NOR_FLAGS			= 'NOR flags'
-STR_NOR_EXTRACT			= 'NOR extractor'
-STR_NOR_BUILD			= 'NOR builder'
+STR_SFLASH_VALIDATOR	= 'sFlash validator'
+STR_SFLASH_FLAGS		= 'sFlash flags'
+STR_SFLASH_EXTRACT		= 'sFlash extractor'
+STR_SFLASH_BUILD		= 'sFlash builder'
 STR_HDD_KEY				= 'HDD eap key'
 STR_2BLS_BUILDER		= '2BLS builder'
 STR_UNPACK_2BLS			= '2BLS unpacker'
+STR_UNPACK_PUP			= 'Decrypted PUP unpacker'
 STR_EMC_CFW				= 'EMC CFW (Aeolia)'
 STR_EAP_KEYS			= 'EAP keys'
 STR_SC_BOOT_MODES		= 'Bootmode records'
 STR_INFO				= 'Info'
 STR_SC_READER			= 'Syscon reader'
 STR_SPIWAY				= 'SPIway by Judges & Abkarino'
-STR_SCF					= 'Syscon Flasher by Abkarino'
+STR_SCF					= 'Syscon Flasher by Abkarino & EgyCnq'
 STR_LEG_PATCH			= 'Legitimate CoreOS Patch'
 STR_PART_RECOVERY		= 'Partition recovery'
 STR_PART_ANALYZE		= 'Partition analyzing'
@@ -164,7 +185,11 @@ STR_PART_LIST			= 'Partitions list'
 STR_PARTS_INFO			= 'Partitions info'
 STR_WIFI_PATCHER		= 'WiFi patcher'
 STR_SB_PATCHER			= 'Southbridge patcher'
+STR_RL78FLASH			= 'RL78 Flasher'
+STR_SC_REBUILDER		= 'Syscon Rebuilder'
 
+STR_ALL					= 'All'
+STR_UNIQUE				= 'Unique'
 STR_BACKUP				= 'Backup'
 STR_EQUAL				= 'Equal'
 STR_NOT_EQUAL			= 'Not equal'
@@ -187,12 +212,16 @@ STR_CANCEL				= 'Cancel'
 STR_IS_PART_VALID		= '[%s] %s FW %s'
 STR_SNVS_ENTRIES		= '%d records found at 0x%05X'
 STR_SERIAL_MONITOR		= 'Terminal'
+STR_ELAPSEDTIME			= 'Elapsed time'
 
+STR_NO_PORT_CHOSEN		= ' No port was chosen'
 STR_NO_PORTS			= ' No one serial port was found'
 STR_PORT_UNAVAILABLE	= ' Selected port is unavailable'
 STR_PORT_CLOSED			= ' Port is closed'
 STR_STOP_MONITORING		= ' Monitoring was stopped by user'
 
+STR_RESTART_APP			= ' Restart App to apply changes'
+STR_GENERATE_ALL_PS		= ' Generate all patches'
 STR_ACTION_NA			= ' No action is available %s'
 STR_EMC_CFW_WARN		= ' Currently EMC CFW is only for 10xx/11xx PS4 Fat'
 STR_EMC_NOT_FOUND		= ' EMC FW was not found'
@@ -219,7 +248,7 @@ STR_FILENAME			= ' Filename: '
 
 STR_VALIDATE_NVS_CHECK	= ' Checking NVS areas'
 STR_ACT_SLOT			= ' Active slot: %s [0x%02X]'
-STR_NIY					= ' Function is not implemented yet'
+STR_NIY					= ' This feature is available in PRO version only'
 STR_CLEAN_FLAGS			= ' Clean all system flags'
 STR_UNK_FILE_TYPE		= ' Unknown file type'
 STR_UNK_CONTENT			= ' Unknown content'
@@ -229,16 +258,17 @@ STR_DEBUG				= ' Syscon debug is set to '
 STR_DIFF_SLOT_VALUES	= ' Values in slots are different!'
 STR_SYSFLAGS_CLEAN		= ' Sys flags were cleared. Tip: turn on UART'
 STR_SAMU_UPD			= ' SAMU flag was set to '
-STR_DOWNGRADE_UPD		= ' Downgrade was set to: '
-STR_LAST_SC_ENTRIES		= ' Showing [%d/%d] entries of active block [%d]'
+STR_DOWNGRADE_UPD		= ' Slot switch was set to: '
+STR_LAST_SC_ENTRIES		= ' Showing last [%d/%d] entries of active block [%d]'
 STR_MEMCLOCK_SET		= ' GDDR5 frequency was set to %dMHz [0x%02X]'
 
 STR_RECOMMEND			= ' Recommended method [%s]'
 STR_PATCH_CANCELED		= ' Patch was canceled'
 STR_PATCH_SUCCESS		= ' Successfully removed %d entries'
 STR_PATCH_SAVED			= ' Patch was saved to %s'
+STR_RENAMED				= ' Renamed to %s'
 
-STR_SC_BLOCK_SELECT		= ' Select data block [0-%d] or show flat [f] '
+STR_SC_BLOCK_SELECT		= ' Select data block [0-%d] | View Flat/Block [f] '
 STR_MPATCH_INPUT		= ' How many records to clean (from end): '
 STR_CHOICE				= ' Make choice: '
 STR_BACK				= ' Press [ENTER] to go back'
@@ -246,9 +276,8 @@ STR_MEMCLOCK_INPUT		= ' Setup frequency [400 - 2000] / [0 set default (0xFF)] MH
 STR_SAMU_INPUT			= ' Setup SAMU [0 - 255] / [default is 255 (0xFF)] '
 STR_TOO_MUCH			= ' %d is too much, maximum value is %d'
 STR_SC_BLOCK_CLEANED	= ' Block [%d] was entirely cleaned'
-STR_REBUILD_REQUIRED	= ' You need rebuild SNVS at first to perform this action'
+STR_OWC_RESET_REQUIRED	= ' You need reset SNVS counters at first to perform this action'
 STR_SC_NO_BM			= ' Boot modes records were not found!'
-STR_SC_ACTIVE_BM		= ' It\'s already active boot mode!'
 
 STR_UNPATCHABLE			= ' Can\'t patch!'
 STR_SYSCON_BLOCK		= ' Block [%d/%d] has [%d/%d] entries | Active block is [%d]\n'
@@ -256,22 +285,31 @@ STR_PARTITIONS_CHECK	= ' Checking partitions'
 STR_ENTROPY				= ' Entropy statistics'
 STR_MAGICS_CHECK		= ' Checking magics'
 STR_DUPLICATES			= ' %d duplicate(s) found [%s]'
-STR_SC_WARN_OVERWITTEN	= ' Warning: CoreOS is overwritten - very small chance of success'
-STR_SC_TOGGLE_FLATDATA	= ' Toggle between Entries/Flatdata'
-STR_SC_BOOT_ENTRY		= ' % 2d: Block %d (#%03d) at 0x%04X'
+STR_SC_WARN_OVERWITTEN	= ' Warning: CoreOS is probably overwritten'
+
 STR_SNVS_ENTRY_INFO		= 'Block %d #%03d Offset 0x%04X'
+STR_SC_TOGGLE_FLATDATA	= 'Toggle between Flat/Block'
+STR_SH_DUPLICATES		= 'Show / Hide duplicates'
+STR_NO_ENTRIES			= 'No entries found'
+STR_SKIPPED				= 'Skipped'
+STR_SKIP_ENTRY			= 'Skip this type of entry'
+STR_NO_FILE_SEL			= 'No file selected'
 
 STR_INCORRECT_SIZE		= ' %s has incorrect dump size!'
 STR_FILE_NOT_EXISTS		= ' File %s doesn\'t exist!'
+STR_FILE_EXISTS			= ' Filename already exists!'
 STR_ERROR_FILE_REQ		= ' You need to select file first'
 STR_SAVED_TO			= ' Saved to %s'
 STR_ERROR_INPUT			= ' Incorrect input'
 STR_ERROR_DEF_VAL		= ' Setting default values'
 STR_ERROR_CHOICE		= ' Invalid choice'
+STR_ERROR_INFO_READ		= ' Error while reading file data'
 STR_OUT_OF_RANGE		= ' Value is out of range!'
 STR_FILES_MATCH			= ' Files are equal'
 STR_FILES_MISMATCH		= ' Files mismatch'
 STR_SIZES_MISMATCH		= ' Sizes mismatch!'
+STR_RENAMED_COUNT		= ' %d files were renamed'
+STR_FW_RECORDS			= ' FW versions - from Current(1) to Initial(%d)'
 
 STR_SELECT_MODEL		= ' Select model:'
 STR_SHOW_DETAILS		= ' Show details?'
@@ -288,8 +326,8 @@ STR_CONFIRM				= ' Input [y] to continue: '
 STR_CURRENT				= ' Current: '
 STR_GO_BACK				= ' Go back'
 STR_SC_BM_SELECT		= ' Select boot mode variant [1-%d] '
-STR_OPEN_IN_SCR			= ' Open file in syscon tool?'
-STR_FLASH_PATCHED		= ' Flash patched to console (SPIway)?'
+STR_OPEN_IN_SC_TOOL		= ' Open file in Syscon Tool?'
+STR_FLASH_FILE			= ' Flash this file to IC?'
 
 STR_READING_DUMP_N		= ' Reading dump %d'
 STR_CHIP_NOT_RESPOND	= ' Chip doesn\'t respond, check wiring and push reset button'
@@ -308,7 +346,7 @@ STR_SPW_ERROR_CHIP		= 'Unsupported chip!'
 STR_SPW_ERROR_VERSION	= 'Unsupported version! (v%d.%02d required)'
 STR_SPW_ERROR_ERASE		= 'Error erasing chip!'
 STR_SPW_ERROR_ERASE_BLK	= 'Block %d - error erasing block'
-STR_SPW_ERROR_DATA_SIZE	= 'Incorrent data size %d'
+STR_SPW_ERROR_DATA_SIZE	= 'Incorrect data size %d'
 STR_SPW_ERROR_LENGTH	= 'Incorrect length %d != %d!'
 STR_SPW_ERROR_BLK_CHK	= 'Error! Block verification failed (block=%d)'
 STR_SPW_ERROR_WRITE		= 'Error while writing!'
@@ -343,6 +381,9 @@ STR_SSP_EQUAL			= 'Slot switch patterns are equal!'
 STR_LP_FIRST_DUMP		= 'First dump'
 STR_LP_SECOND_DUMP		= 'Second dump'
 
+STR_CONVERTING_S28		= ' Converting to S28 format'
+STR_S28_ALREADY			= ' File format is S28'
+
 STR_USE_EXPERT_M		= ' Choose another model or use expert mode!'
 STR_ERR_NO_FW_FOUND		= ' Error: Can not find %s for FW %s in DB'
 STR_EXPERT_MODE			= ' Expert mode?'
@@ -352,10 +393,24 @@ STR_FW_VER				= ' FW: %s / Slot: %s'
 STR_SELECT_MOST_FILE	= ' Select most relevant file: '
 STR_NO_FW_FILES			= ' Files are not found! Download files to fws folder:\n [%s]'
 
+STR_ABOUT_SC_REBUILDER = 'About Syscon Rebuilder'
+STR_INFO_SC_REBUILDER = ''\
+' This util will help you to create custom version of Syscon.\n'\
+' You can adjust each type of records in expert mode.\n'\
+' Entries are sorted from current to past.\n'\
+' * To select previous FW you need to input "2" or more.\n'\
+' * Minimal setup consists of 3 types (00-03 + 04-07 + 08-0B)'
+
+STR_ABOUT_RL78FLASH = 'About Stock Syscon'
+STR_INFO_RL78FLASH = ''\
+' In order to write new blank syscon chip (Renesas RL78G10)\n'\
+' you need USB to TTL adapter, wires and some diodes.\n'\
+' Wiring diagram can be found in assets/hw/l78flash folder'\
+
 STR_ABOUT_NVS = 'About NVS recovery'
 STR_INFO_NVS = ''\
 ' Swaps corrupted block with backup data (not suitable for 10xx/11xx)\n'\
-' UART and other flags may be overwritten.\n'\
+' Warning - UART and other flags may be overwritten.\n'\
 ' If you need to set some flags do it after NVS recovery!\n'\
 
 STR_ABOUT_TORUS_PATCH = 'About WiFi patcher'
@@ -376,13 +431,13 @@ STR_INFO_FLASH_TOOLS = ''\
 
 STR_ABOUT_PART_RECOVERY = 'Partition analyzing and recovery'
 STR_INFO_PART_A_R = ''\
-' Compares every byte of your current partition with valid files\n'\
-' and shows percentage of simularity.\n'\
+' Compares every byte of (SFlash/Syscon) partition with valid files\n'\
+' and shows percentage of similarity.\n'\
 ' Most equal files will be at top of the list.\n'\
 ' Keep in mind that Southbridge FW consists of emc + eap'
 
 STR_INFO_FW_LINK = ''\
-' Put valid emc/eap/torus files to /fws/ folder\n'\
+' Put valid emc/eap/torus/syscon files to /fws/ folder\n'\
 ' You can download it from this repo:\n '
 
 STR_ABOUT_LEG_PATCH = 'About Legitimate CoreOS Patch'
@@ -400,6 +455,7 @@ STR_INFO_LEG_PATCH = ''\
 STR_ABOUT_SCF = 'About Syscon Flasher'
 STR_INFO_SCF = ''\
 ' Syscon Flasher allows you to r/w original PS4 syscon chip (RL78/G13)\n'\
+' Flasher supports only A0x-COLx syscon models\n'\
 ' Currently hardware part is based on Teensy boards (2.0++/4.0/4.1)\n'\
 ' Look at </assets/hw/syscon_flasher> for diagrams and Teensy\'s FW\n'\
 ' More info here: '
@@ -432,14 +488,14 @@ STR_OVERCLOCKING = ''\
 ' - Too high value can lead to LOADBIOS -8 or DCT [*] error\n'\
 ' - Too low value leads to AMDINIT error'
 
-STR_ABOUT_EAPKEYS = 'About eap keys'
+STR_ABOUT_EAPKEYS = 'About EAP keys'
 STR_INFO_EAPKEYS = ''\
 ' Eap key may be 0x40 and 0x60 bytes length\n'\
 ' PS4 10xx/11xx models usually have only one key\n'\
 ' And 12xx/Slim/PRO models have backup key\n'\
 
 STR_IMMEDIATLY = ''\
-' Be careful: All patches are applied immediatly to the file!'
+' Be careful: All patches are applied immediately to the file!'
 
 STR_PATCHES = STR_IMMEDIATLY + '\n'\
 ' Will switch value between available values for chosen option'
@@ -455,11 +511,11 @@ STR_DOWNGRADE = ''\
 STR_ABOUT_MPATCH = 'Manual patch instructions'
 STR_INFO_SC_MPATCH = ''\
 ' Every record has 16 bytes length. First byte is always "A5"\n'\
-' The second byte is record "type" usualy in range [0x00-0x30]\n'\
+' The second byte is record "type" usually in range [0x00-0x30]\n'\
 ' Firmware update takes 4 records with types %s\n'\
 ' To cancel last fw update we need to clean these 4 records (fill 0xFF)\n'\
 ' If there are %s,%s types after %s patch is impossible\n'\
-' backup slot is already erased, you\'ll got checkUpdVersion error'
+' backup slot is already overwritten, you\'ll got checkUpdVersion error'
 
 STR_ABOUT_EAP = 'About EAP keys'
 STR_INFO_HDD_EAP = ''\
@@ -482,4 +538,4 @@ STR_APP_HELP = ''\
 '  <file1> <file2> ... : compare files (with MD5 info)\n'\
 '  --help              : show this help screen\n'\
 '\n'\
-' Home: '
+' Homepage: '

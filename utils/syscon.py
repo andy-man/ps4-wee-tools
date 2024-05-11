@@ -3,6 +3,7 @@
 # part of ps4 wee tools project
 #==========================================================
 from utils.utils import *
+import lang._i18n_ as Lang
 
 
 
@@ -483,3 +484,16 @@ NVS_CONFIG = NvsConfig({
 	"header":	{ "length":BLOCK_SIZE, "count":2 },
 	"data":		{ "flat":BLOCK_SIZE, "records":BLOCK_SIZE * 2, "count":2 },
 })
+
+
+
+def getCanonicalName(fpath):
+	with open(fpath, 'rb') as f:
+		
+		fw = getSysconData(f, 'VERSION')
+		SNVS = NVStorage(SNVS_CONFIG, getSysconData(f, 'SNVS'))
+		records = SNVS.getAllDataEntries()
+		order = ''.join(str(x) for x in SNVS.getDataBlocksOrder())
+		status = Lang.MENU_SC_STATUSES[isSysconPatchable(records)].replace(' ','_').lower()
+	
+	return '_'.join(['syscon', '%X.%02X'%(fw[0],fw[2]), '%d'%len(records), '['+order+']', status])

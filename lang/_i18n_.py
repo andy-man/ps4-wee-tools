@@ -3,8 +3,9 @@
 # part of ps4 wee tools project
 #==========================================================
 import sys, os
+from utils.utils import APP_CONFIG
 
-APP_VERSION = '0.9.9'
+APP_VERSION = '1.0.0'
 
 # Colors stuff
 
@@ -158,7 +159,24 @@ STR_080B = Clr.fg.cyan+'"08-0B"'+Clr.reset
 STR_0C0F = Clr.fg.orange+'"0C-0F"'+Clr.reset
 STR_2023 = Clr.fg.red+'"20-23"'+Clr.reset
 
+# Lang stuff
+
+LANG_LIST = {
+    'en': 'English',
+    'es': 'Spanish',
+    'ru': 'Russian',
+}
+
+LANG_CODE = APP_CONFIG.get('lang')
+
+# Import LANG file
+
 from lang.en import *
+
+if LANG_CODE == 'ru':
+    from lang.ru import *
+elif LANG_CODE == 'es':
+    from lang.es import *
 
 APP_NAME = ' PS4 ~WEE~ TOOLS v' + APP_VERSION
 TITLE = UI.DIVIDER_BOLD + APP_NAME+('by Andy_maN').rjust(UI.LINE_WIDTH-len(APP_NAME)-1)+'\n' + UI.DIVIDER_BOLD

@@ -61,7 +61,7 @@ SWITCH_BLOBS = [
 BOOT_MODES = {b'\xFE':'Development', b'\xFB':'Assist', b'\xFF':'Release'}
 
 # {'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
-NOR_PARTITIONS = {
+SFLASH_PARTITIONS = {
 	"s0_header"			: {"o": 0x00000000,	"l": 0x1000,	"n":"s0_head"},
 	"s0_active_slot"	: {"o": 0x00001000,	"l": 0x1000,	"n":"s0_act_slot"},
 	"s0_MBR1"			: {"o": 0x00002000,	"l": 0x1000,	"n":"s0_mbr1"},
@@ -87,7 +87,7 @@ NOR_PARTITIONS = {
 }
 
 # 'KEY':{'o':<offset>, 'l':<length>, 't':<type>, 'n':<name>}
-NOR_AREAS = {
+SFLASH_AREAS = {
 	
 	'ACT_SLOT'	: {'o':0x001000,	'l':1,			't':'b',	'n':'Active slot'},			# 0x00 - A 0x80 - B
 	
@@ -265,12 +265,18 @@ def getSlotSwitchInfo(file):
 
 
 def getNorFW(f, active_slot = ''):
-	old_fw = getNorData(f, 'FW_V')
-	#print(getNorData(f, 'FW_VER'),getNorData(f, 'FW_V'))
 	
-	fw = getNorData(f, 'FW_VER') if old_fw[0] == 0xFF else old_fw
+	fw = getNorData(f, 'FW_VER')
+	
+	if 0xFF in fw:
+		fw = getNorData(f, 'FW_V')
+	
 	fw = '{:X}.{:02X}'.format(fw[1], fw[0])
-	
+	"""
+	fw = getNorData(f, 'FW_VER')
+	o_fw = getNorData(f, 'FW_V')
+	fw = '{:X}.{:02X}'.format(fw[1], fw[0]) + ' {:X}.{:02X}'.format(o_fw[1], o_fw[0])
+	"""
 	mfw = getNorData(f, 'FW_MIN')
 	mfw = '{:X}.{:02X}'.format(mfw[1], mfw[0]) if mfw[0] != 0xFF else ''
 	
@@ -308,9 +314,9 @@ def getPartitionName(code):
 
 
 def getNorPartition(f, name):
-	if not name in NOR_PARTITIONS:
+	if not name in SFLASH_PARTITIONS:
 		return ''
-	return Utils.getData(f, NOR_PARTITIONS[name]['o'], NOR_PARTITIONS[name]['l'])
+	return Utils.getData(f, SFLASH_PARTITIONS[name]['o'], SFLASH_PARTITIONS[name]['l'])
 
 
 
@@ -438,38 +444,38 @@ def getSouthBridge(f):
 # NOR Areas data utils
 
 def getNorAreaName(key):
-	if key in NOR_AREAS:
-		return NOR_AREAS[key]['n']
+	if key in SFLASH_AREAS:
+		return SFLASH_AREAS[key]['n']
 	return STR_UNKNOWN
 
 
 
 def setNorData(file, key, val):
-	if not key in NOR_AREAS:
+	if not key in SFLASH_AREAS:
 		return False
-	return Utils.setData(file, NOR_AREAS[key]['o'], val)
+	return Utils.setData(file, SFLASH_AREAS[key]['o'], val)
 
 
 
 def setNorDataB(file, key, val):
-	if not key in NOR_AREAS:
+	if not key in SFLASH_AREAS:
 		return False
-	return Utils.setData(file, NOR_AREAS[key]['o'] + BACKUP_OFFSET, val)
+	return Utils.setData(file, SFLASH_AREAS[key]['o'] + BACKUP_OFFSET, val)
 
 
 
 def getNorData(file, key, decode = False):
-	if not key in NOR_AREAS:
+	if not key in SFLASH_AREAS:
 		return 'False' if decode else False
-	data = Utils.getData(file, NOR_AREAS[key]['o'], NOR_AREAS[key]['l'])
+	data = Utils.getData(file, SFLASH_AREAS[key]['o'], SFLASH_AREAS[key]['l'])
 	return data.decode('utf-8','ignore').strip('\x00') if decode else data
 
 
 
 def getNorDataB(file, key, decode = False):
-	if not key in NOR_AREAS:
+	if not key in SFLASH_AREAS:
 		return 'False' if decode else False
-	data = Utils.getData(file, NOR_AREAS[key]['o'] + BACKUP_OFFSET, NOR_AREAS[key]['l'])
+	data = Utils.getData(file, SFLASH_AREAS[key]['o'] + BACKUP_OFFSET, SFLASH_AREAS[key]['l'])
 	return data.decode('utf-8','ignore').strip('\x00') if decode else data
 
 
@@ -525,7 +531,7 @@ def checkNVS(data, key = 'NVS1'):
 
 def getOffsetRange(k, backup = False):
 	extra = BACKUP_OFFSET if backup else 0
-	return '%X~%X'%(NOR_AREAS[k]['o'] + extra, NOR_AREAS[k]['o'] + NOR_AREAS[k]['l'] + extra)
+	return '%X~%X'%(SFLASH_AREAS[k]['o'] + extra, SFLASH_AREAS[k]['o'] + SFLASH_AREAS[k]['l'] + extra)
 
 
 
@@ -568,3 +574,19 @@ def getSFlashInfo(file = '-'):
 		}
 	
 	return info
+
+
+
+def getCanonicalName(fpath):
+	with open(fpath, 'rb') as f:
+		
+		sku = getNorData(f, 'SKU', True)[:9].replace('-','')
+		sn = getNorData(f, 'SN', True)
+		sn = sn if sn else '0'*10
+		sb = getSouthBridge(f)['ic'][-2:]
+		mobo = getMobo(getNorData(f, 'BOARD_ID'))['name']
+		slot = 'a' if getNorData(f, 'ACT_SLOT') == b'\x00' else 'b'
+		fw = getNorFW(f, slot)
+		fws = '-'.join(fw['b'])
+	
+	return '_'.join([sku, sn, sb, mobo, fw['c'], slot, fws]).upper()

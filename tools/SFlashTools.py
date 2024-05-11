@@ -140,8 +140,8 @@ def screenSBpatcher(file, model = '', emc_ver = '', eap_ver = ''):
 		if os.path.exists(emc_file) and os.path.exists(eap_file):
 			out_file = Utils.getFilePathWoExt(file, True)+'_patch_sb_'+model['ic']+'.bin'
 			Utils.savePatchData(out_file, Utils.getFileContents(file), [
-				{'o':SFlash.NOR_PARTITIONS['s0_emc_ipl_'+active_slot.lower()]['o'], 'd':Utils.getFileContents(emc_file)},
-				{'o':SFlash.NOR_PARTITIONS['s0_eap_kbl']['o'], 'd':Utils.getFileContents(eap_file)},
+				{'o':SFlash.SFLASH_PARTITIONS['s0_emc_ipl_'+active_slot.lower()]['o'], 'd':Utils.getFileContents(emc_file)},
+				{'o':SFlash.SFLASH_PARTITIONS['s0_eap_kbl']['o'], 'd':Utils.getFileContents(eap_file)},
 			])
 			UI.setStatus(STR_SAVED_TO%out_file)
 		else:
@@ -224,7 +224,7 @@ def screenWFpatcher(file, model = '', ver = ''):
 		fw_file = (os.path.sep).join([Utils.ROOT_PATH, 'fws', 'torus', '%02X'%model['code'], SFlash.getFwFilename(ver)])
 		if os.path.exists(fw_file):
 			out_file = Utils.getFilePathWoExt(file, True)+'_patch_torus_'+'%02X'%model['code']+'.bin'
-			Utils.savePatchData(out_file, Utils.getFileContents(file), [{'o':SFlash.NOR_PARTITIONS['s0_wifi']['o'], 'd':Utils.getFileContents(fw_file)}])
+			Utils.savePatchData(out_file, Utils.getFileContents(file), [{'o':SFlash.SFLASH_PARTITIONS['s0_wifi']['o'], 'd':Utils.getFileContents(fw_file)}])
 			UI.setStatus(STR_SAVED_TO%out_file)
 		else:
 			UI.setStatus(' %s - %s'%(ver['file'],STR_NOT_FOUND))
@@ -391,14 +391,14 @@ def screenLegitimatePatch(file, path = ''):
 	
 	ofile = Utils.getFilePathWoExt(file)+'_legit_patch.bin'
 	Utils.savePatchData(ofile, data, [
-		{'o':SFlash.NOR_AREAS['CORE_SWCH']['o'],					'd':s_info['switch']},
-		{'o':SFlash.NOR_AREAS['UART']['o'],							'd':b'\x01'},
-		{'o':SFlash.NOR_AREAS['UART']['o']+SFlash.BACKUP_OFFSET,	'd':b'\x01'},
+		{'o':SFlash.SFLASH_AREAS['CORE_SWCH']['o'],					'd':s_info['switch']},
+		{'o':SFlash.SFLASH_AREAS['UART']['o'],							'd':b'\x01'},
+		{'o':SFlash.SFLASH_AREAS['UART']['o']+SFlash.BACKUP_OFFSET,	'd':b'\x01'},
 	])
 	
 	print(STR_PATCH_SAVED%ofile)
 	
-	c = input('\n'+UI.highlight(STR_FLASH_PATCHED+STR_Y_OR_CANCEL)).lower()
+	c = input('\n'+UI.highlight(STR_FLASH_FILE+STR_Y_OR_CANCEL)).lower()
 	if c == 'y':
 		return Tools.screenNorFlasher(ofile if ofile else file, '', 'write', 1)
 	
@@ -442,9 +442,9 @@ def screenDowngrade(file):
 				ofile = os.path.splitext(file)[0]+'_slot_switch_'+str(num)+'.bin'
 				f.seek(0,0)
 				patch = [
-					{'o':SFlash.NOR_AREAS['CORE_SWCH']['o'],					'd':bytes(pattern['v'])},
-					{'o':SFlash.NOR_AREAS['UART']['o'],							'd':b'\x01'},
-					{'o':SFlash.NOR_AREAS['UART']['o']+SFlash.BACKUP_OFFSET,	'd':b'\x01'},
+					{'o':SFlash.SFLASH_AREAS['CORE_SWCH']['o'],					'd':bytes(pattern['v'])},
+					{'o':SFlash.SFLASH_AREAS['UART']['o'],							'd':b'\x01'},
+					{'o':SFlash.SFLASH_AREAS['UART']['o']+SFlash.BACKUP_OFFSET,	'd':b'\x01'},
 				]
 				Utils.savePatchData(ofile, f.read(), patch)
 				UI.setStatus(STR_PATCH_SAVED%ofile)
@@ -452,7 +452,7 @@ def screenDowngrade(file):
 				SFlash.setNorData(f, 'CORE_SWCH', bytes(pattern['v']))
 				UI.setStatus(STR_DOWNGRADE_UPD + SFlash.SWITCH_TYPES[pattern['t']] + ' [' + str(num)+']')
 			
-			c = input('\n'+UI.highlight(STR_FLASH_PATCHED+STR_Y_OR_CANCEL)).lower()
+			c = input('\n'+UI.highlight(STR_FLASH_FILE+STR_Y_OR_CANCEL)).lower()
 			if c == 'y':
 				return Tools.screenNorFlasher(ofile if ofile else file, '', 'write', 1)
 	
@@ -466,7 +466,7 @@ def screenFlagsToggler(file):
 	
 	print(UI.warning(STR_PATCHES))
 	
-	print(UI.getTab(STR_NOR_FLAGS))
+	print(UI.getTab(STR_SFLASH_FLAGS))
 	
 	with open(file, 'rb') as f:
 		
@@ -569,47 +569,69 @@ def screenPartitionsInfo(file):
 
 
 def screenSFlashTools(file):
-	UI.clearScreen()
-	print(TITLE+UI.getTab(STR_NOR_INFO))
-	
-	info = SFlash.getSFlashInfo(file)
-	if info:
-		UI.showTable(info)
-	else:
-		return Tools.screenFileSelect(file)
-	
-	print(UI.getTab(STR_ACTIONS))
-	
-	UI.showMenu(MENU_NOR_ACTIONS,1)
-	print(UI.DIVIDER)
-	UI.showMenu(MENU_EXTRA)
-	
-	UI.showStatus()
-	
-	choice = input(STR_CHOICE)
-	
-	if choice == '1':
-		screenFlagsToggler(file)
-	elif choice == '2':
-		screenMemClock(file)
-	elif choice == '3':
-		screenSamuBoot(file)
-	elif choice == '4':
-		screenDowngrade(file)
-	elif choice == '5':
-		screenLegitimatePatch(file)
-	elif choice == '6':
-		screenSBpatcher(file)
-	elif choice == '7':
-		screenWFpatcher(file)
-	elif choice == '8':
-		AdvSFlashTools.screenAdvSFlashTools(file)
-	
-	elif choice == 's':
-		return Tools.screenFileSelect(file)
-	elif choice == 'f':
-		return Tools.screenNorFlasher(file)
-	elif choice == 'm':
-		return Tools.screenMainMenu()
 		
-	screenSFlashTools(file)
+	while True:
+			
+		UI.clearScreen()
+		print(TITLE+UI.getTab(STR_SFLASH_INFO))
+		
+		info = SFlash.getSFlashInfo(file)
+		if info:
+			UI.showTable(info)
+		else:
+			return Tools.screenFileSelect(file)
+		
+		print(UI.getTab(STR_ACTIONS))
+		
+		UI.showMenu(MENU_SFLASH_ACTIONS,1)
+		print(UI.DIVIDER)
+		UI.showMenu(MENU_EXTRA)
+		
+		UI.showStatus()
+		
+		choice = input(STR_CHOICE)
+	
+		if choice == 's':
+			Tools.screenFileSelect(file)
+			break
+		elif choice == 'f':
+			Tools.screenNorFlasher(file)
+			break
+		elif choice == 'r':
+			file = renameToCanonnical(file)
+			continue
+		elif choice == 'q':
+			break
+
+		if choice == '1':
+			screenFlagsToggler(file)
+		elif choice == '2':
+			screenMemClock(file)
+		elif choice == '3':
+			screenSamuBoot(file)
+		elif choice == '4':
+			screenDowngrade(file)
+		elif choice == '5':
+			screenLegitimatePatch(file)
+		elif choice == '6':
+			screenSBpatcher(file)
+		elif choice == '7':
+			screenWFpatcher(file)
+		elif choice == '8':
+			AdvSFlashTools.screenAdvSFlashTools(file)
+	
+		
+
+def renameToCanonnical(file):
+	fpath = os.path.realpath(file)
+	new_name = SFlash.getCanonicalName(file)
+	if new_name:
+		new_fpath = os.path.join(os.path.dirname(fpath), new_name + '.bin')
+		if not os.path.exists(new_fpath):
+			os.rename(fpath, new_fpath)
+			file = new_fpath
+			UI.setStatus(STR_RENAMED%new_name)
+			return new_fpath
+		else:
+			UI.setStatus(STR_FILE_EXISTS)
+	return file

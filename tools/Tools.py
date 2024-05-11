@@ -15,6 +15,73 @@ import tools.SFlashTools as SFlashTools
 import tools.SysconTools as SysconTools
 import tools.AdvSFlashTools as AdvSFlashTools
 
+# Screens
+
+def screenMainMenu():
+	
+	MENU_TOOL_SELECTION[6-1] = UI.dark(MENU_TOOL_SELECTION[6-1])
+	
+	while True:
+	
+		UI.clearScreen()
+		print(TITLE + UI.getTab(STR_MAIN_MENU))
+		
+		UI.showMenu(MENU_TOOL_SELECTION,1)
+		
+		UI.showStatus()
+		
+		choice = input(STR_CHOICE)
+		
+		if choice == '1':
+			screenFileSelect()
+		elif choice == '2':
+			screenSerialMonitor()
+		elif choice == '3':
+			screenNorFlasher()
+		elif choice == '4':
+			screenSysconFlasher()
+		elif choice == '5':
+			screenSysconReader()
+		elif choice == '6':
+			UI.setStatus(STR_NIY)
+		elif choice == '7':
+			screenSelectLanguage()	
+		elif choice == '8':
+			sys.exit()
+		else:
+			UI.setStatus(STR_ERROR_CHOICE)
+		
+
+
+def screenSelectLanguage():
+
+	while True:
+		UI.clearScreen()
+		print(TITLE+UI.getTab(STR_LANGUAGE))
+		
+		lang_codes = []
+		for i, key in enumerate(LANG_LIST):
+			lang_codes.append(key)
+			print(f' {i+1}: {LANG_LIST[key]} [{key}]')
+		
+		UI.showStatus()
+		
+		choice = input(STR_CHOICE).lower()
+		
+		try: num = int(choice)
+		except: num = -1
+		
+		if num > 0 and num <= len(LANG_LIST):
+			code = lang_codes[num-1]
+			APP_CONFIG.set('lang', code)
+			APP_CONFIG.save()
+			UI.setStatus(STR_RESTART_APP)
+			break
+		else:
+			UI.setStatus(STR_ERROR_CHOICE)
+	
+	return code
+
 
 
 def screenNorFlasher(path = '', port = '', act = '', mode = False):
@@ -186,7 +253,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		return
 	
 	flasher = SysconFlasher(port)
-	#flasher.reset()
+	flasher.reset()
 	
 	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_SCF))
@@ -390,7 +457,7 @@ def screenSysconReader(port = '', file = ''):
 	
 	if equal:
 		print(UI.green(STR_FILES_MATCH))
-		c = input(UI.highlight(STR_OPEN_IN_SCR+STR_Y_OR_CANCEL)).lower()
+		c = input(UI.highlight(STR_OPEN_IN_SC_TOOL+STR_Y_OR_CANCEL)).lower()
 		if c == 'y':
 			SysconTools.screenSysconTools(ofile)
 		else:
@@ -503,35 +570,6 @@ def screenChoosePort():
 		UI.setStatus(STR_ERROR_INPUT)
 	
 	return screenChoosePort()
-
-
-
-def screenMainMenu():
-	UI.clearScreen()
-	print(TITLE + UI.getTab(STR_MAIN_MENU))
-	
-	UI.showMenu(MENU_TOOL_SELECTION,1)
-	
-	UI.showStatus()
-	
-	choice = input(STR_CHOICE)
-	
-	if choice == '1':
-		screenFileSelect()
-	elif choice == '2':
-		screenSerialMonitor()
-	elif choice == '3':
-		screenNorFlasher()
-	elif choice == '4':
-		screenSysconFlasher()
-	elif choice == '5':
-		screenSysconReader()
-	elif choice == '6':
-		return quit()
-	else:
-		UI.setStatus(STR_ERROR_CHOICE)
-		
-	screenMainMenu()
 
 
 
@@ -749,7 +787,7 @@ def screenHelp():
 	
 	input(STR_BACK)
 
-
+# Functions
 
 def chooseBNC(mode = 0, block_size = 0, syscon = False):
 	
@@ -766,9 +804,9 @@ def chooseBNC(mode = 0, block_size = 0, syscon = False):
 		else:
 			areas = [
 				{'n':'PS4 Full dump',		'o':0,											'l':SFlash.DUMP_SIZE},
-				{'n':'PS4 Base Info',		'o':SFlash.NOR_PARTITIONS['s0_header']['o'],	'l':SFlash.NOR_PARTITIONS['s0_blank']['o']},
-				{'n':'PS4 Flags (NVS)',		'o':SFlash.NOR_PARTITIONS['s0_nvs']['o'],		'l':SFlash.NOR_PARTITIONS['s0_nvs']['l']},
-				{'n':'PS4 CoreOS switch',	'o':SFlash.NOR_AREAS['CORE_SWCH']['o'],			'l':SFlash.NOR_AREAS['CORE_SWCH']['l']},
+				{'n':'PS4 Base Info',		'o':SFlash.SFLASH_PARTITIONS['s0_header']['o'],	'l':SFlash.SFLASH_PARTITIONS['s0_blank']['o']},
+				{'n':'PS4 Flags (NVS)',		'o':SFlash.SFLASH_PARTITIONS['s0_nvs']['o'],		'l':SFlash.SFLASH_PARTITIONS['s0_nvs']['l']},
+				{'n':'PS4 CoreOS switch',	'o':SFlash.SFLASH_AREAS['CORE_SWCH']['o'],			'l':SFlash.SFLASH_AREAS['CORE_SWCH']['l']},
 			]
 		for i in range(len(areas)):
 			areas[i]['b'] = areas[i]['o'] // block_size

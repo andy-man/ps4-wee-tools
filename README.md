@@ -71,6 +71,7 @@ Visit our [WIKI](https://github.com/andy-man/ps4-wee-tools/wiki)
 * Syscon reader by DarkNESmonk
 * Multy files compare
 * Pack / Unpack 2BLS files
+* Language selection
 
 Don't use if you don't understand what is it for!
 
@@ -103,11 +104,19 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
+### v1.0.0
+* [fix] FW detection
+* [fix] syscon patch
+* Syscon Flasher 2.02
+* 11.50 support
+* Spanish Language
+* Russian Language
+* Some code from PRO
+
 ### v0.9.9
 * VS bug fix
 * MBR magic check - fixed
 * Warning for manual patch
-* 11.50 support
 * 11.02 support
 
 ### v0.9.8

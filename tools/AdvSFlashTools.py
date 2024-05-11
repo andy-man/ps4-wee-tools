@@ -80,7 +80,7 @@ def screenPartitionRecovery(file, partition = ''):
 			data = Utils.getFileContents(file)
 			pdata = Utils.getFileContents(items[n]['path'])
 			
-			Utils.savePatchData(out_file, data, [{'o':SFlash.NOR_PARTITIONS[partition]['o'], 'd':pdata}])
+			Utils.savePatchData(out_file, data, [{'o':SFlash.SFLASH_PARTITIONS[partition]['o'], 'd':pdata}])
 			
 			UI.setStatus(STR_SAVED_TO%out_file)
 		else:
@@ -111,7 +111,7 @@ def screenPartitionRecovery(file, partition = ''):
 
 def screenValidate(file):
 	UI.clearScreen()
-	print(TITLE + UI.getTab(STR_NOR_VALIDATOR))
+	print(TITLE + UI.getTab(STR_SFLASH_VALIDATOR))
 	
 	with open(file,'rb') as f:
 		
@@ -156,7 +156,7 @@ def screenValidate(file):
 		eap_key = SFlash.getNorData(f, 'EAP_KEY')
 		
 		print(UI.highlight(' EAP key\n'))
-		print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.NOR_AREAS['EAP_MGC']['n'] else STR_DIFF ))
+		print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.SFLASH_AREAS['EAP_MGC']['n'] else STR_DIFF ))
 		for i in range(0,len(eap_key),0x20):
 			print(' '+Utils.hex(eap_key[i:i+0x20],''))
 		
@@ -165,7 +165,7 @@ def screenValidate(file):
 			eap_key_b = SFlash.getNorDataB(f, 'EAP_KEY')
 			print()
 			print(UI.highlight(' EAP key ('+STR_BACKUP+')\n'))
-			print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.NOR_AREAS['EAP_MGC']['n'] else STR_DIFF ))
+			print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.SFLASH_AREAS['EAP_MGC']['n'] else STR_DIFF ))
 			for i in range(0,len(eap_key_b),0x20):
 				print(' '+Utils.hex(eap_key_b[i:i+0x20],''))
 			
@@ -311,7 +311,7 @@ def screenEapKeyRecovery(file):
 		key_b = SFlash.getNorDataB(f, 'EAP_KEY')
 		
 		print(UI.highlight(' Key A\n'))
-		print(' Magic [%s] %s\n'%(Utils.hex(magic_a,''), STR_OK if magic_a == SFlash.NOR_AREAS['EAP_MGC']['n'] else STR_DIFF ))
+		print(' Magic [%s] %s\n'%(Utils.hex(magic_a,''), STR_OK if magic_a == SFlash.SFLASH_AREAS['EAP_MGC']['n'] else STR_DIFF ))
 		
 		for i in range(0,len(key_a),0x20):
 			print(' '+Utils.hex(key_a[i:i+0x20],''))
@@ -319,7 +319,7 @@ def screenEapKeyRecovery(file):
 		print()
 		
 		print(UI.highlight(' Key B\n'))
-		print(' Magic [%s] %s\n'%(Utils.hex(magic_b,''), STR_OK if magic_b == SFlash.NOR_AREAS['EAP_MGC']['n'] else STR_DIFF ))
+		print(' Magic [%s] %s\n'%(Utils.hex(magic_b,''), STR_OK if magic_b == SFlash.SFLASH_AREAS['EAP_MGC']['n'] else STR_DIFF ))
 		
 		for i in range(0,len(key_b),0x20):
 			print(' '+Utils.hex(key_b[i:i+0x20],''))
@@ -346,9 +346,9 @@ def screenEapKeyRecovery(file):
 		elif c == 2:
 			SFlash.setNorDataB(f, 'EAP_KEY', key_a)
 		elif c == 3:
-			SFlash.setNorData(f, 'EAP_MGC', SFlash.NOR_AREAS['EAP_MGC']['n'])
+			SFlash.setNorData(f, 'EAP_MGC', SFlash.SFLASH_AREAS['EAP_MGC']['n'])
 		elif c == 4:
-			SFlash.setNorDataB(f, 'EAP_MGC', SFlash.NOR_AREAS['EAP_MGC']['n'])
+			SFlash.setNorDataB(f, 'EAP_MGC', SFlash.SFLASH_AREAS['EAP_MGC']['n'])
 		elif c == 5:
 			key = Utils.genRandBytes(0x40)
 			SFlash.setNorData(f, 'EAP_KEY', key + b'\xFF'*0x20)
@@ -358,8 +358,8 @@ def screenEapKeyRecovery(file):
 			SFlash.setNorData(f, 'EAP_KEY', key)
 			SFlash.setNorDataB(f, 'EAP_KEY', key)
 		elif c == 7:
-			SFlash.setNorDataB(f, 'EAP_MGC', b'\xFF'*SFlash.NOR_AREAS['EAP_MGC']['l'])
-			SFlash.setNorDataB(f, 'EAP_KEY', b'\xFF'*SFlash.NOR_AREAS['EAP_KEY']['l'])
+			SFlash.setNorDataB(f, 'EAP_MGC', b'\xFF'*SFlash.SFLASH_AREAS['EAP_MGC']['l'])
+			SFlash.setNorDataB(f, 'EAP_KEY', b'\xFF'*SFlash.SFLASH_AREAS['EAP_KEY']['l'])
 		
 		if c >= 1 and c <= len(MENU_EAP_KEYS):
 			UI.setStatus(STR_PERFORMED+MENU_EAP_KEYS[c-1])
@@ -462,7 +462,7 @@ def screenEmcCFW(file):
 		print('\n'+UI.warning(STR_SIZES_MISMATCH))
 	
 	out_file = os.path.join(folder,filename+'_emc_cfw.bin')
-	Utils.savePatchData(out_file, data, [{'o':fw_offset + SFlash.NOR_PARTITIONS[emc_part_name]['o'],'d':encrypted_fw}])
+	Utils.savePatchData(out_file, data, [{'o':fw_offset + SFlash.SFLASH_PARTITIONS[emc_part_name]['o'],'d':encrypted_fw}])
 	print('\n'+UI.highlight(STR_SAVED_TO%out_file))
 	
 	input(STR_BACK)
@@ -489,7 +489,7 @@ def screenHddKey(file):
 	for i in range(0,len(key),0x20):
 		print(' '+Utils.hex(key[i:i+0x20],''))
 	
-	print(UI.highlight('\n Key magic - ')+'%s\n'%(STR_OK if magic == SFlash.NOR_AREAS['EAP_MGC']['n'] else STR_DIFF))
+	print(UI.highlight('\n Key magic - ')+'%s\n'%(STR_OK if magic == SFlash.SFLASH_AREAS['EAP_MGC']['n'] else STR_DIFF))
 	
 	keys = Encdec.hddEapKey(key, smi, True if mode == 'y' else False)
 	print()
@@ -510,7 +510,7 @@ def screenHddKey(file):
 
 def screenExtractNorDump(file):
 	UI.clearScreen()
-	print(TITLE+UI.getTab(STR_NOR_EXTRACT))
+	print(TITLE+UI.getTab(STR_SFLASH_EXTRACT))
 	
 	with open(file, 'rb') as f:
 		
@@ -529,8 +529,8 @@ def screenExtractNorDump(file):
 		print(STR_EXTRACTING%sn+'\n')
 		
 		i = 0
-		for k in SFlash.NOR_PARTITIONS:
-			p = SFlash.NOR_PARTITIONS[k]
+		for k in SFlash.SFLASH_PARTITIONS:
+			p = SFlash.SFLASH_PARTITIONS[k]
 			i += 1
 			print(' %2d: %16s > %s'%(i, k, p['n']))
 			info += '%2d: %16s > %s\n'%(i, k, p['n'])
@@ -551,7 +551,7 @@ def screenExtractNorDump(file):
 
 def screenBuildNorDump(folder):
 	UI.clearScreen()
-	print(TITLE+UI.getTab(STR_NOR_BUILD))
+	print(TITLE+UI.getTab(STR_SFLASH_BUILD))
 	
 	if not os.path.exists(folder):
 		print(STR_NO_FOLDER%folder+'\n\n'+STR_ABORT)
@@ -563,8 +563,8 @@ def screenBuildNorDump(folder):
 	found = 0
 	
 	i = 0
-	for k in SFlash.NOR_PARTITIONS:
-		p = SFlash.NOR_PARTITIONS[k]
+	for k in SFlash.SFLASH_PARTITIONS:
+		p = SFlash.SFLASH_PARTITIONS[k]
 		i += 1
 		status = STR_OK
 		
@@ -580,11 +580,11 @@ def screenBuildNorDump(folder):
 	
 	print()
 	
-	if found == len(SFlash.NOR_PARTITIONS):
+	if found == len(SFlash.SFLASH_PARTITIONS):
 		
 		"""
 		sn = '0'*17
-		with open(folder+os.sep+SFlash.NOR_PARTITIONS['s0_nvs']['n'],'rb') as nvs:
+		with open(folder+os.sep+SFlash.SFLASH_PARTITIONS['s0_nvs']['n'],'rb') as nvs:
 			nvs.seek(0x4030)
 			sn = nvs.read(17)
 		"""
@@ -595,8 +595,8 @@ def screenBuildNorDump(folder):
 		
 		out = open(fname,"wb")
 		
-		for k in SFlash.NOR_PARTITIONS:
-			file = folder+os.sep+SFlash.NOR_PARTITIONS[k]['n']
+		for k in SFlash.SFLASH_PARTITIONS:
+			file = folder+os.sep+SFlash.SFLASH_PARTITIONS[k]['n']
 			with open(file, 'rb') as f:
 				out.write(f.read())
 		
@@ -611,37 +611,39 @@ def screenBuildNorDump(folder):
 
 
 def screenAdvSFlashTools(file):
-	UI.clearScreen()
-	print(TITLE+UI.getTab(STR_ADDITIONAL))
 	
 	with open(file, 'rb') as f:
 		sn = SFlash.getNorData(f, 'SN', True)
 	
 	folder = os.path.dirname(file) + os.sep + sn
-	
-	UI.showMenu(MENU_ADDTIONAL,1)
-	
-	UI.showStatus()
-	
-	choice = input(STR_CHOICE)
-	
-	if choice == '':
-		return
-	elif choice == '1':
-		screenExtractNorDump(file)
-	elif choice == '2':
-		screenBuildNorDump(folder)
-	elif choice == '3':
-		screenNvsRecovery(file)
-	elif choice == '4':
-		screenEapKeyRecovery(file)
-	elif choice == '5':
-		screenHddKey(file)
-	elif choice == '6':
-		screenEmcCFW(file)
-	elif choice == '7':
-		screenValidate(file)
-	elif choice == '8':
-		screenPartitionRecovery(file)
-	
-	screenAdvSFlashTools(file)
+
+	while True:
+
+		UI.clearScreen()
+		print(TITLE+UI.getTab(STR_ADDITIONAL))
+		
+		UI.showMenu(MENU_SFLASH_ADV_ACTIONS,1)
+		
+		UI.showStatus()
+		
+		choice = input(STR_CHOICE)
+		
+		if choice == '':
+			return
+		elif choice == '1':
+			screenExtractNorDump(file)
+		elif choice == '2':
+			screenBuildNorDump(folder)
+		elif choice == '3':
+			screenNvsRecovery(file)
+		elif choice == '4':
+			screenEapKeyRecovery(file)
+		elif choice == '5':
+			screenHddKey(file)
+		elif choice == '6':
+			screenEmcCFW(file)
+		elif choice == '7':
+			screenValidate(file)
+		elif choice == '8':
+			screenPartitionRecovery(file)
+		
