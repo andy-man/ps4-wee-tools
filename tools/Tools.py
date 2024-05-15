@@ -239,7 +239,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 			return SFlashTools.screenSFlashTools(path)
 		else:
 			UI.setStatus(STR_FILE_NOT_EXISTS%path)
-	elif choice == 'm':
+	elif choice == 'q':
 		return screenMainMenu()
 		
 	screenNorFlasher(path, port, act, mode)
@@ -397,7 +397,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 			return SysconTools.screenSysconTools(path)
 		else:
 			UI.setStatus(STR_FILE_NOT_EXISTS%path)
-	elif choice == 'm':
+	elif choice == 'q':
 		return screenMainMenu()
 	
 	screenSysconFlasher(path, port, act, mode)
@@ -644,7 +644,7 @@ def screenFileSelect(path = False, all = False, ret = False):
 				if not os.path.exists(new_fpath):
 					os.rename(fpath, new_fpath)
 	
-	elif choice == 'm':
+	elif choice == 'q':
 		return screenMainMenu()
 	elif choice != '':
 		try:
