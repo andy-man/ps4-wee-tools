@@ -165,6 +165,7 @@ LANG_LIST = {
     'en': 'English',
     'es': 'Spanish',
     'ru': 'Russian',
+    'pt': 'Portuguese',
 }
 
 LANG_CODE = APP_CONFIG.get('lang')
@@ -177,6 +178,8 @@ if LANG_CODE == 'ru':
     from lang.ru import *
 elif LANG_CODE == 'es':
     from lang.es import *
+elif LANG_CODE == 'pt':
+    from lang.pt import *
 
 APP_NAME = ' PS4 ~WEE~ TOOLS v' + APP_VERSION
 TITLE = UI.DIVIDER_BOLD + APP_NAME+('by Andy_maN').rjust(UI.LINE_WIDTH-len(APP_NAME)-1)+'\n' + UI.DIVIDER_BOLD
