@@ -176,9 +176,9 @@ class WeeSerial:
 		if not self.sp is None:
 			self.sp.close()
 	
-	# Private
+	# Protected
 	
-	def __write(self, s):
+	def _write(self, s):
 		try:
 			if isinstance(s, int):
 				s = s.to_bytes(1,'big')
@@ -194,7 +194,7 @@ class WeeSerial:
 		except Exception as e:
 			self.error(str(e))
 	
-	def __flush(self):
+	def _flush(self):
 		try:
 			if len(self.BUFFER):
 				self.sp.write(self.BUFFER)
@@ -204,8 +204,8 @@ class WeeSerial:
 		except Exception as e:
 			self.error(str(e))
 	
-	def __read(self, size):
-		self.__flush()
+	def _read(self, size):
+		self._flush()
 		try:
 			data = self.sp.read(size)
 			return data
@@ -214,7 +214,7 @@ class WeeSerial:
 			self.error(str(e))
 			return b''
 	
-	def __clean(self):
+	def _clean(self):
 		if not self.sp.is_open:
 			return False
 		self.sp.flushInput()

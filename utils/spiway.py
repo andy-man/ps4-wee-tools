@@ -2,6 +2,7 @@
 # SPIWAY (original idea by Judges)
 # https://github.com/hjudges/NORway
 # part of ps4 wee tools project
+# https://github.com/andy-man/ps4-wee-tools
 #==========================================================
 import time
 from lang._i18n_ import *
@@ -19,18 +20,18 @@ class SpiFlasher(WeeSerial):
 	
 	ICs = [
 		#Ven_ID	Dev_ID	Brand Type	Blocks	Addr_length	3B_cmd	Sec_per_block	Sec_count
-		[0xC2,	0x1920,	'Macronix',	'MX25L25635F',	512,	4],
-		[0xC2,	0x1820,	'Macronix',	'MX25L12872F',	256,	3],
-		[0xC2,	0x1120,	'Macronix',	'MX25L1006E',	2,		3],
+		[0xC2,	0x1920,	'Macronix',	'MX25L25635F',	512,	4,	0],
+		[0xC2,	0x1820,	'Macronix',	'MX25L12872F',	256,	3,	0],
+		[0xC2,	0x1120,	'Macronix',	'MX25L1006E',	2,		3,	0],
 		
-		[0xEF,	0x10,	'Winbond',	'W25X10CL',		2,		3],
-		[0xEF,	0x13,	'Winbond',	'W25Q80BV',		16,		3],
+		[0xEF,	0x10,	'Winbond',	'W25X10CL',		2,		3,	0],
+		[0xEF,	0x13,	'Winbond',	'W25Q80BV',		16,		3,	0],
 		[0xEF,	0x1940,	'Winbond',	'W25Q256FV',	512,	4,	1],
-		[0xEF,	0x1570,	'Winbond',	'25Q16JVXXM',	32,		3],
-		[0xEF,	0x1540,	'Winbond',	'25Q16JVXXQ',	32,		3],
-		[0xEF,	0x60,	'Winbond',	'W25Q128JW',	256,	3],
+		[0xEF,	0x1570,	'Winbond',	'25Q16JVXXM',	32,		3,	0],
+		[0xEF,	0x1540,	'Winbond',	'25Q16JVXXQ',	32,		3,	0],
+		[0xEF,	0x60,	'Winbond',	'W25Q128JW',	256,	3,	0],
 		
-		[0x01,	0x1960,	'Cypress/Spansion',	'S25FL256L',	512,	4],
+		[0x01,	0x1960,	'Spansion',	'S25FL256L',	512,	4,	0],
 	]
 	
 	# Main config
@@ -51,7 +52,7 @@ class SpiFlasher(WeeSerial):
 		
 		@classmethod
 		def reset(cls):
-			cls.load([0]*12)
+			cls.load([0]*12, -1)
 		
 		@classmethod
 		def load(cls, cfg, id = 0):
@@ -123,14 +124,14 @@ class SpiFlasher(WeeSerial):
 	
 	def __setAddress(self, address):
 		# set address (msb first)
-		self.__write((address >> 24) & 0xFF)
-		self.__write((address >> 16) & 0xFF)
-		self.__write((address >> 8) & 0xFF)
-		self.__write(address & 0xFF)
+		self._write((address >> 24) & 0xFF)
+		self._write((address >> 16) & 0xFF)
+		self._write((address >> 8) & 0xFF)
+		self._write(address & 0xFF)
 	
 	def __setMode(self):
-		self.__write(self.Cmd.SPI_3BYTE_ADDRESS if self.Config.ADDR_LEN == 3 else self.Cmd.SPI_4BYTE_ADDRESS)
-		self.__write(self.Cmd.SPI_3BYTE_CMDS if self.Config.USE_3B_CMD == 1 else self.Cmd.SPI_4BYTE_CMDS)
+		self._write(self.Cmd.SPI_3BYTE_ADDRESS if self.Config.ADDR_LEN == 3 else self.Cmd.SPI_4BYTE_ADDRESS)
+		self._write(self.Cmd.SPI_3BYTE_CMDS if self.Config.USE_3B_CMD == 1 else self.Cmd.SPI_4BYTE_CMDS)
 	
 	def __getStatusByCode(self, code):
 		
@@ -151,7 +152,7 @@ class SpiFlasher(WeeSerial):
 	
 	def __getStatus(self):
 		# read status byte
-		res = self.__read(1)
+		res = self._read(1)
 		
 		if (res != b'K'): # K = ok
 			self.error('\n '+self.__getStatusByCode(res))
@@ -163,7 +164,7 @@ class SpiFlasher(WeeSerial):
 	def __eraseBlock(self, block):
 		
 		self.__setMode()
-		self.__write(self.Cmd.SPI_ERASEBLOCK)
+		self._write(self.Cmd.SPI_ERASEBLOCK)
 		self.__setAddress(block * self.Config.BLOCK_SIZE)
 		
 		if self.__getStatus() == False:
@@ -175,13 +176,13 @@ class SpiFlasher(WeeSerial):
 	def __readBlock(self, block):
 		
 		self.__setMode()
-		self.__write(self.Cmd.SPI_READBLOCK)
+		self._write(self.Cmd.SPI_READBLOCK)
 		self.__setAddress(block * self.Config.BLOCK_SIZE)
 		
 		if self.__getStatus() == False:
 			return False
 		
-		data = self.__read(self.Config.BLOCK_SIZE)
+		data = self._read(self.Config.BLOCK_SIZE)
 		return data
 	
 	def __writeSector(self, data, sector):
@@ -189,10 +190,10 @@ class SpiFlasher(WeeSerial):
 			self.error(STR_SPW_ERROR_DATA_SIZE%(len(data)))
 		
 		self.__setMode()
-		self.__write(self.Cmd.SPI_WRITESECTOR)
+		self._write(self.Cmd.SPI_WRITESECTOR)
 		self.__setAddress(sector * self.Config.SEC_SIZE)
 		
-		self.__write(data)
+		self._write(data)
 		
 		return self.__getStatus()
 	
@@ -239,19 +240,19 @@ class SpiFlasher(WeeSerial):
 	# Public methods
 	
 	def bootloader(self):
-		self.__write(self.Cmd.BOOTLOADER)
-		self.__flush()
+		self._write(self.Cmd.BOOTLOADER)
+		self._flush()
 	
 	def reset(self):
 		# TODO: Find a way to reset, there is no cmd for reset in Teensy FW
-		self.__flush()
+		self._flush()
 		self.BUFFER = b''
 	
 	def ping(self):
-		self.__write(self.Cmd.PING1)
-		self.__write(self.Cmd.PING2)
+		self._write(self.Cmd.PING1)
+		self._write(self.Cmd.PING2)
 		
-		info = self.__read(4)
+		info = self._read(4)
 		info = b'\x00'*4 if len(info) != 4 else info
 		
 		ver = [info[0], info[1]]
@@ -265,10 +266,10 @@ class SpiFlasher(WeeSerial):
 		return {'RAM':ram, 'VER':ver}
 	
 	def getChipId(self):
-		self.__write(self.Cmd.PULLUPS_DISABLE if self.DISABLE_PULLUPS else self.Cmd.PULLUPS_ENABLE)
-		self.__write(self.Cmd.SPI_ID)
+		self._write(self.Cmd.PULLUPS_DISABLE if self.DISABLE_PULLUPS else self.Cmd.PULLUPS_ENABLE)
+		self._write(self.Cmd.SPI_ID)
 		
-		info = self.__read(3)
+		info = self._read(3)
 		info = b'\x00'*3 if len(info) != 3 else info
 		
 		ven_id = info[0]
@@ -294,10 +295,13 @@ class SpiFlasher(WeeSerial):
 	
 	def eraseChip(self, block = 0, count = 0):
 		
+		# Check if chip config is known
+		if self.Config.IC_ID <= 0: return False
+		
 		block, count = self.__checkBC(block, count)
 		
 		# Doesn't allow to handle progress
-		#self.__write(self.Cmd.SPI_ERASECHIP) 
+		#self._write(self.Cmd.SPI_ERASECHIP) 
 		
 		kb_pb = self.Config.BLOCK_SIZE // 1024
 		total = count * kb_pb
@@ -318,6 +322,9 @@ class SpiFlasher(WeeSerial):
 		return True
 	
 	def readChip(self, block = 0, count = 0):
+		
+		# Check if chip config is known
+		if self.Config.IC_ID <= 0: return False
 		
 		block, count = self.__checkBC(block, count)
 		
@@ -342,6 +349,10 @@ class SpiFlasher(WeeSerial):
 		return data
 	
 	def writeChip(self, data, verify = 0, block = 0, count = 0):
+		
+		# Check if chip config is known
+		if self.Config.IC_ID <= 0: return False
+		
 		dsize = len(data)
 		
 		block, count = self.__checkBC(block, count)

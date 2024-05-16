@@ -441,7 +441,7 @@ class NVStorage:
 		# fix counters
 		for i in range(len(entries)):
 			entry = NvsEntry(entries[i])
-			entry.setCounter(i)
+			entry.setCounter(i+1)
 			entries[i] = entry.getEntry()
 		
 		# create new

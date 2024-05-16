@@ -1,10 +1,11 @@
 #==========================================================
-# Syscon flasher by Abkarino & EgyCnq
+# Syscon flasher by Abkarino & EgyCnq / DarkNESmonk
 # https://github.com/AbkarinoMHM/PS4SysconTools
 # part of ps4 wee tools project
+# https://github.com/andy-man/ps4-wee-tools
 #==========================================================
 
-import time, sys
+import time, sys, os
 import utils.syscon as Syscon
 from lang._i18n_ import *
 from utils.serial import WeeSerial
@@ -66,11 +67,11 @@ class SysconFlasher(WeeSerial):
 		if code == b'\xFF':
 			return STR_SCF_ERR_UNKNOWN
 		
-		return STR_SCF_ERR_UNK_STATUS + ' [0x{:02X}]'.format(code[0])
+		return STR_SCF_ERR_UNK_STATUS + (' [0x%02X]'%code[0] if len(code) >= 1 else '')
 	
 	def __getStatus(self):
 		# read status byte
-		res = self.__read(1)
+		res = self._read(1)
 		
 		if (res != b'\x00'): # 0 = ok
 			self.error('\n '+self.__getStatusByCode(res))
@@ -97,7 +98,7 @@ class SysconFlasher(WeeSerial):
 	
 	def __eraseAll(self):
 		
-		self.__write(self.Cmd.ERASE_CHIP)
+		self._write(self.Cmd.ERASE_CHIP)
 		
 		if self.__getStatus() == False:
 			self.error(STR_SCF_ERROR_ERASE_CHIP)
@@ -108,7 +109,7 @@ class SysconFlasher(WeeSerial):
 	def __eraseBlock(self, block, count = 1):
 		
 		cmd_data = self.__getCmdData(self.Cmd.ERASE_BLOCK, block, count)
-		self.__write(cmd_data)
+		self._write(cmd_data)
 		
 		if self.__getStatus() == False:
 			self.error(STR_SCF_ERROR_ERASE_BLK%block)
@@ -119,18 +120,18 @@ class SysconFlasher(WeeSerial):
 	def __readAll(self):
 		
 		cmd_data = self.__getCmdData(self.Cmd.READ_CHIP)
-		self.__write(cmd_data)
+		self._write(cmd_data)
 		
-		data = self.__read(self.Config.TOTAL_SIZE)
+		data = self._read(self.Config.TOTAL_SIZE)
 		
 		return data
 	
 	def __readBlock(self, block, count = 1):
 		
 		cmd_data = self.__getCmdData(self.Cmd.READ_BLOCK, block, count)
-		self.__write(cmd_data)
+		self._write(cmd_data)
 		
-		data = self.__read(self.Config.BLOCK_SIZE * count)
+		data = self._read(self.Config.BLOCK_SIZE * count)
 		
 		return data
 	
@@ -140,8 +141,8 @@ class SysconFlasher(WeeSerial):
 			return False
 		
 		cmd_data = self.__getCmdData(self.Cmd.WRITE_BLOCK_EX if ex else self.Cmd.WRITE_BLOCK, block)
-		self.__write(cmd_data)
-		self.__write(data)
+		self._write(cmd_data)
+		self._write(data)
 		
 		if self.__getStatus() == False:
 			self.error(STR_SCF_ERROR_WRITE_BLK%block)
@@ -162,21 +163,21 @@ class SysconFlasher(WeeSerial):
 	# Public methods
 	
 	def reset(self):
-		self.__clean()
-		self.__write(self.Cmd.RESET)
-		self.__flush()
+		self._clean()
+		self._write(self.Cmd.RESET)
+		self._flush()
 	
 	def connect(self):
 		
 		if not self.sp.is_open:
 			self.sp.open()
 		
-		self.__clean()
+		self._clean()
 		
-		self.__write(self.Cmd.PING1)
-		self.__write(self.Cmd.PING2)
+		self._write(self.Cmd.PING1)
+		self._write(self.Cmd.PING2)
 		
-		info = self.__read(4)
+		info = self._read(4)
 		info = b'\x00'*4 if len(info) != 4 else info
 		
 		ver = [info[0], info[1]]
@@ -186,15 +187,16 @@ class SysconFlasher(WeeSerial):
 			maj, min = self.VERSION
 			self.error(STR_SCF_ERROR_VERSION%(maj, min))
 			self.close()
+			return {'RAM':ram, 'VER':ver, 'DEBUG':False}
 		
-		self.__write(self.Cmd.INIT)
+		self._write(self.Cmd.INIT)
 		debug = self.__getStatus()
 		
 		return {'RAM':ram, 'VER':ver, 'DEBUG':debug}
 	
 	def getChipInfo(self):
 		
-		self.__clean()
+		self._clean()
 		
 		data = self.__readBlock(0)
 		
@@ -211,8 +213,8 @@ class SysconFlasher(WeeSerial):
 		return info
 	
 	def disconnect(self):
-		self.__clean()
-		self.__write(self.Cmd.UNINIT)
+		self._clean()
+		self._write(self.Cmd.UNINIT)
 		return self.__getStatus()
 	
 	def eraseChip(self, block = 0, count = 0):
@@ -224,7 +226,7 @@ class SysconFlasher(WeeSerial):
 		
 		start = time.time()
 		
-		self.__clean()
+		self._clean()
 		
 		for b in range(block, block+count):
 			"""
@@ -254,7 +256,7 @@ class SysconFlasher(WeeSerial):
 		
 		start = time.time()
 		
-		self.__clean()
+		self._clean()
 		
 		for b in range(block, block+count):
 			buf = self.__readBlock(b)
@@ -292,7 +294,7 @@ class SysconFlasher(WeeSerial):
 		
 		start = time.time()
 		
-		self.__clean()
+		self._clean()
 		
 		for b in range(block, block + count):
 			
