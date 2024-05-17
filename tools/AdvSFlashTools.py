@@ -155,7 +155,7 @@ def screenValidate(file):
 		magic = SFlash.getNorData(f, 'EAP_MGC')
 		eap_key = SFlash.getNorData(f, 'EAP_KEY')
 		
-		print(UI.highlight(' EAP key\n'))
+		print(UI.highlight(' '+STR_EAP_KEYS+'\n'))
 		print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.SFLASH_AREAS['EAP_MGC']['n'] else STR_DIFF ))
 		for i in range(0,len(eap_key),0x20):
 			print(' '+Utils.hex(eap_key[i:i+0x20],''))
@@ -164,12 +164,12 @@ def screenValidate(file):
 			magic = SFlash.getNorDataB(f, 'EAP_MGC')
 			eap_key_b = SFlash.getNorDataB(f, 'EAP_KEY')
 			print()
-			print(UI.highlight(' EAP key ('+STR_BACKUP+')\n'))
+			print(UI.highlight(' '+STR_EAP_KEYS+' ('+STR_BACKUP+')\n'))
 			print(' Magic [%s] %s\n'%(Utils.hex(magic,''), STR_OK if magic == SFlash.SFLASH_AREAS['EAP_MGC']['n'] else STR_DIFF ))
 			for i in range(0,len(eap_key_b),0x20):
 				print(' '+Utils.hex(eap_key_b[i:i+0x20],''))
 			
-			print(UI.highlight('\n EAP keys are ') + UI.green(STR_EQUAL) if eap_key == eap_key_b else STR_DIFF)
+			print(UI.highlight('\n '+STR_EAP_KEYS+' ') + UI.green(STR_EQUAL) if eap_key == eap_key_b else STR_DIFF)
 		
 		print()
 		
