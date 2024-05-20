@@ -613,7 +613,8 @@ def screenFileSelect(path = False, all = False, ret = False):
 	elif choice == 'b':
 		screenBuild2BLS(path)
 	elif choice == 'c':
-		file_list = [os.path.join(path, x) for x in files] # Force bin only: if x.lower().endswith('.bin')
+#		file_list = [os.path.join(path, x) for x in files] # Force bin only: if x.lower().endswith('.bin')
+		file_list = [os.path.join(path, x) for x in os.listdir(path) if not os.path.isdir(os.path.join(path, x)) and (x.lower().endswith('.bin') or x.lower().endswith('.pup'))]
 		screenCompareFiles(file_list)
 	elif choice == 'r':
 		for file in files:
@@ -675,21 +676,60 @@ def screenCompareFiles(list):
 		return
 	
 	res = True
+	file_list = {}
 	hashes = []
+	same = []
+	info = ''
+	
+	print(STR_FILES_CHECK + '... \n')
+
 	for i, file in enumerate(list):
 		if not file or not os.path.isfile(file):
 			print((STR_FILE_NOT_EXISTS).format(file))
 			continue
 		else:
 			md5 = Utils.getFileMD5(file)
-			if not md5 in hashes:
+			file_list[i]=(
+				i+1,
+				md5,
+				os.path.basename(file),
+			)
+			if not md5 in hashes:           
 				hashes.append(md5)
-			print((' {: 2}: [{}] {}').format(i+1, md5,  os.path.basename(file)))
-	
+			else:
+				if not md5 in same:
+					same.append(md5)
+
+			print((' {:2} : [{}] {}').format(file_list[i][0], file_list[i][1], file_list[i][2]))
+
+	if len(same) > 0:
+		result = {}
+		for h in range(len(same)):
+			hs = same[h]
+			idx = ''
+			for f in file_list:
+				fl = file_list[f][1]
+				if (fl == hs):
+					if idx == '':
+						idx = str(file_list[f][0])
+					else:
+						idx = idx + '=' + str(file_list[f][0])
+
+			result[h]=(idx)
+
+		for r in range(len(result)):
+			if len(result) > 0:
+				if len(info) == 0:
+					info = '[' + str(result[r]) + ' ' + STR_OK + ']'
+				else:
+					info = info + ', ' + '[' + str(result[r]) + ' ' + STR_OK + ']'
+			
 	print(UI.DIVIDER)
 	UI.showTable({
-		'Result'		: STR_OK if len(hashes) == 1 else STR_FAIL,
-		'Hashes count'	: len(hashes),
+		STR_INFO        : info if len(same) > 0 else STR_FAIL,
+		STR_ALL         : str(len(hashes)) + ' Hashes',
+		STR_EQUAL       : str(len(same)) + ' Hashes',
+		STR_NOT_EQUAL   : str(len(hashes) - len(same)) + ' Hashes ',
 	})
 	input(STR_BACK)
 	
