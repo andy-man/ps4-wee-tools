@@ -613,8 +613,7 @@ def screenFileSelect(path = False, all = False, ret = False):
 	elif choice == 'b':
 		screenBuild2BLS(path)
 	elif choice == 'c':
-#		file_list = [os.path.join(path, x) for x in files] # Force bin only: if x.lower().endswith('.bin')
-		file_list = [os.path.join(path, x) for x in os.listdir(path) if not os.path.isdir(os.path.join(path, x)) and (x.lower().endswith('.bin') or x.lower().endswith('.pup'))]
+		file_list = [os.path.join(path, x) for x in files if all or (x.lower().endswith('.bin') or x.lower().endswith('.pup'))]
 		screenCompareFiles(file_list)
 	elif choice == 'r':
 		for file in files:
