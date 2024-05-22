@@ -105,12 +105,14 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 ## Changelog
 
 ### v1.0.0
+* [fix] File comparation functions
 * [fix] FW detection
 * [fix] syscon patch
 * Syscon Flasher 2.02
 * 11.50 support
 * Spanish Language
 * Russian Language
+* Portuguese Language
 * Some code from PRO
 
 ### v0.9.9
