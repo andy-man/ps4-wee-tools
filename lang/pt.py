@@ -1,5 +1,5 @@
 #==========================================================
-# Default language [EN]
+# Portuguese language [PT]
 # part of ps4 wee tools project
 # https://github.com/andy-man/ps4-wee-tools
 #==========================================================

@@ -50,7 +50,7 @@ def screenViewSNVS(file, block = '', flat = False):
 	
 	blocks_count = Syscon.SNVS_CONFIG.getDataCount()-1
 	count = Syscon.SNVS_CONFIG.getDataRecordsCount() if not flat else SNVS.cfg.getDataFlatLength() // Syscon.NvsEntry.getEntrySize()
-	active = SNVS.active_entry.getLink()
+	active = SNVS.active_volume_entry.getLink()
 	block = active if block == '' else block
 	
 	if flat:
@@ -104,7 +104,7 @@ def screenAutoPatchSNVS(file):
 	prev_fw = Syscon.getRecordPos(prev_index, SNVS)
 	
 	info = {
-		'General'			: 'Active[%d] OWC[%d]'%(SNVS.active_entry.getLink(), SNVS.getOWC()),
+		'General'			: 'Active[%d] OWC[%d]'%(SNVS.active_volume_entry.getLink(), SNVS.getOWC()),
 		'08-0B (prev)'		: STR_NOT_FOUND if prev_index < 0 else STR_SNVS_ENTRY_INFO%(prev_fw['block'], prev_fw['num'], prev_fw['offset']),
 		'08-0B (last)'		: STR_NOT_FOUND if index < 0 else STR_SNVS_ENTRY_INFO%(last_fw['block'], last_fw['num'], last_fw['offset']),
 		'Order of blocks'	: SNVS.getDataBlocksOrder(),
@@ -183,7 +183,7 @@ def screenManualPatchSNVS(file, flat = False):
 		SNVS = Syscon.NVStorage(Syscon.SNVS_CONFIG, Syscon.getSysconData(f, 'SNVS'))
 		entries = SNVS.getLastFlatEntries() if flat else SNVS.getLastDataEntries()
 		
-		block = SNVS.active_entry.getLink()
+		block = SNVS.active_volume_entry.getLink()
 		records_count = 16 if len(entries) > 16 else len(entries)
 		records = entries[-records_count:]
 		
@@ -298,8 +298,8 @@ def getSysconInfo(file):
 		fw_info = Syscon.checkSysconFW(f)
 		snvs_info = 'Vol[%d] Data[%d] Counter[0x%X] OWC[%d]'%(
 			SNVS.active_volume,
-			SNVS.active_entry.getLink(),
-			SNVS.active_entry.getCounter(),
+			SNVS.active_volume_entry.getLink(),
+			SNVS.active_volume_entry.getCounter(),
 			SNVS.getOWC(),
 		)
 		

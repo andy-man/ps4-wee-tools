@@ -79,6 +79,7 @@ Don't use if you don't understand what is it for!
 
 [Abkarino](https://github.com/AbkarinoMHM), 
 [zecoxao](https://github.com/zecoxao), 
+[EgyCnq](https://github.com/egycnq), 
 [Al-Azif](https://github.com/Al-Azif), 
 [Judges](https://github.com/hjudges), 
 [pearlxcore](https://github.com/pearlxcore), 
@@ -103,6 +104,11 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [X/Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v1.0.1
+* [fix] Syscon SNVS lib (active volume)
+* 11.52 support
+* Portuguese language
 
 ### v1.0.0
 * [fix] FW detection

@@ -214,7 +214,7 @@ class NvsEntry:
 	
 	entry = b''
 	
-	def __init__(self, buf):
+	def __init__(self, buf=b''):
 		if len(buf) < self.getEntryHeadSize() or self.checkMagic(buf) == 0:
 			self.entry = [0x00] * self.getEntryHeadSize()
 		else:
@@ -281,18 +281,20 @@ class NVStorage:
 	data = b''
 	
 	active_volume = 0
-	active_entry = NvsEntry('')
-	active_entry_num = 1
+	active_volume_entry = NvsEntry('')
+	active_volume_entry_num = 1
 	
 	def __init__(self, config, buffer):
 		self.cfg = config
 		if buffer and len(buffer):
 			self.load(buffer)
 	
+	# General
+
 	def load(self, buf):
 		self.header = buf[:self.cfg.getHeaderSize()]
 		self.data = buf[len(self.header):]
-		self.findActive()
+		self.findActiveVolume()
 	
 	def getHeader(self):
 		return self.header
@@ -303,15 +305,33 @@ class NVStorage:
 	def getBytes(self):
 		return self.header + self.data
 	
-	def findActive(self):
-		
+	# Volumes
+
+	def getVolumeEntry(self, volume = 0, index = 0):
+		offset = (index) * NvsEntry.getEntryHeadSize() + self.cfg.getHeaderLength() * volume;
+		return self.header[offset:offset + NvsEntry.getEntryHeadSize()]
+	
+	def getLastVolumeEntryOffset(self, real = False):
+		return self.getVolumeEntryOffset(self.active_volume_entry_num, real)
+	
+	def getVolumeEntryOffset(self, index, real = False):
+		offset = NvsEntry.getEntryHeadSize() * index
+		return self.cfg.getOffset() + offset if real else offset
+	
+	def getVolumeIndex(self, volume = 0):
+		entry = NvsEntry(self.getVolumeEntry(volume,0))
+		return entry.getIndex()
+
+	def findActiveVolume(self):
+		prev_ind = 0
 		for volume in range(0, self.cfg.getHeaderCount()):
-			counter = self.getVolumeCounter(volume)
+			index = self.getVolumeIndex(volume)
 			entries = self.getVolumeEntries(volume)
-			if len(entries) and counter > 0:
+			if len(entries) and index > prev_ind:
+				prev_ind = index
 				self.active_volume = volume
-				self.active_entry = NvsEntry(entries[len(entries)-1])
-				self.active_entry_num = len(entries)-1
+				self.active_volume_entry = NvsEntry(entries[len(entries)-1])
+				self.active_volume_entry_num = len(entries)-1
 		
 		return self.active_volume
 	
@@ -329,26 +349,13 @@ class NVStorage:
 		
 		return entries
 	
-	def getOWC(self):
-		# overwrite count
-		c = len(self.getVolumeEntries()) - 1
-		return 0 if c <= self.cfg.getDataCount() else c // self.cfg.getDataCount()
+	# Block Data
 	
 	def getLastDataEntries(self):
-		return self.getDataBlockEntries(self.active_entry.getLink())
-	
-	def getLastFlatEntries(self):
-		return self.getFlatDataEntries(self.active_entry.getLink())
-	
-	def getLastFlatDataOffset(self, real = False):
-		return self.getFlatDataOffset(self.active_entry.getLink(), real)
+		return self.getDataBlockEntries(self.active_volume_entry.getLink())
 	
 	def getLastDataBlockOffset(self, real = False):
-		return self.getDataBlockOffset(self.active_entry.getLink(), real)
-	
-	def getFlatDataOffset(self, index = 0, real = False):
-		offset = self.cfg.getDataLength() * index
-		return self.cfg.getOffset() + self.cfg.getHeaderSize() + offset if real else offset
+		return self.getDataBlockOffset(self.active_volume_entry.getLink(), real)
 	
 	def getDataBlockOffset(self, index = 0, real = False):
 		offset = self.cfg.getDataLength() * index
@@ -358,13 +365,55 @@ class NVStorage:
 		offset = self.getDataBlockOffset(index)
 		return self.data[ offset : offset + self.cfg.getDataLength()]
 	
-	def getDataBlockFlat(self, index = 0):
-		block = self.getDataBlock(index)
-		return block[:self.cfg.getDataFlatLength()]
-	
 	def getDataBlockRecords(self, index = 0):
 		block = self.getDataBlock(index)
 		return block[self.cfg.getDataFlatLength():]
+	
+	def getDataBlockEntries(self, index = 0):
+		
+		data = self.getDataBlockRecords(index)
+		entry_size = NvsEntry.getEntrySize()
+		entries = []
+		
+		for i in range(0, len(data), entry_size):
+			entry = data[i:i+entry_size]
+			if NvsEntry.checkMagic(entry) != 0:
+				entries.append(entry)
+		
+		return entries
+	
+	def getDataBlocksOrder(self):
+		v_entries = self.getVolumeEntries(self.active_volume)
+		max = len(v_entries) - self.cfg.getDataCount()
+		return [NvsEntry(v_entries[i-1]).getLink() for i in range(len(v_entries), max if max > 0 else 1, -1)]
+	
+	def getAllDataEntries(self):
+		entries = []
+		for n in self.getDataBlocksOrder():
+			entries = self.getDataBlockEntries(n) + entries
+		return entries
+	
+	# Flat Data (cache)
+	
+	def getLastFlatEntries(self):
+		return self.getFlatDataEntries(self.active_volume_entry.getLink())
+	
+	def getLastFlatDataOffset(self, real = False):
+		return self.getFlatDataOffset(self.active_volume_entry.getLink(), real)
+
+	def getFlatDataOffset(self, index = 0, real = False):
+		offset = self.cfg.getDataLength() * index
+		return self.cfg.getOffset() + self.cfg.getHeaderSize() + offset if real else offset
+
+	def getDataBlockFlat(self, index = 0):
+		block = self.getDataBlock(index)
+		return block[:self.cfg.getDataFlatLength()]
+
+	def getAllFlatData(self):
+		flatdata = []
+		for n in self.getDataBlocksOrder():
+			flatdata = [self.getDataBlockFlat(n)] + flatdata
+		return flatdata
 	
 	def getFlatDataEntries(self, index = 0):
 		
@@ -386,52 +435,18 @@ class NVStorage:
 		if empty == len(entries): entries = []
 		
 		return entries
-	
-	def getDataBlockEntries(self, index = 0):
-		
-		data = self.getDataBlockRecords(index)
-		entry_size = NvsEntry.getEntrySize()
-		entries = []
-		
-		for i in range(0, len(data), entry_size):
-			entry = data[i:i+entry_size]
-			if NvsEntry.checkMagic(entry) != 0:
-				entries.append(entry)
-		
-		return entries
-	
-	def getVolumeEntry(self, volume = 0, index = 0):
-		offset = (index) * NvsEntry.getEntryHeadSize() + self.cfg.getHeaderLength() * volume;
-		return self.header[offset:offset + NvsEntry.getEntryHeadSize()]
-	
-	def getLastVolumeEntryOffset(self, real = False):
-		return self.getVolumeEntryOffset(self.active_entry_num, real)
-	
-	def getVolumeEntryOffset(self, index, real = False):
-		offset = NvsEntry.getEntryHeadSize() * index
-		return self.cfg.getOffset() + offset if real else offset
-	
-	def getVolumeCounter(self, volume = 0):
-		entry = NvsEntry(self.getVolumeEntry(volume,0))
-		return entry.getCounter()
-	
-	def getDataBlocksOrder(self):
-		v_entries = self.getVolumeEntries()
-		max = len(v_entries) - self.cfg.getDataCount()
-		return [NvsEntry(v_entries[i-1]).getLink() for i in range(len(v_entries), max if max > 0 else 1, -1)]
-	
-	def getAllDataEntries(self):
-		entries = []
-		for n in self.getDataBlocksOrder():
-			entries = self.getDataBlockEntries(n) + entries
-		return entries
-	
-	def getAllFlatData(self):
-		flatdata = []
-		for n in self.getDataBlocksOrder():
-			flatdata = [self.getDataBlockFlat(n)] + flatdata
-		return flatdata
-	
+
+	# Helpers
+
+	def getOWC(self):
+		# overwrite count
+		total_entries = 0
+		for volume in range(0, self.cfg.getHeaderCount()):
+			count = len(self.getVolumeEntries(volume))
+			if count > 0: total_entries += count - 1
+
+		return 0 if total_entries <= self.cfg.getDataCount() else total_entries // self.cfg.getDataCount()
+
 	def getRebuilded(self, entries = False, flatdata = False):
 		# get all enties and flatdata
 		entries = self.getAllDataEntries() if entries == False else entries
