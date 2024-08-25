@@ -1,6 +1,7 @@
 #==========================================================
 # Syscon utils
 # part of ps4 wee tools project
+# https://github.com/andy-man/ps4-wee-tools
 #==========================================================
 from utils.utils import *
 import lang._i18n_ as Lang
@@ -19,6 +20,8 @@ MD5_SC_FW = {
 	'1c70248c249f0ac4f0c5555499afa6ef':'2.13_1',
 	'45ebe778279ca58b6bf200ff1bd2cb9e':'2.13_2',
 	'581d42d6a6c83992521420a23f02427c':'2.13_3',
+	"D72B5263F90BF0A196764F8C8572C952":"2.13_4",
+	"D89B1256E2A3B2D4C3044BFB5F44E8A5":"2.13_5",
 	'39a1bdd270d0dc2bdce8d81e7525af41':'2.23_1',
 	'a7d36425e5881770b2e9c4f925ced39f':'2.23_2',
 	'c42c250bbb7b30acd2f3960cfad9c8e3':'2.23_3',
@@ -323,14 +326,19 @@ class NVStorage:
 		return entry.getIndex()
 
 	def findActiveVolume(self):
-		prev_ind = 0
+		counter = 0
 		for volume in range(0, self.cfg.getHeaderCount()):
-			index = self.getVolumeIndex(volume)
+			
 			entries = self.getVolumeEntries(volume)
-			if len(entries) and index > prev_ind:
-				prev_ind = index
+			
+			if not len(entries): continue
+			
+			entry = NvsEntry(entries[-1])
+
+			if entry.getCounter() > counter:
+				counter = entry.getCounter()
 				self.active_volume = volume
-				self.active_volume_entry = NvsEntry(entries[len(entries)-1])
+				self.active_volume_entry = entry
 				self.active_volume_entry_num = len(entries)-1
 		
 		return self.active_volume
@@ -339,7 +347,7 @@ class NVStorage:
 		
 		length = self.cfg.getHeaderLength()
 		step = NvsEntry.getEntryHeadSize()
-		offset = length * volume;
+		offset = length * volume
 		entries = list()
 		
 		for i in range(0, offset+length, step):
