@@ -863,7 +863,12 @@ def launchTool(path):
 	elif header[0:len(Slb2.SLB2_HEADER)] == Slb2.SLB2_HEADER:
 		return screenUnpack2BLS(path)
 	else:
-		UI.setStatus(STR_UNK_FILE_TYPE + ' {}'.format(path))
+		if f_size != SFlash.DUMP_SIZE and f_size != Syscon.DUMP_SIZE:
+			UI.setStatus(STR_WRNG_FILE_SIZE + ' {}'.format(path))
+		elif header[0:len(Slb2.SLB2_HEADER)] != Slb2.SLB2_HEADER:
+			UI.setStatus(STR_WRNG_FILE_HEAD + ' {}'.format(path))
+		else:
+			UI.setStatus(STR_UNK_FILE_TYPE + ' {}'.format(path))
 
 
 
