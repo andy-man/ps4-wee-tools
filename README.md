@@ -105,6 +105,10 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
+### v1.0.2
+* 12.50 support
+* Polish language
+
 ### v1.0.1
 * [fix] Syscon SNVS lib (active volume)
 * 11.52 support

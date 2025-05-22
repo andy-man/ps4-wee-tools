@@ -17,6 +17,7 @@ class WeeSerial:
 		'network'	: Clr.fg.blue,
 		'samu'		: Clr.fg.cyan,
 		'standby'	: Clr.bg.purple,
+		'panic'		: Clr.fg.l_red,
 	}
 	
 	cfg = {

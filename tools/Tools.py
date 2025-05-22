@@ -863,7 +863,8 @@ def launchTool(path):
 	elif header[0:len(Slb2.SLB2_HEADER)] == Slb2.SLB2_HEADER:
 		return screenUnpack2BLS(path)
 	else:
-		UI.setStatus(STR_UNK_FILE_TYPE + ' {}'.format(path))
+		header_ascii = ''.join([chr(c) if c > 0x1F and c < 0x7F else '.' for c in header])
+		UI.setStatus(f"{STR_UNK_FILE_TYPE} {path}\n File size: {f_size} bytes\n Header: {header_ascii} [{Utils.hex(header,'')}]")
 
 
 

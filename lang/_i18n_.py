@@ -5,7 +5,7 @@
 import sys, os
 from utils.utils import APP_CONFIG
 
-APP_VERSION = '1.0.1'
+APP_VERSION = '1.0.2'
 
 # Colors stuff
 
@@ -166,6 +166,7 @@ LANG_LIST = {
     'es': 'Spanish',
     'ru': 'Russian',
     'pt': 'Portuguese',
+    'pl': 'Polish',
 }
 
 LANG_CODE = APP_CONFIG.get('lang')
@@ -180,8 +181,10 @@ elif LANG_CODE == 'es':
     from lang.es import *
 elif LANG_CODE == 'pt':
     from lang.pt import *
+elif LANG_CODE == 'pl':
+    from lang.pl import *
 
-APP_NAME = ' PS4 ~WEE~ TOOLS v' + APP_VERSION
+APP_NAME = ' PS4 weeTools v' + APP_VERSION
 TITLE = UI.DIVIDER_BOLD + APP_NAME+('by Andy_maN').rjust(UI.LINE_WIDTH-len(APP_NAME)-1)+'\n' + UI.DIVIDER_BOLD
 
 # Fill strings
