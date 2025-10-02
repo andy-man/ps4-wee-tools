@@ -105,8 +105,11 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
+### v1.0.3
+* 13.00, 13.02 support
+
 ### v1.0.2
-* 12.50 support
+* 12.50, 12.52 support
 * Polish language
 
 ### v1.0.1

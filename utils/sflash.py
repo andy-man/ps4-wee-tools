@@ -296,15 +296,22 @@ def getNorFW(f, active_slot = ''):
 
 
 def isFwInList(fw, fw_list):
-	fw_cur = int(fw.replace('.',''))
+	try: fw_cur = int(fw.replace('.',''))
+	except: fw_cur = 0
 	fw_min = int(fw_list[0].replace('.',''))
 	fw_max = int(fw_list[-1].replace('.',''))
 	return fw_cur >= fw_min and fw_cur <= fw_max
 
 
 
-def getFwFilename(item):
-	return item['fw'][0].replace('.','').rjust(4, '0')+'-'+item['fw'][-1].replace('.','').rjust(4, '0') + '_' + item['md5'] + '.2bls'
+def getFwFilename(item, folder):
+	md5 = item['md5']
+	#print(folder, md5)
+	for file in os.listdir(folder):
+		path = os.path.join(folder, file)
+		if not os.path.isdir(path) and md5 in file:
+			return path
+	return ''
 
 
 

@@ -5,7 +5,7 @@
 import sys, os
 from utils.utils import APP_CONFIG
 
-APP_VERSION = '1.0.2'
+APP_VERSION = '1.0.3'
 
 # Colors stuff
 
