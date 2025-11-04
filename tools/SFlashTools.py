@@ -14,245 +14,270 @@ import tools.AdvSFlashTools as AdvSFlashTools
 
 
 def screenSBpatcher(file, model = '', emc_ver = '', eap_ver = ''):
-	UI.clearScreen()
-	print(TITLE + UI.getTab(STR_ABOUT_SB_PATCH))
-	print(UI.warning(STR_INFO_SB_PATCH))
-	print()
-	print(UI.warning(STR_INFO_FW_LINK))
 	
-	print(UI.getTab(STR_SB_PATCHER))
+	# Read once
+	
 	with open(file,'rb') as f:
 		active_slot = SFlash.getActiveSlot(f)
-		fw = SFlash.getNorFW(f, active_slot)
+		fw = SFlash.getFWInfo(f, active_slot)
 		sb = SFlash.getSouthBridge(f)
+
+	while True:
 	
-	print(UI.highlight(STR_CURRENT))
-	print()
-	UI.showTable({
-		'Southbridge'	: '%s [%s] [%02X:%02X]'%(sb['name'], sb['ic'], sb['code'][0], sb['code'][1]),
-		'FW info'		: fw['c'] + ' ['+active_slot.upper()+']',
-	})
-	
-	print()
-	
-	if model in SFlash.SOUTHBRIDGES:
-		print(UI.highlight(STR_MODEL+': ') + '%s [%s] [%02X:%02X]'%(model['name'], model['ic'], model['code'][0], model['code'][1]))
-	else:
-		print(UI.highlight(STR_SELECT_MODEL)+'\n')
-		sb_list = SFlash.SOUTHBRIDGES
-		UI.showMenu(['%s [%02X:%02X] %s'%(sb_list[x]['ic'], sb_list[x]['code'][0], sb_list[x]['code'][1], sb_list[x]['name']) for x in range(len(sb_list))], 1)
+		UI.clearScreen()
+		print(TITLE + UI.getTab(STR_ABOUT_SB_PATCH))
+		print(UI.warning(STR_INFO_SB_PATCH))
+		print()
+		print(UI.warning(STR_INFO_FW_LINK))
 		
-		print(UI.DIVIDER+' 0:'+STR_GO_BACK)
-		UI.showStatus()
+		print(UI.getTab(STR_SB_PATCHER))
 		
-		try: n = int(input(STR_CHOICE))
-		except: n = -1
+		print(UI.highlight(STR_CURRENT))
+		print()
+		UI.showTable({
+			'Southbridge'	: '%s [%s] [%02X:%02X]'%(sb['name'], sb['ic'], sb['code'][0], sb['code'][1]),
+			'FW info'		: fw['c'] + ' ['+active_slot.upper()+']',
+		})
 		
-		if n == 0:
-			return
-		if n > 0 and n <= len(SFlash.SOUTHBRIDGES):
-			model = SFlash.SOUTHBRIDGES[n-1]
+		print()
+		
+		if model in SFlash.SOUTHBRIDGES:
+			print(UI.highlight(STR_MODEL+': ') + '%s [%s] [%02X:%02X]'%(model['name'], model['ic'], model['code'][0], model['code'][1]))
 		else:
-			UI.setStatus(STR_ERROR_INPUT)
+			print(UI.highlight(STR_SELECT_MODEL)+'\n')
+			sb_list = SFlash.SOUTHBRIDGES
+			UI.showMenu(['%s [%02X:%02X] %s'%(sb_list[x]['ic'], sb_list[x]['code'][0], sb_list[x]['code'][1], sb_list[x]['name']) for x in range(len(sb_list))], 1)
+			
+			UI.showStatus()
+			
+			choice = input(STR_CHOICE)
+
+			if choice == '':
+				break
+
+			try: n = int(choice)
+			except: n = -1
+			
+			if n > 0 and n <= len(SFlash.SOUTHBRIDGES):
+				model = SFlash.SOUTHBRIDGES[n-1]
+			else:
+				UI.setStatus(STR_ERROR_INPUT)
+			
+			continue
 		
-		return screenSBpatcher(file, model)
-	
-	print()
-	
-	expert_mode = False
-	if not emc_ver:
-		expert_mode = input(UI.highlight(STR_EXPERT_MODE+STR_Y_OR_CANCEL)).lower()
-		UI.clearInput()
-	
-	# Quick mode
-	if not emc_ver and expert_mode != 'y':
-		emc_ver = SFlash.getDataByPartitionAndType('emc_ipl', model['code'][0], fw['c'])
-		eap_ver = SFlash.getDataByPartitionAndType('eap_kbl', model['code'][1], fw['c'])
+		print()
 		
+		expert_mode = False
 		if not emc_ver:
-			print(UI.error(STR_ERR_NO_FW_FOUND%('EMC',fw['c'])))
-		if not eap_ver:
-			print(UI.error(STR_ERR_NO_FW_FOUND%('EAP',fw['c'])))
+			expert_mode = input(UI.highlight(STR_EXPERT_MODE+STR_Y_OR_CANCEL)).lower()
+			UI.clearInput()
 		
+		# Quick mode
+		if not emc_ver and expert_mode != 'y':
+			emc_ver = SFlash.getDataByPartitionAndType('emc_ipl', model['code'][0], fw['c'])
+			eap_ver = SFlash.getDataByPartitionAndType('eap_kbl', model['code'][1], fw['c'])
+			
+			if not emc_ver:
+				print(UI.error(STR_ERR_NO_FW_FOUND%('EMC',fw['c'])))
+			if not eap_ver:
+				print(UI.error(STR_ERR_NO_FW_FOUND%('EAP',fw['c'])))
+			
+			if emc_ver and eap_ver:
+				continue
+			else:
+				model, emc_ver, eap_ver = '','',''
+				print(UI.highlight(STR_USE_EXPERT_M))
+				input(STR_BACK)
+				continue
+		
+		# Expert mode
+		if emc_ver:
+			print(UI.highlight(' EMC:') + ' %s - %s [%s]\n'%(emc_ver['fw'][0], emc_ver['fw'][-1], emc_ver['md5']))
+		else:
+			print(UI.highlight(STR_SELECT_FW_VER+' (emc):')+'\n')
+			
+			items = SFlash.getDataByPartitionAndType('emc_ipl', model['code'][0])
+			for x in range(len(items)):
+				str = ' %2d: %05s <> %05s [%s]'%(x+1, items[x]['fw'][0], items[x]['fw'][-1], items[x]['md5'])
+				print(UI.highlight(str) if SFlash.isFwInList(fw['c'], items[x]['fw']) else str)
+			
+			print(UI.DIVIDER+' 0:'+STR_GO_BACK)
+			UI.showStatus()
+
+			try: n = int(input(STR_CHOICE))
+			except: n = -1
+			
+			if n == 0:
+				model, emc_ver, eap_ver = '','',''
+				continue
+			if n > 0 and n <= len(items):
+				emc_ver = items[n-1]
+			else:
+				UI.setStatus(STR_ERROR_INPUT)
+			
+			continue
+		
+		if eap_ver:
+			print(UI.highlight(' EAP:') + ' %s - %s [%s]\n'%(eap_ver['fw'][0], eap_ver['fw'][-1], eap_ver['md5']))
+		else:
+			print(UI.highlight(STR_SELECT_FW_VER+' (eap):')+'\n')
+			
+			items = SFlash.getDataByPartitionAndType('eap_kbl', model['code'][1])
+			for x in range(len(items)):
+				str = ' %2d: %05s <> %05s [%s]'%(x+1, items[x]['fw'][0], items[x]['fw'][-1], items[x]['md5'])
+				print(UI.highlight(str) if SFlash.isFwInList(fw['c'], items[x]['fw']) else str)
+			
+			print(UI.DIVIDER+' 0:'+STR_GO_BACK)
+			UI.showStatus()
+			
+			try: n = int(input(STR_CHOICE))
+			except: n = -1
+			
+			if n == 0:
+				emc_ver, eap_ver = '',''
+				continue
+			if n > 0 and n <= len(items):
+				eap_ver = items[n-1]
+			else:
+				UI.setStatus(STR_ERROR_INPUT)
+			
+			continue
+		
+		# Process
 		if emc_ver and eap_ver:
-			return screenSBpatcher(file, model, emc_ver, eap_ver)
-		else:
-			print(UI.highlight(STR_USE_EXPERT_M))
-			input(STR_BACK)
-			return screenSBpatcher(file)
-	
-	# Expert mode
-	if emc_ver:
-		print(UI.highlight(' EMC:') + ' %s - %s [%s]\n'%(emc_ver['fw'][0], emc_ver['fw'][-1], emc_ver['md5']))
-	else:
-		print(UI.highlight(STR_SELECT_FW_VER+' (emc):')+'\n')
+			emc_file = SFlash.getFwFilename(emc_ver, (os.path.sep).join([ Utils.ROOT_PATH, 'fws', 'emc', '%02X'%model['code'][0] ]))
+			eap_file = SFlash.getFwFilename(eap_ver, (os.path.sep).join([ Utils.ROOT_PATH, 'fws', 'eap', '%02X'%model['code'][1] ]))
+			
+			if os.path.exists(emc_file) and os.path.exists(eap_file):
+				out_file = Utils.getFilePathWoExt(file, True)+'_patch_sb_'+model['ic']+'.bin'
+				Utils.savePatchData(out_file, Utils.getFileContents(file), [
+					{'o':SFlash.SFLASH_PARTITIONS['s0_emc_ipl_'+active_slot.lower()]['o'], 'd':Utils.getFileContents(emc_file)},
+					{'o':SFlash.SFLASH_PARTITIONS['s0_eap_kbl']['o'], 'd':Utils.getFileContents(eap_file)},
+				])
+				UI.setStatus(STR_SAVED_TO%out_file)
+			else:
+				status = ' '+Utils.ROOT_PATH+'\n'
+				if not os.path.exists(emc_file): status += ' '+emc_file[len(Utils.ROOT_PATH):]+'\n'
+				if not os.path.exists(eap_file): status += ' '+eap_file[len(Utils.ROOT_PATH):]+'\n'
+				status += ' ' + STR_NOT_FOUND
+				UI.setStatus(status)
 		
-		items = SFlash.getDataByPartitionAndType('emc_ipl', model['code'][0])
-		for x in range(len(items)):
-			str = ' %2d: %05s <> %05s [%s]'%(x+1, items[x]['fw'][0], items[x]['fw'][-1], items[x]['md5'])
-			print(UI.highlight(str) if SFlash.isFwInList(fw['c'], items[x]['fw']) else str)
-		
-		print(UI.DIVIDER+' 0:'+STR_GO_BACK)
 		UI.showStatus()
-		
-		try: n = int(input(STR_CHOICE))
-		except: n = -1
-		
-		if n == 0:
-			return screenSBpatcher(file)
-		if n > 0 and n <= len(items):
-			emc_ver = items[n-1]
-		else:
-			UI.setStatus(STR_ERROR_INPUT)
-		
-		return screenSBpatcher(file, model, emc_ver)
-	
-	if eap_ver:
-		print(UI.highlight(' EAP:') + ' %s - %s [%s]\n'%(eap_ver['fw'][0], eap_ver['fw'][-1], eap_ver['md5']))
-	else:
-		print(UI.highlight(STR_SELECT_FW_VER+' (eap):')+'\n')
-		
-		items = SFlash.getDataByPartitionAndType('eap_kbl', model['code'][1])
-		for x in range(len(items)):
-			str = ' %2d: %05s <> %05s [%s]'%(x+1, items[x]['fw'][0], items[x]['fw'][-1], items[x]['md5'])
-			print(UI.highlight(str) if SFlash.isFwInList(fw['c'], items[x]['fw']) else str)
-		
-		print(UI.DIVIDER+' 0:'+STR_GO_BACK)
-		UI.showStatus()
-		
-		try: n = int(input(STR_CHOICE))
-		except: n = -1
-		
-		if n == 0:
-			return screenSBpatcher(file, model)
-		if n > 0 and n <= len(items):
-			eap_ver = items[n-1]
-		else:
-			UI.setStatus(STR_ERROR_INPUT)
-		
-		return screenSBpatcher(file, model, emc_ver, eap_ver)
-	
-	# Process
-	if emc_ver and eap_ver:
-		emc_file = (os.path.sep).join([Utils.ROOT_PATH, 'fws', 'emc', '%02X'%model['code'][0], SFlash.getFwFilename(emc_ver)])
-		eap_file = (os.path.sep).join([Utils.ROOT_PATH, 'fws', 'eap', '%02X'%model['code'][1], SFlash.getFwFilename(eap_ver)])
-		
-		if os.path.exists(emc_file) and os.path.exists(eap_file):
-			out_file = Utils.getFilePathWoExt(file, True)+'_patch_sb_'+model['ic']+'.bin'
-			Utils.savePatchData(out_file, Utils.getFileContents(file), [
-				{'o':SFlash.SFLASH_PARTITIONS['s0_emc_ipl_'+active_slot.lower()]['o'], 'd':Utils.getFileContents(emc_file)},
-				{'o':SFlash.SFLASH_PARTITIONS['s0_eap_kbl']['o'], 'd':Utils.getFileContents(eap_file)},
-			])
-			UI.setStatus(STR_SAVED_TO%out_file)
-		else:
-			status = ' '+Utils.ROOT_PATH+'\n'
-			if not os.path.exists(emc_file): status += ' '+emc_file[len(Utils.ROOT_PATH):]+'\n'
-			if not os.path.exists(eap_file): status += ' '+eap_file[len(Utils.ROOT_PATH):]+'\n'
-			status += ' ' + STR_NOT_FOUND
-			UI.setStatus(status)
-	
-	UI.showStatus()
-	input(STR_BACK)
+		input(STR_BACK)
+		break
 
 
 
 def screenWFpatcher(file, model = '', ver = ''):
-	UI.clearScreen()
-	print(TITLE + UI.getTab(STR_ABOUT_TORUS_PATCH))
-	print(UI.warning(STR_INFO_TORUS_PATCH))
-	print()
-	print(UI.warning(STR_INFO_FW_LINK))
 	
-	print(UI.getTab(STR_WIFI_PATCHER))
+	# Read once
+	
 	with open(file,'rb') as f:
 		active_slot = SFlash.getActiveSlot(f)
-		fw = SFlash.getNorFW(f, active_slot)
+		fw = SFlash.getFWInfo(f, active_slot)
 		torus = SFlash.getTorusInfo(f)
-	
-	print(UI.highlight(STR_CURRENT))
-	print()
-	UI.showTable({
-		'Torus (WiFi+BT)'	: '%s [0x%02X]'%(torus['name'],torus['code']),
-		'FW info'			: fw['c'] + ' ['+active_slot.upper()+']',
-	})
-	print()
-	
-	if model in SFlash.TORUS_VERS:
-		print(UI.highlight(STR_MODEL+': ') + '%s [0x%02X]'%(model['name'], model['code']))
-	else:
-		print(UI.highlight(STR_SELECT_MODEL)+'\n')
-		UI.showMenu(['%s [0x%02X]'%(SFlash.TORUS_VERS[x]['name'], SFlash.TORUS_VERS[x]['code']) for x in range(len(SFlash.TORUS_VERS))], 1)
+
+	while True:
+
+		UI.clearScreen()
+		print(TITLE + UI.getTab(STR_ABOUT_TORUS_PATCH))
+		print(UI.warning(STR_INFO_TORUS_PATCH))
+		print()
+		print(UI.warning(STR_INFO_FW_LINK))
 		
-		print(UI.DIVIDER+' 0:'+STR_GO_BACK)
-		UI.showStatus()
+		print(UI.getTab(STR_WIFI_PATCHER))
 		
-		try: n = int(input(STR_CHOICE))
-		except: n = -1
+		print(UI.highlight(STR_CURRENT))
+		print()
+		UI.showTable({
+			'Torus (WiFi+BT)'	: '%s - %s [0x%02X]'%(torus['v'], torus['name'], torus['code']),
+			'FW info'			: fw['c'] + ' ['+active_slot.upper()+']',
+		})
+		print()
 		
-		if n == 0:
-			return
-		if n > 0 and n <= len(SFlash.TORUS_VERS):
-			model = SFlash.TORUS_VERS[n-1]
+		if model in SFlash.TORUS_VERS:
+			print(UI.highlight(STR_MODEL+': ') + '%s - %s [%02X]'%(model['v'], model['name'], model['code']))
 		else:
-			UI.setStatus(STR_ERROR_INPUT)
+			print(UI.highlight(STR_SELECT_MODEL)+'\n')
+			tor_models = SFlash.TORUS_VERS
+			UI.showMenu(['%s - %s [0x%02X] %s'%(tor_models[x]['v'], tor_models[x]['name'][:15], tor_models[x]['code'], ', '.join(tor_models[x]['ic'])) for x in range(len(SFlash.TORUS_VERS))], 1)
+			
+			UI.showStatus()
+			
+			choice = input(STR_CHOICE)
+
+			if choice == '':
+				break
+
+			try: n = int(choice)
+			except: n = -1
+
+			if n > 0 and n <= len(SFlash.TORUS_VERS):
+				model = SFlash.TORUS_VERS[n-1]
+			else:
+				UI.setStatus(STR_ERROR_INPUT)
+			
+			continue
 		
-		return screenWFpatcher(file, model)
-	
-	print()
-	
-	# Quick mode
-	expert_mode = False
-	if not ver:
-		expert_mode = input(UI.highlight(STR_EXPERT_MODE+STR_Y_OR_CANCEL)).lower()
-		UI.clearInput()
-	
-	if not ver and expert_mode != 'y':
-		ver = SFlash.getDataByPartitionAndType('wifi', model['code'], fw['c'])
+		print()
 		
+		# Quick mode
+		expert_mode = False
 		if not ver:
-			print(UI.error(STR_ERR_NO_FW_FOUND%('TORUS',fw['c'])))
-			print(UI.highlight(STR_USE_EXPERT_M))
-			input(STR_BACK)
-			return screenWFpatcher(file)
+			expert_mode = input(UI.highlight(STR_EXPERT_MODE+STR_Y_OR_CANCEL)).lower()
+			UI.clearInput()
 		
-		return screenWFpatcher(file, model, ver)
-	
-	# Expert mode
-	if ver:
-		print(UI.highlight(' TORUS: ') + '%s - %s [%s]\n'%(ver['fw'][0], ver['fw'][-1], ver['md5']))
+		if not ver and expert_mode != 'y':
+			ver = SFlash.getDataByPartitionAndType('wifi', model['code'], fw['c'])
+			
+			if not ver:
+				print(UI.error(STR_ERR_NO_FW_FOUND%('TORUS',fw['c'])))
+				print(UI.highlight(STR_USE_EXPERT_M))
+				input(STR_BACK)
+				model, ver = '',''
+			
+			continue
 		
-		fw_file = (os.path.sep).join([Utils.ROOT_PATH, 'fws', 'torus', '%02X'%model['code'], SFlash.getFwFilename(ver)])
-		if os.path.exists(fw_file):
-			out_file = Utils.getFilePathWoExt(file, True)+'_patch_torus_'+'%02X'%model['code']+'.bin'
-			Utils.savePatchData(out_file, Utils.getFileContents(file), [{'o':SFlash.SFLASH_PARTITIONS['s0_wifi']['o'], 'd':Utils.getFileContents(fw_file)}])
-			UI.setStatus(STR_SAVED_TO%out_file)
+		# Expert mode
+		if ver:
+			print(UI.highlight(' TORUS: ') + '%s - %s [%s]\n'%(ver['fw'][0], ver['fw'][-1], ver['md5']))
+			
+			fw_file = SFlash.getFwFilename(ver, (os.path.sep).join([ Utils.ROOT_PATH, 'fws', 'torus', '%02X'%model['code'] ]))
+
+			if os.path.exists(fw_file):
+				out_file = Utils.getFilePathWoExt(file, True)+'_patch_torus_'+'%02X'%model['code']+'.bin'
+				Utils.savePatchData(out_file, Utils.getFileContents(file), [{'o':SFlash.SFLASH_PARTITIONS['s0_wifi']['o'], 'd':Utils.getFileContents(fw_file)}])
+				UI.setStatus(STR_SAVED_TO%out_file)
+			else:
+				UI.setStatus(' %s - %s'%(fw_file, STR_NOT_FOUND))
 		else:
-			UI.setStatus(' %s - %s'%(ver['file'],STR_NOT_FOUND))
-	else:
-		print(UI.highlight(STR_SELECT_FW_VER)+':\n')
+			print(UI.highlight(STR_SELECT_FW_VER)+':\n')
+			
+			items = SFlash.getDataByPartitionAndType('wifi', model['code'])
+			for x in range(len(items)):
+				str = ' %2d: %05s <> %05s [%s]'%(x+1, items[x]['fw'][0], items[x]['fw'][-1], items[x]['md5'])
+				print(UI.highlight(str) if SFlash.isFwInList(fw['c'], items[x]['fw']) else str)
+			
+			print(UI.DIVIDER+' 0:'+STR_GO_BACK)
+			UI.showStatus()
+			
+			try: n = int(input(STR_CHOICE))
+			except: n = -1
+			
+			if n == 0:
+				return screenWFpatcher(file)
+			if n > 0 and n <= len(items):
+				ver = items[n-1]
+			else:
+				UI.setStatus(STR_ERROR_INPUT)
+			
+			continue
 		
-		items = SFlash.getDataByPartitionAndType('wifi', model['code'])
-		for x in range(len(items)):
-			str = ' %2d: %05s <> %05s [%s]'%(x+1, items[x]['fw'][0], items[x]['fw'][-1], items[x]['md5'])
-			print(UI.highlight(str) if SFlash.isFwInList(fw['c'], items[x]['fw']) else str)
-		
-		print(UI.DIVIDER+' 0:'+STR_GO_BACK)
 		UI.showStatus()
-		
-		try: n = int(input(STR_CHOICE))
-		except: n = -1
-		
-		if n == 0:
-			return screenWFpatcher(file)
-		if n > 0 and n <= len(items):
-			ver = items[n-1]
-		else:
-			UI.setStatus(STR_ERROR_INPUT)
-		
-		return screenWFpatcher(file, model, ver)
+		input(STR_BACK)
+		break
 	
-	UI.showStatus()
-	input(STR_BACK)
+	return
 
 
 

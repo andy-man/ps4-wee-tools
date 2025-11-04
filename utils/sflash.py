@@ -540,6 +540,65 @@ def getOffsetRange(k, backup = False):
 	extra = BACKUP_OFFSET if backup else 0
 	return '%X~%X'%(SFLASH_AREAS[k]['o'] + extra, SFLASH_AREAS[k]['o'] + SFLASH_AREAS[k]['l'] + extra)
 
+def getPartition(f, name):
+	if not name in SFLASH_PARTITIONS:
+		return ''
+	return Utils.getData(f, SFLASH_PARTITIONS[name]['o'], SFLASH_PARTITIONS[name]['l'])
+
+def getPartitionMD5(f, name):
+	data = getPartition(f, name)
+	if len(data) > 0:
+		return hashlib.md5(data).hexdigest()
+	return ''
+
+def getFWInfo(f, active_slot = ''):
+	
+	fw = getNorData(f, 'FW_VER')
+	
+	if b'\xFF' in fw:
+		fw = getNorData(f, 'FW_V')
+	
+	# EAP holds current FW
+	if type(fw) == bytes and b'\xFF' in fw:
+		md5_eap = getPartitionMD5(f, 's0_eap_kbl')
+		fw_info = Data.EAP_KBL_MD5
+
+		if md5_eap in fw_info:
+			fws = fw_info[md5_eap]['fw']
+			fw = ' <-> '.join(fws if len(fws) == 1 else [fws[0], fws[-1]])
+	
+	if type(fw) == bytes and b'\xFF' in fw:
+		md5_emc = getPartitionMD5(f, 's0_emc_ipl_' + active_slot)
+		fw_info = Data.EMC_IPL_MD5
+		
+		if md5_emc in fw_info:
+			fws = fw_info[md5_emc]['fw']
+			fw = ' <-> '.join(fws if len(fws) == 1 else [fws[0], fws[-1]])
+		
+	if type(fw) == bytes:
+		fw = '{:X}.{:02X}'.format(fw[1], fw[0])
+
+	"""
+	fw = getNorData(f, 'FW_VER')
+	o_fw = getNorData(f, 'FW_V')
+	fw = '{:X}.{:02X}'.format(fw[1], fw[0]) + ' {:X}.{:02X}'.format(o_fw[1], o_fw[0])
+	"""
+	mfw = getNorData(f, 'FW_MIN')
+	mfw = '{:X}.{:02X}'.format(mfw[1], mfw[0]) if mfw[0] != 0xFF else ''
+	
+	bfw = ['']
+	if active_slot:
+		pname = 's0_emc_ipl_' + ('a' if active_slot == 'b' else 'b')
+		
+		md5 = getPartitionMD5(f, pname)
+		fw_info_data = getDataByPartition(pname)
+		
+		if md5 in fw_info_data:
+			fw2 = fw_info_data[md5]['fw']
+			bfw = fw2 if len(fw2) == 1 else [fw2[0], fw2[-1]]
+	
+	return {'c':fw, 'b':bfw, 'min':mfw}
+
 
 
 def getSFlashInfo(file = '-'):
