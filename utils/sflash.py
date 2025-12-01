@@ -306,13 +306,14 @@ def isFwInList(fw, fw_list):
 
 
 def getFwFilename(item, folder):
-	md5 = item['md5']
-	#print(folder, md5)
-	for file in os.listdir(folder):
-		path = os.path.join(folder, file)
-		if not os.path.isdir(path) and md5 in file:
-			return path
-	return ''
+	try:
+		md5 = item['md5']
+		for file in os.listdir(folder):
+			path = os.path.join(folder, file)
+			if not os.path.isdir(path) and md5 in file:
+				return path
+	except Exception as e:
+		return ''
 
 
 
