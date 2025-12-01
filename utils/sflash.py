@@ -93,6 +93,7 @@ SFLASH_AREAS = {
 	
 	'BOARD_ID'	: {'o':0x1C4000,	'l':8,			't':'b',	'n':'Board ID'},			# SAA-001, SAB-00, etc
 	'MAC'		: {'o':0x1C4021,	'l':6,			't':'b',	'n':'MAC Address'},
+	'5G'		: {'o':0x1C7018,	'l':1,			't':'b',	'n':'5G support'},			# 00 Not Supported, 01 Supported		
 	'MB_SN'		: {'o':0x1C8000,	'l':16,			't':'s',	'n':'Motherboard Serial'},
 	'SN'		: {'o':0x1C8030,	'l':17,			't':'s',	'n':'Console Serial'},
 	'SKU'		: {'o':0x1C8041,	'l':13,			't':'s',	'n':'SKU Version'},
@@ -147,9 +148,9 @@ SOUTHBRIDGES = [
 ]
 
 TORUS_VERS = [
-	{'code':0x03, 'name':'Version 1'},
-	{'code':0x22, 'name':'Version 2'},
-	{'code':0x30, 'name':'Version 3'},
+	{'code':0x03, 'v':'V1', 'name':'Marvell 88W8797', 'ic':['J20H071', 'SP88W8797']},
+	{'code':0x22, 'v':'V2', 'name':'Marvell 88W8897', 'ic':['AW-CB262', 'AW-NB218', 'DHSM-PS97', 'J20H091']},
+	{'code':0x30, 'v':'V3', 'name':'MediaTek MT7667BSN', 'ic':['AW-CB319', 'J20H096']},
 ]
 
 MAGICS = {
@@ -408,14 +409,17 @@ def getPartitionsInfo(f):
 
 
 def getTorusInfo(f):
-	torus_md5 = getNorPartitionMD5(f, 's0_wifi')
+	torus_md5 = getPartitionMD5(f, 's0_wifi')
+	supports_5g = int.from_bytes(getNorData(f, '5G'), 'big')
 	torus = Data.TORUS_FW_MD5[torus_md5]['t'] if torus_md5 in Data.TORUS_FW_MD5 else 0
 	
-	for k in range(len(TORUS_VERS)):
-		if torus == TORUS_VERS[k]['code']:
-			return TORUS_VERS[k]
+	for item in TORUS_VERS:
+		if torus == item['code']:
+			data = item
+			data['s5g'] = supports_5g
+			return data
 	
-	return {'code':torus, 'name':STR_UNKNOWN}
+	return {'code':torus, 'v':'?', 'name':STR_UNKNOWN, 's5g':supports_5g}
 
 
 

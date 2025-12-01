@@ -176,7 +176,7 @@ def screenWFpatcher(file, model = '', ver = ''):
 		active_slot = SFlash.getActiveSlot(f)
 		fw = SFlash.getFWInfo(f, active_slot)
 		torus = SFlash.getTorusInfo(f)
-
+	
 	while True:
 
 		UI.clearScreen()
@@ -189,6 +189,7 @@ def screenWFpatcher(file, model = '', ver = ''):
 		
 		print(UI.highlight(STR_CURRENT))
 		print()
+		
 		UI.showTable({
 			'Torus (WiFi+BT)'	: '%s - %s [0x%02X]'%(torus['v'], torus['name'], torus['code']),
 			'FW info'			: fw['c'] + ' ['+active_slot.upper()+']',
