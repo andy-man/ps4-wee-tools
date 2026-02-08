@@ -253,7 +253,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		return
 	
 	flasher = SysconFlasher(port)
-	flasher.reset()
+	#flasher.reset()
 	
 	UI.clearScreen()
 	print(TITLE+UI.getTab(STR_ABOUT_SCF))
@@ -264,16 +264,22 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		print(UI.warning(STR_PORT_UNAVAILABLE))
 		print(UI.warning(flasher.err))
 		flasher.disconnect()
+		# Beep.error() # Pro
 		input(STR_BACK)
 		return
 	
 	info = flasher.connect()
 	ver_maj, ver_min = info['VER']
+	ram = info['RAM']
+	debug = info['DEBUG'] if 'DEBUG' in info else None
+
+	hw_scf_ver = '%d.%02d'%(ver_maj, ver_min)
+	sw_scf_ver = '%d.%02d'%(flasher.VERSION[0], flasher.VERSION[1])
 	
 	UI.showTable({
-		'Version'		: '%d.%02d'%(ver_maj, ver_min),
-		'Memory'		: '%d bytes'%info['RAM'],
-		'Debug Mode'	: info['DEBUG'],
+		'Version'		: hw_scf_ver if hw_scf_ver == sw_scf_ver else f'{hw_scf_ver} [sw={sw_scf_ver}]' ,
+		'Memory'		: '%d bytes'%ram,
+		'Debug Mode'	: STR_ON if debug else STR_OFF,
 	})
 	print()
 	

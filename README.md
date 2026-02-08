@@ -105,6 +105,11 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 
 ## Changelog
 
+### v1.0.4
+* 13.04 support
+* Syscon Flasher 2.05
+* boot modes bug-fix
+
 ### v1.0.3
 * 13.00, 13.02 support
 

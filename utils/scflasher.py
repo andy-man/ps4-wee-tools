@@ -14,7 +14,7 @@ from utils.serial import WeeSerial
 
 class SysconFlasher(WeeSerial):
 	
-	VERSION                 = [2, 0x02] # Syscon flasher HW version here
+	VERSION                 = [2, 0x05] # Syscon flasher HW version here
 	
 	BUFFER                  = b''
 	BUFFER_SIZE             = 0x8000
@@ -183,7 +183,7 @@ class SysconFlasher(WeeSerial):
 		ver = [info[0], info[1]]
 		ram = (info[2] << 8) | info[3]
 		
-		if ver != self.VERSION:
+		if ver[0] != self.VERSION[0]: # Major version check
 			maj, min = self.VERSION
 			self.error(STR_SCF_ERROR_VERSION%(maj, min))
 			self.close()

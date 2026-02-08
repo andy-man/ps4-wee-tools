@@ -85,7 +85,7 @@ def screenBootModes(file):
 		
 		if edata in items:
 			color = Clr.fg.orange
-			duplicates.append(i+1)
+			duplicates.append(str(i+1))
 		else:
 			items.append(edata)
 		
@@ -95,7 +95,7 @@ def screenBootModes(file):
 	print()
 	
 	if len(duplicates):
-		print(STR_DUPLICATES%(len(duplicates),','.join(duplicates)))
+		print(STR_DUPLICATES%(len(duplicates), ','.join(duplicates)))
 	
 	UI.showStatus()
 	
