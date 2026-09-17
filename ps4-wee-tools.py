@@ -5,13 +5,16 @@
 import os, sys
 import tools.Tools as Tools
 import tools.SFlashTools as SFlashTools
-from lang._i18n_ import UI
+from utils.utils import UI
+from utils.updates import check_fw_update
+from lang.lang import *
 
 
 
 def main(args):
 	
 	UI.setTitle()
+	check_fw_update()
     
 	args.pop(0)
 

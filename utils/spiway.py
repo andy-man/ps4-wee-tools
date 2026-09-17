@@ -5,7 +5,7 @@
 # https://github.com/andy-man/ps4-wee-tools
 #==========================================================
 import time
-from lang._i18n_ import *
+from lang.lang import *
 from utils.serial import WeeSerial
 
 

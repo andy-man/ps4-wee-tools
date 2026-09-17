@@ -3,7 +3,7 @@
 # part of ps4 wee tools project
 #==============================================================
 import os
-from lang._i18n_ import *
+from lang.lang import *
 import utils.syscon as Syscon
 import utils.utils as Utils
 import tools.Tools as Tools
@@ -233,8 +233,6 @@ def screenManualPatchSNVS(file, flat = False):
 
 def screenSysconTools(file):
 	
-	MENU_SC_ACTIONS[4-1] = UI.dark(MENU_SC_ACTIONS[4-1])
-	
 	while True:
 	
 		UI.clearScreen()
@@ -247,7 +245,9 @@ def screenSysconTools(file):
 		UI.showTable(info)
 		
 		print(UI.getTab(STR_ACTIONS))
-		UI.showMenu(MENU_SC_ACTIONS,1)
+		menu = list(MENU_SC_ACTIONS)
+		menu[4-1] = UI.dark(menu[4-1])
+		UI.showMenu(menu,1)
 		print(UI.DIVIDER)
 		UI.showMenu(MENU_EXTRA)
 		

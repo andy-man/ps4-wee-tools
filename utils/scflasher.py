@@ -7,7 +7,7 @@
 
 import time, sys, os
 import utils.syscon as Syscon
-from lang._i18n_ import *
+from lang.lang import *
 from utils.serial import WeeSerial
 
 

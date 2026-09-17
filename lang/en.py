@@ -143,6 +143,8 @@ MENU_SPW_ACTS = {
 	'erase':	'Erasing',
 }
 
+STR_APP_NAME			= 'PS4 weeTools'
+STR_CFG_ERROR			= 'CFG Error:'
 STR_LANGUAGE			= 'Language'
 STR_SECONDS				= '%0.0f seconds'
 STR_NVS_AREAS			= 'NVS areas'

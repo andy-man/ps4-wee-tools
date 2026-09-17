@@ -3,9 +3,9 @@
 # part of ps4 wee tools project
 #==========================================================
 import hashlib, os, math, sys, ctypes
-from lang._i18n_ import *
+from lang.lang import *
 import data.data as Data
-import lang._i18n_ as Lang
+import lang.lang as Lang
 import utils.utils as Utils
 
 

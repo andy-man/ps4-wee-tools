@@ -4,3 +4,4 @@ __pycache__
 fws/*/
 release/
 *.bin
+/.pyarmor
