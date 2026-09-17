@@ -20,6 +20,8 @@ If you want to run python script directly you need these libs
 
 `pip install pyserial` since v0.8.5
 
+`pip install requests` optional, for firmware repo auto-update
+
 Teensy Loader Application - can be found **[here](https://www.pjrc.com/teensy/loader.html)**
 
 **Documentation**
@@ -104,6 +106,16 @@ And of course [PSDevWiki](https://www.psdevwiki.com/ps4/)
 * [X/Twitter](https://twitter.com/AndyManDev)
 
 ## Changelog
+
+### v1.0.5
+* 14.00, 13.52, 13.50 support
+* Config: sound, ports, colors, fw update
+* Beep sounds for flasher / UART
+* Remember last COM ports
+* Firmware repo auto-update
+* 20 languages
+* Auto detect system language
+* Language switch without restart
 
 ### v1.0.4
 * 13.04 support

@@ -4,7 +4,7 @@
 # https://github.com/andy-man/ps4-wee-tools
 #==============================================================
 import os
-from lang._i18n_ import *
+from lang.lang import *
 import utils.utils as Utils
 import utils.syscon as Syscon
 import utils.utils as Utils
@@ -13,17 +13,17 @@ import tools.Tools as Tools
 # Screens
 
 def screenAdvSysconTools(file):
-	
-    MENU_SC_ADV_ACTIONS[2-1] = UI.dark(MENU_SC_ADV_ACTIONS[2-1])
-    MENU_SC_ADV_ACTIONS[5-1] = UI.dark(MENU_SC_ADV_ACTIONS[5-1])
-    MENU_SC_ADV_ACTIONS[6-1] = UI.dark(MENU_SC_ADV_ACTIONS[6-1])
 
     while True:
 
         UI.clearScreen()
         print(TITLE+UI.getTab(STR_ADDITIONAL))
 		
-        UI.showMenu(MENU_SC_ADV_ACTIONS,1)
+        menu = list(MENU_SC_ADV_ACTIONS)
+        menu[2-1] = UI.dark(menu[2-1])
+        menu[5-1] = UI.dark(menu[5-1])
+        menu[6-1] = UI.dark(menu[6-1])
+        UI.showMenu(menu,1)
 
         UI.showStatus()
 		

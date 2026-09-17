@@ -3,7 +3,7 @@
 # part of ps4 wee tools project
 #==============================================================
 import os
-from lang._i18n_ import *
+from lang.lang import *
 import utils.utils as Utils
 import utils.sflash as SFlash
 import utils.slb2 as Slb2

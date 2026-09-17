@@ -4,7 +4,7 @@
 # https://github.com/andy-man/ps4-wee-tools
 #==========================================================
 from utils.utils import *
-import lang._i18n_ as Lang
+import lang.lang as Lang
 
 
 

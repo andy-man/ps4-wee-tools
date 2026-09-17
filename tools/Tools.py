@@ -3,7 +3,8 @@
 # part of ps4 wee tools project
 #==============================================================
 import os, sys, time, datetime
-from lang._i18n_ import *
+from lang.lang import *
+from utils.utils import Beep
 from utils.serial import WeeSerial
 from utils.spiway import SpiFlasher
 from utils.scflasher import SysconFlasher, sysconReader
@@ -19,14 +20,14 @@ import tools.AdvSFlashTools as AdvSFlashTools
 
 def screenMainMenu():
 	
-	MENU_TOOL_SELECTION[6-1] = UI.dark(MENU_TOOL_SELECTION[6-1])
-	
 	while True:
 	
 		UI.clearScreen()
 		print(TITLE + UI.getTab(STR_MAIN_MENU))
 		
-		UI.showMenu(MENU_TOOL_SELECTION,1)
+		menu = list(MENU_TOOL_SELECTION)
+		menu[6-1] = UI.dark(menu[6-1])
+		UI.showMenu(menu,1)
 		
 		UI.showStatus()
 		
@@ -60,9 +61,10 @@ def screenSelectLanguage():
 		print(TITLE+UI.getTab(STR_LANGUAGE))
 		
 		lang_codes = []
-		for i, key in enumerate(LANG_LIST):
+		for i, key in enumerate(LANG_DATA):
 			lang_codes.append(key)
-			print(f' {i+1}: {LANG_LIST[key]} [{key}]')
+			option = f' {i+1:2}: [{key}] {LANG_DATA[key]["LANGUAGE"]}'
+			UI.sp_print(UI.highlight(option) if key == LANG_CODE else option)
 		
 		UI.showStatus()
 		
@@ -71,11 +73,12 @@ def screenSelectLanguage():
 		try: num = int(choice)
 		except: num = -1
 		
-		if num > 0 and num <= len(LANG_LIST):
+		if num > 0 and num <= len(LANG_DATA):
 			code = lang_codes[num-1]
 			APP_CONFIG.set('lang', code)
 			APP_CONFIG.save()
-			UI.setStatus(STR_RESTART_APP)
+			set_language(code)
+			UI.setStatus(f'{STR_LANGUAGE}: {LANG_DATA[code]["LANGUAGE"]}')
 			break
 		else:
 			UI.setStatus(STR_ERROR_CHOICE)
@@ -86,7 +89,7 @@ def screenSelectLanguage():
 
 def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	
-	port = port if port else screenChoosePort()
+	port = port if port else screenChoosePort('spiway')
 	if not port:
 		UI.setStatus(STR_NO_PORTS)
 		return
@@ -103,6 +106,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 		print(UI.warning(STR_PORT_UNAVAILABLE))
 		print(UI.warning(flasher.err))
 		flasher.close()
+		Beep.error()
 		input(STR_BACK)
 		return
 	
@@ -116,6 +120,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	
 	if ping['VER'] != flasher.VERSION:
 		flasher.close()
+		Beep.warning()
 		input(STR_BACK)
 		return
 	
@@ -126,6 +131,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 			'Device ID'	: '0x%02X'%flasher.Config.VENDOR_ID,
 			'Vendor ID'	: '0x%04X'%flasher.Config.DEVICE_ID,
 		})
+		Beep.warning()
 		input(STR_BACK)
 		return
 	
@@ -147,6 +153,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 	
 	cfg = flasher.Config
 	
+	success = True
 	if act:
 		print(' '+UI.highlight(MENU_SPW_ACTS[act] if act in MENU_SPW_ACTS else STR_UNKNOWN)+'\n')
 		block, count = chooseBNC(mode, cfg.BLOCK_SIZE)
@@ -163,6 +170,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 				file.seek(cfg.BLOCK_SIZE * block)
 				file.write(data)
 		else:
+			success = False
 			path = ''
 	
 	elif act == 'write':
@@ -170,9 +178,10 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 			with open(path,"rb") as file:
 				file.seek(cfg.BLOCK_SIZE * block)
 				data = file.read(cfg.BLOCK_SIZE * (count if count > 0 else cfg.BLOCK_COUNT))
-				flasher.writeChip(data, False, block, count)
+				success = flasher.writeChip(data, False, block, count)
 				print()
 		else:
+			success = False
 			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	
 	elif act == 'verify':
@@ -181,15 +190,18 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 				file.seek(cfg.BLOCK_SIZE * block)
 				data = file.read(cfg.BLOCK_SIZE * (count if count else cfg.BLOCK_COUNT))
 				vdata = flasher.readChip(block, count)
+				success = data == vdata
 				print('\n'+STR_VERIFY+': '+(STR_OK if data == vdata else STR_FAIL)+'\n')
 		else:
 			UI.setStatus(STR_FILE_NOT_EXISTS%path)
 	
 	elif act == 'erase':
-		flasher.eraseChip(block, count)
+		success = flasher.eraseChip(block, count)
 		print()
 	
 	if act:
+		if success: Beep.success()
+		else: Beep.warning()
 		print(STR_DONE)
 	
 	flasher.close()
@@ -247,7 +259,7 @@ def screenNorFlasher(path = '', port = '', act = '', mode = False):
 
 
 def screenSysconFlasher(path = '', port = '', act = '', mode = False):
-	port = port if port else screenChoosePort()
+	port = port if port else screenChoosePort('sc_flasher')
 	if not port:
 		UI.setStatus(STR_NO_PORTS)
 		return
@@ -264,7 +276,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		print(UI.warning(STR_PORT_UNAVAILABLE))
 		print(UI.warning(flasher.err))
 		flasher.disconnect()
-		# Beep.error() # Pro
+		Beep.error()
 		input(STR_BACK)
 		return
 	
@@ -285,6 +297,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 	
 	if info['VER'] != flasher.VERSION or info['DEBUG'] != True:
 		flasher.close()
+		Beep.warning()
 		input(STR_BACK)
 		return
 	
@@ -355,6 +368,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 		print()
 	
 	if act:
+		Beep.success()
 		print(STR_DONE)
 	
 	flasher.close()
@@ -412,7 +426,7 @@ def screenSysconFlasher(path = '', port = '', act = '', mode = False):
 
 def screenSysconReader(port = '', file = ''):
 	
-	port = port if port else screenChoosePort()
+	port = port if port else screenChoosePort('sc_reader')
 	if not port:
 		UI.setStatus(STR_NO_PORTS)
 		return
@@ -433,6 +447,7 @@ def screenSysconReader(port = '', file = ''):
 	
 	if not serial.sp or not serial.sp.is_open:
 		print(UI.error(STR_PORT_UNAVAILABLE))
+		Beep.error()
 		input(STR_BACK)
 		return
 	
@@ -463,12 +478,14 @@ def screenSysconReader(port = '', file = ''):
 	
 	if equal:
 		print(UI.green(STR_FILES_MATCH))
+		Beep.success()
 		c = input(UI.highlight(STR_OPEN_IN_SC_TOOL+STR_Y_OR_CANCEL)).lower()
 		if c == 'y':
 			SysconTools.screenSysconTools(ofile)
 		else:
 			UI.clearInput()
 	else:
+		Beep.error()
 		print(UI.error(STR_FILES_MISMATCH))
 	
 	print(STR_DONE)
@@ -478,7 +495,7 @@ def screenSysconReader(port = '', file = ''):
 
 def screenSerialMonitor(port = '', emc_mode = False):
 	
-	port = port if port else screenChoosePort()
+	port = port if port else screenChoosePort('uart')
 	if not port:
 		UI.setStatus(STR_NO_PORTS)
 		return
@@ -494,6 +511,7 @@ def screenSerialMonitor(port = '', emc_mode = False):
 	if serial.err or serial.sp.is_open == False:
 		print(UI.warning(STR_PORT_UNAVAILABLE))
 		print(UI.warning(serial.err))
+		Beep.error()
 		input(STR_BACK)
 		return
 	
@@ -535,47 +553,57 @@ def screenSerialMonitor(port = '', emc_mode = False):
 			
 		serial.sendText(txt)
 	if serial.err:
+		Beep.warning()
 		print(' '+UI.error(serial.err))
 	input(STR_BACK)
 
 
 
-def screenChoosePort():
-	UI.clearScreen()
-	print(TITLE + UI.getTab(STR_WARNING))
-	print(UI.warning(STR_INFO_FLASH_TOOLS))
-	
-	print(UI.getTab(STR_PORTS_LIST))
-	
+def screenChoosePort(type):
+
 	ports = WeeSerial.getPortList()
+
+	def_port = APP_CONFIG.get('port-'+type)
 	
-	for i in range(len(ports)):
-		port = ports[i]
-		print(' % 2s: %s - %s'%(i+1, port['port'].ljust(6), port['desc']))
-    
-	if not len(ports):
-		print(UI.warning(STR_NO_PORTS))
-		input(STR_BACK)
-		return ''
-    
-	UI.showStatus()
-	
-	try:
-		c = input(STR_CHOICE)
+	if def_port:
+		for port in ports:
+			if port['port'] == def_port:
+				return def_port
+
+	while True:
+		UI.clearScreen()
+		print(TITLE + UI.getTab(STR_WARNING))
+		print(UI.warning(STR_INFO_FLASH_TOOLS))
 		
-		if c == '':
-			return
+		print(UI.getTab(STR_PORTS_LIST))
 		
-		c = int(c)
+		for i, port in enumerate(ports):
+			print(' % 2s: %s - %s'%(i+1, port['port'].ljust(6), port['desc']))
 		
-		if c > 0 and c <= len(ports):
-			return ports[c-1]['port']
+		if not len(ports):
+			print(UI.warning(STR_NO_PORTS))
+			input(STR_BACK)
+			break
+		
+		UI.showStatus()
+		
+		choice = input(STR_CHOICE)
+
+		if choice == '':
+			break
+
+		try: num = int(choice)
+		except: num = -1
+			
+		if num > 0 and num <= len(ports):
+			port = ports[num-1]['port']
+			APP_CONFIG.set('port-'+type, port)
+			APP_CONFIG.save()
+			return port
 		else:
 			UI.setStatus(STR_ERROR_INPUT)
-	except:
-		UI.setStatus(STR_ERROR_INPUT)
-	
-	return screenChoosePort()
+
+	return ''
 
 
 

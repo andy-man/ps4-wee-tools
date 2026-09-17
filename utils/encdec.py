@@ -4,7 +4,7 @@
 #==========================================================
 import struct
 import utils.utils as Utils
-from lang._i18n_ import *
+from lang.lang import *
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA, HMAC, SHA256
 

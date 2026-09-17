@@ -3,7 +3,7 @@
 # part of ps4 wee tools project
 #==========================================================
 import serial, threading, sys, time
-from lang._i18n_ import *
+from lang.lang import *
 from serial.tools import list_ports
 
 
